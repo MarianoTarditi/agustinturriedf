@@ -96,7 +96,7 @@ html {
 }
 
 .noir-overlay {
-  background: linear-gradient(to bottom, rgba(19,19,19,0.4) 0%, rgba(19,19,19,0.95) 100%);
+  background: linear-gradient(to bottom, rgba(19,19,19,0.4) 0%, rgba(19,19,19,0.95) 300%);
 }
 
 .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -108,7 +108,7 @@ html {
 }
 
 .animate-marquee {
-  animation: marquee 30s linear infinite;
+  animation: marquee 60s linear infinite;
 }
 
 .animate-marquee:hover {
