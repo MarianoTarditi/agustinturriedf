@@ -9,15 +9,17 @@ const navLinks = [
 ---
 
 <nav id="navbar" class="bg-black/70 backdrop-blur-xl fixed top-0 w-full z-50 transition-transform duration-300 shadow-[0px_20px_40px_rgba(123,44,191,0.08)]">
-  <div class="flex justify-between items-center w-full px-8 py-6 max-w-none">
-    <a href="#" class="flex items-center gap-3 group">
-      <img 
-        alt="KINETIC NOIR Logo" 
-        class="h-14 w-auto object-contain transition-all duration-300 group-hover:scale-105 group-hover:drop-shadow-[0_0_15px_rgba(123,44,191,0.6)]" 
-        src="/Logo.png" 
-      />
-    </a>
-    <div class="hidden md:flex gap-8 items-center justify-center flex-grow">
+  <div class="flex items-center justify-between w-full px-8 py-6 max-w-none">
+    <div class="flex-shrink-0">
+      <a href="#" class="flex items-center gap-3 group">
+        <img 
+          alt="KINETIC NOIR Logo" 
+          class="h-14 w-auto object-contain transition-all duration-300 group-hover:scale-105 group-hover:drop-shadow-[0_0_15px_rgba(123,44,191,0.6)]" 
+          src="/Logo.png" 
+        />
+      </a>
+    </div>
+    <div class="hidden md:flex gap-8 items-center justify-center absolute left-1/2 transform -translate-x-1/2">
       {navLinks.map((link) => (
         <a
           class="nav-link font-headline tracking-tight text-sm font-bold uppercase transition-colors text-gray-400 hover:text-white"
@@ -28,12 +30,14 @@ const navLinks = [
         </a>
       ))}
     </div>
-    <button
-      id="login-btn"
-      class="bg-gradient-to-r from-primary-container to-on-primary-fixed-variant px-6 py-2 rounded-md font-headline text-sm font-bold uppercase text-on-primary-container scale-95 active:scale-90 transition-all hover:scale-105 hover:shadow-[0px_0px_20px_rgba(123,44,191,0.4)] cursor-pointer"
-    >
-      Iniciar sesión
-    </button>
+    <div class="flex-shrink-0">
+      <button
+        id="login-btn"
+        class="bg-gradient-to-r from-primary-container to-on-primary-fixed-variant px-6 py-2 rounded-md font-headline text-sm font-bold uppercase text-on-primary-container scale-95 active:scale-90 transition-all hover:scale-105 hover:shadow-[0px_0px_20px_rgba(123,44,191,0.4)] cursor-pointer"
+      >
+        Iniciar sesión
+      </button>
+    </div>
   </div>
 </nav>
 
