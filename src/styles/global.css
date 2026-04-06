@@ -111,6 +111,8 @@ html {
   animation: marquee 60s linear infinite;
 }
 
-.animate-marquee:hover {
-  animation-play-state: paused;
+@media (min-width: 768px) {
+  .animate-marquee:hover {
+    animation-play-state: paused;
+  }
 }

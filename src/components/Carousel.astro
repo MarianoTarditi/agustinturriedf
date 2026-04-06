@@ -23,7 +23,7 @@ const carouselImages = [
       <div class="flex gap-4 px-2">
         {
           carouselImages.map((img) => (
-            <div class="min-w-[400px] h-[300px] rounded-xl overflow-hidden grayscale hover:grayscale-0 transition-all duration-500 hover:scale-105">
+            <div class="min-w-[400px] h-[300px] rounded-xl overflow-hidden grayscale md:grayscale md:hover:grayscale-0 transition-all duration-500 hover:scale-105">
               <img
                 class="w-full h-full object-cover"
                 data-alt="training photo"
@@ -36,7 +36,7 @@ const carouselImages = [
       <div class="flex gap-4 px-2">
         {
           carouselImages.map((img) => (
-            <div class="min-w-[400px] h-[300px] rounded-xl overflow-hidden grayscale hover:grayscale-0 transition-all duration-500 hover:scale-105">
+            <div class="min-w-[400px] h-[300px] rounded-xl overflow-hidden grayscale md:grayscale md:hover:grayscale-0 transition-all duration-500 hover:scale-105">
               <img class="w-full h-full object-cover" src={img} />
             </div>
           ))
