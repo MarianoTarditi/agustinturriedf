@@ -1,0 +1,91 @@
+---
+const faqs = [
+  {
+    question: "¿Cómo puedo ingresar al sistema?",
+    answer:
+      "¡Proximamente! Estamos trabajando en una plataforma donde podrás iniciar sesión para acceder a tu plan de entrenamiento, registrar tus progresos y mucho mas.",
+  },
+  {
+    question: "¿Necesito experiencia previa en entrenamiento de fuerza?",
+    answer:
+      "No. Diseñamos planes desde nivel cero. La técnica se enseña desde el primer día con videos y corrección directa.",
+  },
+  {
+    question: "¿Cómo funcionan los grupos de 5 personas?",
+    answer:
+      "Trabajamos con un sistema de entrenamiento personalizado. No estás pagando por un ginasio sino por un especio explusivo donde reciben un entreamiento y un servicio individualizado. Con maximo 5 personas por turno.",
+  },
+  {
+    question: "¿Cómo funciona el entrenamiento personalizado?",
+    answer:
+      " El entrenamiento es completamente personalizado segín tus objetivos, nivel de condición fsica y disponibilidad. Recibirás un plan adaptado a tus necesidades, con seguimiento constante y ajustes semanales basados en tu progreso.",
+  },
+  {
+    question:
+      "¿Es necesario tener experiencia previa en entrenamiento de fuerza?",
+    answer:
+      "Para nada. El programa está diseñado para adaptarse a cualquier nivel. La enseñanza de la técnica correcta es nuestra prioridad desde el primer día.",
+  },
+  {
+    question: "¿Cuánto tiempo necesito para ver resultados?",
+    answer:
+      "Los resultados varían según cada persona y sus objetivos. Generalmente, con un entrenamiento constante y adecuado, podés comenzar a notar mejoras en fuerza y resistencia en las primeras 4 a 6 semanas. Los cambios más significativos en composición corporal suelen verse después de 8 a 12 semanas.",
+  },
+];
+---
+
+<section class="py-24 bg-black" id="faq">
+  <div class="container mx-auto px-8 max-w-4xl">
+    <h2
+      class="font-headline text-4xl font-black uppercase text-center mb-16 tracking-widest"
+    >
+      Preguntas Frecuentes
+    </h2>
+    <div class="space-y-2">
+      {
+        faqs.map((faq, index) => (
+          <details
+            class="group bg-surface-container rounded-lg transition-all duration-300 open:bg-surface-container-high"
+            data-faq
+          >
+            <summary class="flex items-center justify-between p-6 cursor-pointer list-none font-bold uppercase tracking-tight text-on-surface">
+              {faq.question}
+              <span class="material-symbols-outlined transition-transform duration-500 group-open:rotate-180">
+                expand_more
+              </span>
+            </summary>
+            <div class="faq-content px-6 pb-6 text-secondary text-sm leading-relaxed overflow-hidden max-h-0 opacity-0 transition-all duration-500 ease-in-out">
+              {faq.answer}
+            </div>
+          </details>
+        ))
+      }
+    </div>
+
+    <style>
+      details[open] .faq-content {
+        max-height: 200px;
+        opacity: 1;
+        margin-top: -0.5rem;
+        transition:
+          max-height 500ms ease-in-out,
+          opacity 500ms ease-in-out,
+          margin-top 500ms ease-in-out;
+      }
+    </style>
+
+    <script>
+      document.querySelectorAll("details[data-faq]").forEach((detail) => {
+        detail.addEventListener("toggle", function () {
+          if (this.hasAttribute("open")) {
+            document.querySelectorAll("details[data-faq]").forEach((other) => {
+              if (other !== this && other.hasAttribute("open")) {
+                other.removeAttribute("open");
+              }
+            });
+          }
+        });
+      });
+    </script>
+  </div>
+</section>

@@ -1,0 +1,50 @@
+---
+const testimonials = [
+  {
+    name: "1 PROFESOR",
+    role: "Cada 5 alumnos",
+    quote: "Seguimiento cercano, corrección técnica y atención personalizada en cada clase.",
+    icon: "person",
+  },
+  {
+    name: "HORARIOS",
+    role: "FIJOS",
+    quote: "Entrená con constancia y organización en horarios pensados para sostener tu progreso.",
+    icon: "schedule",
+  },
+  {
+    name: "CUPO",
+    role: "LIMITADO",
+    quote: "Grupos reducidos para brindarte más control, mejor técnica y una experiencia de mayor calidad.",
+    icon: "lock_open",
+  },
+];
+---
+
+<section class="py-24 bg-black" id="facilities">
+  <div class="container mx-auto px-8">
+    <h2 class="font-headline text-4xl md:text-5xl font-black uppercase tracking-tighter mb-4 text-center text-white">
+      Construí tu mejor versión
+    </h2>
+    <p class="text-secondary text-center max-w-2xl mx-auto mb-16 text-lg">
+      En nuestro espacio de entrenamiento tendrás toda la atención y elementos necesarios para alcanzar tus objetivos.
+    </p>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {testimonials.map((testimonial) => (
+        <div class="bg-surface-container p-8 rounded-xl border border-outline-variant/20 hover:border-primary/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(123,44,191,0.2)]">
+          <div class="flex items-center gap-4 mb-6">
+            <div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center">
+              <span class="material-symbols-outlined text-on-primary-container text-xl">{testimonial.icon}</span>
+            </div>
+            <div>
+              <h4 class="font-headline text-sm font-bold uppercase text-white">{testimonial.name}</h4>
+              <p class="text-primary text-xs uppercase tracking-wider">{testimonial.role}</p>
+            </div>
+          </div>
+          <p class="text-secondary leading-relaxed">{testimonial.quote}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

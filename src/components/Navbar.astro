@@ -1,0 +1,156 @@
+---
+const navLinks = [
+  { href: "#", label: "Inicio" },
+  { href: "#plans", label: "Planes" },
+  { href: "#facilities", label: "Instalaciones" },
+  { href: "#faq", label: "FAQ" },
+  { href: "#contact", label: "Contacto" },
+];
+---
+
+<nav class="bg-black/70 backdrop-blur-xl fixed top-0 w-full z-50 transition-colors duration-500 shadow-[0px_20px_40px_rgba(123,44,191,0.08)]">
+  <div class="flex justify-between items-center w-full px-8 py-6 max-w-none">
+    <a href="#" class="flex items-center gap-3 group">
+      <img 
+        alt="KINETIC NOIR Logo" 
+        class="h-14 w-auto object-contain transition-all duration-300 group-hover:scale-105 group-hover:drop-shadow-[0_0_15px_rgba(123,44,191,0.6)]" 
+        src="/Logo.png" 
+      />
+    </a>
+    <div class="hidden md:flex gap-8 items-center justify-center flex-grow">
+      {navLinks.map((link) => (
+        <a
+          class="nav-link font-headline tracking-tight text-sm font-bold uppercase transition-colors text-gray-400 hover:text-white"
+          href={link.href}
+          data-section={link.href}
+        >
+          {link.label}
+        </a>
+      ))}
+    </div>
+    <button
+      id="login-btn"
+      class="bg-gradient-to-r from-primary-container to-on-primary-fixed-variant px-6 py-2 rounded-md font-headline text-sm font-bold uppercase text-on-primary-container scale-95 active:scale-90 transition-all hover:scale-105 hover:shadow-[0px_0px_20px_rgba(123,44,191,0.4)] cursor-pointer"
+    >
+      Iniciar sesión
+    </button>
+  </div>
+</nav>
+
+<div id="coming-soon-modal" class="fixed inset-0 z-[100] hidden">
+  <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" id="modal-overlay"></div>
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-surface-container p-8 rounded-xl border border-outline-variant/20 max-w-md w-full relative">
+      <button id="close-modal" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+      <div class="text-center">
+        <span class="material-symbols-outlined text-primary text-6xl mb-4">schedule</span>
+        <h3 class="font-headline text-2xl font-bold uppercase mb-4">Próximamente</h3>
+        <p class="text-secondary">Estamos trabajando para ofrecerte la mejor experiencia. Muy pronto podrás iniciar sesión y acceder a tu panel de entrenamiento.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-link');
+
+  function updateActiveNav() {
+    const scrollPos = window.scrollY;
+    
+    let activeSectionId = null;
+    
+    if (scrollPos < 300) {
+      activeSectionId = 'hero';
+    } else {
+      sections.forEach((section) => {
+        const sectionTop = section.offsetTop - 150;
+        const sectionHeight = section.offsetHeight;
+        if (scrollPos >= sectionTop && scrollPos < sectionTop + sectionHeight) {
+          activeSectionId = section.id;
+        }
+      });
+    }
+    
+    if (!activeSectionId && scrollPos + window.innerHeight >= document.documentElement.scrollHeight - 50) {
+      const lastSection = sections[sections.length - 1];
+      if (lastSection) activeSectionId = lastSection.id;
+    }
+
+    navLinks.forEach((link) => {
+      const linkHref = link.getAttribute('data-section');
+      link.classList.remove('text-purple-300', 'border-b-2', 'border-purple-500', 'pb-1');
+      link.classList.add('text-gray-400');
+      
+      if (linkHref === '#' && (scrollPos < 300 || activeSectionId === 'hero' || activeSectionId === null)) {
+        link.classList.remove('text-gray-400');
+        link.classList.add('text-purple-300', 'border-b-2', 'border-purple-500', 'pb-1');
+      } else if (linkHref && linkHref !== '#' && linkHref === `#${activeSectionId}`) {
+        link.classList.remove('text-gray-400');
+        link.classList.add('text-purple-300', 'border-b-2', 'border-purple-500', 'pb-1');
+      }
+    });
+  }
+
+  navLinks.forEach((link) => {
+    link.addEventListener('click', function(e) {
+      const linkHref = link.getAttribute('data-section');
+      
+      navLinks.forEach((l) => {
+        l.classList.remove('text-purple-300', 'border-b-2', 'border-purple-500', 'pb-1');
+        l.classList.add('text-gray-400');
+      });
+      link.classList.remove('text-gray-400');
+      link.classList.add('text-purple-300', 'border-b-2', 'border-purple-500', 'pb-1');
+      
+      if (linkHref && linkHref !== '#') {
+        const sectionId = linkHref.replace('#', '');
+        const section = document.querySelector(`section[id="${sectionId}"]`);
+        if (section) {
+          e.preventDefault();
+          const navHeight = 100;
+          const sectionTop = section.offsetTop - navHeight;
+          window.scrollTo({
+            top: sectionTop,
+            behavior: 'smooth'
+          });
+        }
+      } else if (linkHref === '#') {
+        e.preventDefault();
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }
+    });
+  });
+
+  window.addEventListener('scroll', updateActiveNav);
+  updateActiveNav();
+
+  const loginBtn = document.getElementById('login-btn') as HTMLButtonElement;
+  const modal = document.getElementById('coming-soon-modal') as HTMLDivElement;
+  const closeModal = document.getElementById('close-modal') as HTMLButtonElement;
+  const modalOverlay = document.getElementById('modal-overlay') as HTMLDivElement;
+
+  if (loginBtn && modal) {
+    loginBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      modal.classList.remove('hidden');
+    });
+
+    if (closeModal) {
+      closeModal.addEventListener('click', () => {
+        modal.classList.add('hidden');
+      });
+    }
+
+    if (modalOverlay) {
+      modalOverlay.addEventListener('click', () => {
+        modal.classList.add('hidden');
+      });
+    }
+  }
+</script>

@@ -1,0 +1,29 @@
+---
+const carouselImages = [
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuCmA6f2IEXCTkDWBtYn3u-3Um-Njl-QBdW-BSV_SSlki7PtDQyhuzGYV-38mFA847jfWDB7UgH_xNhW3QM-6b2UFmm8Co2QCEB0sWlAJkysLOA0cbNwOvBO22u_kLa3xA5veSpw9J5xqsD2niSIIKG6qy0FL_Z3Q7nCKfWJdhD4nTdc5qh15NPsJZyFXYa84P2tDNbt8Y3gcQBxDJMAefTGl2p9ndq4xKGbIQSDL4_JchlwdJ2xIvpgBAoslIe6QCYWodcANceinTLB",
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuBe-VCvqgOoPuViud8qJsG06_A2pFbVSLWpJ8wtbks8Wo_iS-uLOMY0jCMFw2hjA4lY3QPEJ7Sccl211VTABI2PfpK-udNS63sv0YKGih2wQTIqnmxoAeO1OSafulRqwdY77MznrvO8pWBhnElmcjVBK7T8Yh9qhgNLH9pxOl79w_Fq9Bn-MOF7NGdG56K4v2EvT5tqZ6DWEX35_wcSFtxMeSlzqKfyRKhWO8KIrlAzpvwBpPu5KVnL2yieUSSFzQ1D41UhjE3O29Vx",
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuC5lLbr_kBsEEoy4mJ0Gp9fNKkCS3kX02VhJ_ACW6s3Kpb0eyIhwbvJb96EXXsmdMUYbongo3jI85psXUzWD3LfkRPiL3fVM1IaLg8CKYJUjso199f9uq5LfBHaglfutVf4Gbm_bDxHlQISI-6yZ-TlYzqyV4QkRHPzUvXVAXodMRlqrgGHH7wFgKJmiVzUmtnQ-2Kccd79HsypQkvKkcidVNMrFjXZPDDTZPaBV27KwUr2ZdIXE9zFh3YbIHUEsxCIJkrGCT3TfZ3P",
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuCSRu3Oo5jS603b9i7ij8FuMxnGGTCFuxkAkr3o7jx9W1b-Rv82aZ8N9wTkCKFOrjwZ4X6_94uDYSmMiKJ23gw0P_1DNCdU3D9oZ7bppXZZaXLGKLtdy8oPRay-sCwy90f5-4PZFgn32RsKk8byTtNJqPKaEN5RvguYTqme4z2smbC-6X14PYGKA_Wr29RsiGPo7OOqNOp_NxQ88RY5tuvlaf2KqyJFdqokCFK0b5jMEKiNC33-4HBjL-Nl2a2Lxd72oGAbGTboN0Mo",
+];
+---
+
+<section class="py-12 bg-black overflow-hidden">
+  <div class="relative flex overflow-x-hidden">
+    <div class="flex animate-marquee py-4 whitespace-nowrap">
+      <div class="flex gap-4 px-2">
+        {carouselImages.map((img) => (
+          <div class="min-w-[400px] h-[300px] rounded-xl overflow-hidden grayscale hover:grayscale-0 transition-all duration-500">
+            <img class="w-full h-full object-cover" data-alt="training photo" src={img} />
+          </div>
+        ))}
+      </div>
+      <div class="flex gap-4 px-2">
+        {carouselImages.map((img) => (
+          <div class="min-w-[400px] h-[300px] rounded-xl overflow-hidden grayscale hover:grayscale-0 transition-all duration-500">
+            <img class="w-full h-full object-cover" src={img} />
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
