@@ -44,13 +44,13 @@ const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(w
       </p>
       <div class="flex flex-col sm:flex-row gap-4">
         <button
-          class="bg-primary-container text-on-primary-container px-10 py-4 rounded-md font-headline font-bold uppercase tracking-widest text-center transition-all hover:scale-105 hover:bg-on-primary-fixed-variant cursor-pointer"
+          class="bg-primary-container text-on-primary-container px-10 py-4 rounded-md font-headline font-bold uppercase tracking-widest text-center transition-all hover:scale-105 active:scale-105 cursor-pointer"
           id="hero-login-btn"
         >
           Comenzar Ahora
         </button>
         <a
-          class="border border-outline-variant text-on-surface px-10 py-4 rounded-md font-headline font-bold uppercase tracking-widest text-center backdrop-blur-md transition-all hover:scale-105 hover:bg-surface-variant hover:border-primary/50 flex items-center justify-center gap-3"
+          class="border border-outline-variant text-on-surface px-10 py-4 rounded-md font-headline font-bold uppercase tracking-widest text-center backdrop-blur-md transition-all hover:scale-105 active:scale-105 flex items-center justify-center gap-3"
           href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"

@@ -19,7 +19,7 @@ const carouselImages = [
 
 <section class="py-12 bg-black overflow-hidden">
   <div class="relative flex overflow-x-hidden">
-    <div class="flex animate-marquee py-4 whitespace-nowrap">
+    <div class="flex animate-marquee py-4 whitespace-nowrap" id="carousel-container">
       <div class="flex gap-4 px-2">
         {
           carouselImages.map((img) => (
@@ -45,3 +45,42 @@ const carouselImages = [
     </div>
   </div>
 </section>
+
+<script>
+  const container = document.getElementById('carousel-container');
+  const items = container?.querySelectorAll('.grayscale');
+  
+  if (container) {
+    container.addEventListener('touchstart', () => {
+      container.style.animationPlayState = 'paused';
+      items?.forEach((item) => item.classList.remove('grayscale'));
+    });
+    
+    container.addEventListener('touchend', () => {
+      container.style.animationPlayState = 'running';
+      items?.forEach((item) => {
+        if (window.innerWidth < 768) {
+          item.classList.remove('grayscale');
+        } else {
+          item.classList.add('grayscale');
+        }
+      });
+    });
+    
+    container.addEventListener('mouseenter', () => {
+      if (window.innerWidth >= 768) {
+        container.style.animationPlayState = 'paused';
+        items?.forEach((item) => item.classList.remove('grayscale'));
+      }
+    });
+    
+    container.addEventListener('mouseleave', () => {
+      container.style.animationPlayState = 'running';
+      items?.forEach((item) => {
+        if (window.innerWidth >= 768) {
+          item.classList.add('grayscale');
+        }
+      });
+    });
+  }
+</script>

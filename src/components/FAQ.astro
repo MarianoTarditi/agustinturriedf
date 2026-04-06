@@ -45,17 +45,19 @@ const faqs = [
       {
         faqs.map((faq, index) => (
           <details
-            class="group bg-surface-container rounded-lg transition-all duration-300 open:bg-surface-container-high"
+            class="group bg-surface-container rounded-lg transition-all duration-300 open:bg-surface-container-high cursor-pointer"
             data-faq
           >
-            <summary class="flex items-center justify-between p-6 cursor-pointer list-none font-bold uppercase tracking-tight text-on-surface">
+            <summary class="flex items-center justify-between p-6 list-none font-bold uppercase tracking-tight text-on-surface select-none">
               {faq.question}
-              <span class="material-symbols-outlined transition-transform duration-500 group-open:rotate-180">
+              <span class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180">
                 expand_more
               </span>
             </summary>
-            <div class="faq-content px-6 pb-6 text-secondary text-sm leading-relaxed overflow-hidden max-h-0 opacity-0 transition-all duration-500 ease-in-out">
-              {faq.answer}
+            <div class="faq-content text-secondary text-sm leading-relaxed overflow-hidden max-h-0 opacity-0">
+              <div class="px-6 pb-6 pt-0">
+                {faq.answer}
+              </div>
             </div>
           </details>
         ))
@@ -63,14 +65,15 @@ const faqs = [
     </div>
 
     <style>
-      details[open] .faq-content {
-        max-height: 200px;
+      details[data-faq] .faq-content {
+        transition: max-height 400ms ease-out, opacity 400ms ease-out;
+        max-height: 0;
+        opacity: 0;
+      }
+      
+      details[data-faq][open] .faq-content {
+        max-height: 400px;
         opacity: 1;
-        margin-top: -0.5rem;
-        transition:
-          max-height 500ms ease-in-out,
-          opacity 500ms ease-in-out,
-          margin-top 500ms ease-in-out;
       }
     </style>
 

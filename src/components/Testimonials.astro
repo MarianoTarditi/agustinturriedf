@@ -30,9 +30,9 @@ const testimonials = [
       En nuestro espacio de entrenamiento tendrás toda la atención y elementos necesarios para alcanzar tus objetivos.
     </p>
     
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8" id="testimonials-grid">
       {testimonials.map((testimonial) => (
-        <div class="bg-surface-container p-8 rounded-xl border border-outline-variant/20 hover:border-primary/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(123,44,191,0.2)]">
+        <div class="testimonial-card bg-surface-container p-8 rounded-xl border border-outline-variant/20 hover:border-primary/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(123,44,191,0.2)]">
           <div class="flex items-center gap-4 mb-6">
             <div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center">
               <span class="material-symbols-outlined text-on-primary-container text-xl">{testimonial.icon}</span>
@@ -48,3 +48,20 @@ const testimonials = [
     </div>
   </div>
 </section>
+
+<script>
+  const cards = document.querySelectorAll('.testimonial-card');
+  
+  cards.forEach((card) => {
+    card.addEventListener('touchstart', () => {
+      cards.forEach((c) => c.classList.remove('border-primary/30', 'shadow-[0_0_30px_rgba(123,44,191,0.2)]'));
+      card.classList.add('border-primary/30', 'shadow-[0_0_30px_rgba(123,44,191,0.2)]');
+    });
+    
+    card.addEventListener('touchend', () => {
+      setTimeout(() => {
+        cards.forEach((c) => c.classList.remove('border-primary/30', 'shadow-[0_0_30px_rgba(123,44,191,0.2)]'));
+      }, 1500);
+    });
+  });
+</script>
