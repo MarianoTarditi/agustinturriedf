@@ -31,31 +31,15 @@ const navLinks = [
       ))}
     </div>
     <div class="flex-shrink-0">
-      <button
-        id="login-btn"
-        class="bg-gradient-to-r from-primary-container to-on-primary-fixed-variant px-6 py-2 rounded-md font-headline text-sm font-bold uppercase text-on-primary-container scale-95 active:scale-90 transition-all hover:scale-105 hover:shadow-[0px_0px_20px_rgba(123,44,191,0.4)] cursor-pointer"
+      <a
+        href="/login"
+        class="bg-gradient-to-r from-primary-container to-on-primary-fixed-variant px-6 py-2 rounded-md font-headline text-sm font-bold uppercase text-on-primary-container scale-95 active:scale-90 transition-all hover:scale-105 hover:shadow-[0px_0px_20px_rgba(123,44,191,0.4)] cursor-pointer inline-block"
       >
         Iniciar sesión
-      </button>
+      </a>
     </div>
   </div>
 </nav>
-
-<div id="coming-soon-modal" class="fixed inset-0 z-[100] hidden">
-  <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" id="modal-overlay"></div>
-  <div class="flex items-center justify-center min-h-screen p-4">
-    <div class="bg-surface-container p-8 rounded-xl border border-outline-variant/20 max-w-md w-full relative">
-      <button id="close-modal" class="absolute top-4 right-4 text-gray-400 hover:text-white">
-        <span class="material-symbols-outlined">close</span>
-      </button>
-      <div class="text-center">
-        <span class="material-symbols-outlined text-primary text-6xl mb-4">schedule</span>
-        <h3 class="font-headline text-2xl font-bold uppercase mb-4">Próximamente</h3>
-        <p class="text-secondary">Estamos trabajando para ofrecerte la mejor experiencia. Muy pronto podrás iniciar sesión y acceder a tu panel de entrenamiento.</p>
-      </div>
-    </div>
-  </div>
-</div>
 
 <script>
   const sections = document.querySelectorAll('section[id]');
@@ -129,30 +113,6 @@ const navLinks = [
 
   window.addEventListener('scroll', updateActiveNav);
   updateActiveNav();
-
-  const loginBtn = document.getElementById('login-btn') as HTMLButtonElement;
-  const modal = document.getElementById('coming-soon-modal') as HTMLDivElement;
-  const closeModal = document.getElementById('close-modal') as HTMLButtonElement;
-  const modalOverlay = document.getElementById('modal-overlay') as HTMLDivElement;
-
-  if (loginBtn && modal) {
-    loginBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      modal.classList.remove('hidden');
-    });
-
-    if (closeModal) {
-      closeModal.addEventListener('click', () => {
-        modal.classList.add('hidden');
-      });
-    }
-
-    if (modalOverlay) {
-      modalOverlay.addEventListener('click', () => {
-        modal.classList.add('hidden');
-      });
-    }
-  }
 
   const navbar = document.getElementById('navbar') as HTMLElement;
   let lastScrollY = 0;

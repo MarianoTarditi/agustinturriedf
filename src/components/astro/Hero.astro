@@ -43,12 +43,12 @@ const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(w
         y rendimiento.
       </p>
       <div class="flex flex-col sm:flex-row gap-4">
-        <button
-          class="bg-primary-container text-on-primary-container px-10 py-4 rounded-md font-headline font-bold uppercase tracking-widest text-center transition-all hover:scale-105 active:scale-105 cursor-pointer"
-          id="hero-login-btn"
+        <a
+          href="/login"
+          class="bg-primary-container text-on-primary-container px-10 py-4 rounded-md font-headline font-bold uppercase tracking-widest text-center transition-all hover:scale-105 active:scale-105 cursor-pointer inline-block"
         >
           Comenzar Ahora
-        </button>
+        </a>
         <a
           class="border border-outline-variant text-on-surface px-10 py-4 rounded-md font-headline font-bold uppercase tracking-widest text-center backdrop-blur-md transition-all hover:scale-105 active:scale-105 flex items-center justify-center gap-3"
           href={whatsappUrl}
@@ -68,13 +68,4 @@ const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(w
   </div>
 </section>
 
-<script>
-  const heroLoginBtn = document.getElementById('hero-login-btn');
-  const modal = document.getElementById('coming-soon-modal');
-
-  if (heroLoginBtn && modal) {
-    heroLoginBtn.addEventListener('click', () => {
-      modal.classList.remove('hidden');
-    });
-  }
 </script>
