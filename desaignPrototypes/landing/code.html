@@ -1,0 +1,916 @@
+<!doctype html>
+<html class="dark" lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>KINETIC NOIR | Personal Training</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&amp;family=Inter:wght@300..700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "tertiary-fixed": "#ffddba",
+              outline: "#988d9e",
+              tertiary: "#fdb969",
+              "on-secondary-fixed": "#0d1c32",
+              "inverse-primary": "#8234c6",
+              "surface-container-highest": "#353535",
+              error: "#ffb4ab",
+              "primary-fixed": "#f1dbff",
+              "surface-bright": "#393939",
+              "error-container": "#93000a",
+              "surface-container": "#1f1f1f",
+              "secondary-fixed-dim": "#b9c7e4",
+              "inverse-surface": "#e2e2e2",
+              "primary-container": "#7b2cbf",
+              "on-primary-fixed-variant": "#680eac",
+              "secondary-container": "#3c4962",
+              "on-error": "#690005",
+              "on-background": "#e2e2e2",
+              "on-primary-fixed": "#2d0050",
+              "on-secondary-container": "#abb9d6",
+              "on-surface": "#e2e2e2",
+              "surface-container-lowest": "#0e0e0e",
+              "on-tertiary-fixed": "#2b1700",
+              "on-primary-container": "#e4c2ff",
+              background: "#131313",
+              "inverse-on-surface": "#303030",
+              "tertiary-fixed-dim": "#fdb969",
+              "primary-fixed-dim": "#deb7ff",
+              "secondary-fixed": "#d6e3ff",
+              surface: "#131313",
+              "on-tertiary-container": "#ffc480",
+              "surface-tint": "#deb7ff",
+              "surface-dim": "#131313",
+              "on-error-container": "#ffdad6",
+              secondary: "#b9c7e4",
+              "outline-variant": "#4c4353",
+              "on-secondary": "#233148",
+              "surface-variant": "#353535",
+              "on-secondary-fixed-variant": "#39475f",
+              "on-surface-variant": "#cfc2d5",
+              primary: "#deb7ff",
+              "surface-container-low": "#1b1b1b",
+              "surface-container-high": "#2a2a2a",
+              "on-primary": "#4a007f",
+              "on-tertiary": "#482a00",
+              "tertiary-container": "#7e4d00",
+              "on-tertiary-fixed-variant": "#663e00",
+            },
+            borderRadius: {
+              DEFAULT: "0.125rem",
+              lg: "0.25rem",
+              xl: "0.5rem",
+              full: "0.75rem",
+            },
+            fontFamily: {
+              headline: ["Space Grotesk"],
+              body: ["Inter"],
+              label: ["Inter"],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+      }
+      .text-glow {
+        text-shadow: 0 0 30px rgba(123, 44, 191, 0.4);
+      }
+      .noir-overlay {
+        background: linear-gradient(
+          to bottom,
+          rgba(19, 19, 19, 0.4) 0%,
+          rgba(19, 19, 19, 0.95) 100%
+        );
+      }
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      @keyframes marquee {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(-50%);
+        }
+      }
+      .animate-marquee {
+        animation: marquee 30s linear infinite;
+      }
+      .animate-marquee:hover {
+        animation-play-state: paused;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-background text-on-surface font-body selection:bg-primary-container selection:text-white"
+  >
+    <!-- TopNavBar -->
+    <nav
+      class="bg-black/70 backdrop-blur-xl docked full-width top-0 sticky z-50 no-border transition-colors duration-500 shadow-[0px_20px_40px_rgba(123,44,191,0.08)]"
+    >
+      <div
+        class="flex justify-between items-center w-full px-8 py-6 max-w-none"
+      >
+        <div
+          class="text-2xl font-black tracking-tighter text-purple-400 uppercase font-headline"
+          style=""
+        >
+          <img
+            alt="KINETIC NOIR Logo"
+            class="h-12 w-auto object-contain"
+            src="https://lh3.googleusercontent.com/aida/ADBb0uisceJjF2_LWHDdCSAqGZSJQa6KTAF2RoyA2mYfrYVAZ1SVDeiP7RgUmQNYQMFnFN6IRGczoPCmvrV3ZXv4iCZABN5GwZJg3lGd4plS8J4YGs_heSAvhS_z0AjnLF2L70TZNcVtw39QOACeux7NOxUSGl0s4Daj88vhTO-Xxte7_SmZYlC5pbUCKhAeVStMkT9Awd94IDCSSZPkmbE1Jq7e58sH_vQNt-J-gYiP1bsQ5bwa7nls-qxCcN9Nn8Zcv1h0OK_IQqqZZ3w"
+            style=""
+          />
+        </div>
+        <div class="hidden md:flex gap-8 items-center">
+          <a
+            class="font-['Space_Grotesk'] tracking-tight text-sm font-bold uppercase text-purple-300 border-b-2 border-purple-500 pb-1"
+            href="#"
+            style=""
+            >Inicio</a
+          >
+          <a
+            class="font-['Space_Grotesk'] tracking-tight text-sm font-bold uppercase text-gray-400 hover:text-white transition-colors"
+            href="#plans"
+            style=""
+            >Planes</a
+          >
+          <a
+            class="font-['Space_Grotesk'] tracking-tight text-sm font-bold uppercase text-gray-400 hover:text-white transition-colors"
+            href="#facilities"
+            style=""
+            >Instalaciones</a
+          >
+          <a
+            class="font-['Space_Grotesk'] tracking-tight text-sm font-bold uppercase text-gray-400 hover:text-white transition-colors"
+            href="#faq"
+            style=""
+            >FAQ</a
+          >
+          <a
+            class="font-['Space_Grotesk'] tracking-tight text-sm font-bold uppercase text-gray-400 hover:text-white transition-colors"
+            href="#contact"
+            style=""
+            >Contacto</a
+          >
+        </div>
+        <button
+          class="bg-gradient-to-r from-primary-container to-on-primary-fixed-variant px-6 py-2 rounded-md font-['Space_Grotesk'] text-sm font-bold uppercase text-on-primary-container scale-95 active:scale-90 transition-transform hover:shadow-[0px_0px_20px_rgba(123,44,191,0.4)]"
+          style=""
+        >
+          Iniciar sesión
+        </button>
+      </div>
+    </nav>
+    <main>
+      <!-- Hero Section -->
+      <section class="relative h-[921px] flex items-center overflow-hidden">
+        <div class="absolute inset-0 z-0">
+          <img
+            class="w-full h-full object-cover grayscale opacity-60"
+            data-alt="dramatic low-key wide shot of a muscular person lifting heavy iron weights in a dark industrial gym with single overhead light"
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhrOPFrVUAjzJmUH0LjeH1fNbVKOymFwmq4ww1nPzxGNhjf61WvMLb3vLNZnkt7C7duqqlzBy-quZTAmr0fbao9tOtqpkpu2aBKJZzLDofxKDErjDjRNbSUuCbL2XG8AjUSiiwVpXDOKDJ-wWHT_-ATlEd6gnEsGfKzBaXKx4PvjcMb0Pa_FtNEirZaAswkr4yuvumDqVTxZXOe5Jt36MGppUksHL5udOOQL8pRqlTn0lOm-01pSZ-WL-IVohpbx5QNG9O9POPBmrA"
+            style=""
+          />
+          <div class="absolute inset-0 noir-overlay"></div>
+        </div>
+        <div class="relative z-10 container mx-auto px-8">
+          <div class="max-w-4xl">
+            <span
+              class="inline-block px-4 py-1 mb-6 bg-surface-container-highest rounded-full text-xs font-bold tracking-widest text-primary uppercase"
+              style=""
+              >aCONDICIONAMIENTO FÍSICO</span
+            >
+            <h1
+              class="font-headline text-6xl md:text-8xl font-bold tracking-tighter leading-[0.9] text-on-surface mb-8 text-glow"
+              style=""
+            >
+              <span class="text-primary italic" style=""
+                ><font color="#e2e2e2"
+                  ><span class="" style="font-style: normal"
+                    >AGUSTÍN TURRI</span
+                  ></font
+                ></span
+              >
+              <div>
+                <span class="text-primary italic" style=""
+                  >ENTRENADOR DE FUERZA</span
+                >
+              </div>
+            </h1>
+            <p
+              class="text-body-lg text-secondary max-w-xl mb-10 leading-relaxed opacity-80"
+              style=""
+            >
+              Entrenamiento de fuerza de alto rendimiento. Arquitectura corporal
+              diseñada para la excelencia. Sin excusas, solo resultados
+              medibles.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4">
+              <a
+                class="bg-primary-container text-on-primary-container px-10 py-4 rounded-md font-headline font-bold uppercase tracking-widest text-center transition-all hover:scale-105 hover:bg-on-primary-fixed-variant"
+                href="#plans"
+                style=""
+                >Iniciar Sesión</a
+              >
+              <a
+                class="border border-outline-variant text-on-surface px-10 py-4 rounded-md font-headline font-bold uppercase tracking-widest text-center backdrop-blur-md transition-all hover:bg-surface-variant/50"
+                href="#facilities"
+                style=""
+                >Contactáme</a
+              >
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Planes / Benefits -->
+      <section class="py-24 bg-surface" id="plans">
+        <div class="container mx-auto px-8">
+          <div
+            class="flex flex-col md:flex-row justify-between items-end mb-20 gap-8"
+          >
+            <div class="max-w-2xl">
+              <h2
+                class="font-headline text-4xl md:text-5xl font-black uppercase tracking-tighter mb-4"
+                style=""
+              >
+                Planes de entrenamiento
+              </h2>
+              <div class="h-1 w-24 bg-primary-container mb-6"></div>
+              <p class="text-secondary text-lg" style=""></p>
+              <p class="mb-4" style="">
+                Potenciá tu rendimiento con un plan de entrenamiento de fuerza
+                100% personalizado. Diseñado para transformar tu estética y
+                salud a través de una arquitectura corporal de alto rendimiento,
+                adaptada a tus objetivos específicos y posibilidades reales.
+              </p>
+              <p class="" style="">
+                Viví un acompañamiento integral donde cada sesión tiene un
+                propósito. Entrená con criterio, progresión técnica y un
+                seguimiento genuino. Sin improvisaciones. Sin planes genéricos.
+                Solo resultados medibles.
+              </p>
+              <p class="" style=""></p>
+            </div>
+            <div
+              class="font-headline text-primary font-bold text-xl uppercase tracking-widest"
+              style=""
+            >
+              Rutinas personalizadas
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-1">
+            <!-- Benefit 01 -->
+            <div
+              class="group bg-surface-container p-10 h-80 flex flex-col justify-between border-b md:border-b-0 md:border-r border-outline-variant/10 transition-colors hover:bg-surface-container-high"
+            >
+              <span
+                class="font-headline text-5xl font-black text-outline-variant opacity-30 group-hover:text-primary transition-colors"
+                style=""
+                >01</span
+              >
+              <div>
+                <h3
+                  class="font-headline text-xl font-bold uppercase mb-3"
+                  style=""
+                >
+                  Videos de ejercicios
+                </h3>
+                <p class="text-sm text-secondary leading-relaxed" style="">
+                  Videoteca exclusiva de movimientos para asegurar la ejecución
+                  adecuada.
+                </p>
+              </div>
+            </div>
+            <!-- Benefit 02 -->
+            <div
+              class="group bg-surface-container p-10 h-80 flex flex-col justify-between border-b md:border-b-0 md:border-r border-outline-variant/10 transition-colors hover:bg-surface-container-high"
+            >
+              <span
+                class="font-headline text-5xl font-black text-outline-variant opacity-30 group-hover:text-primary transition-colors"
+                style=""
+                >02</span
+              >
+              <div>
+                <h3
+                  class="font-headline text-xl font-bold uppercase mb-3"
+                  style=""
+                >
+                  Correción de técnica
+                </h3>
+                <p class="text-sm text-secondary leading-relaxed" style="">
+                  Mejorá la técnica de tus ejercicios a partir de un feedback
+                  constante
+                </p>
+              </div>
+            </div>
+            <!-- Benefit 03 -->
+            <div
+              class="group bg-surface-container p-10 h-80 flex flex-col justify-between border-b md:border-b-0 md:border-r border-outline-variant/10 transition-colors hover:bg-surface-container-high"
+            >
+              <span
+                class="font-headline text-5xl font-black text-outline-variant opacity-30 group-hover:text-primary transition-colors"
+                style=""
+                >03</span
+              >
+              <div>
+                <h3
+                  class="font-headline text-xl font-bold uppercase mb-3"
+                  style=""
+                >
+                  Progresión semanal
+                </h3>
+                <p class="text-sm text-secondary leading-relaxed" style="">
+                  Seguimiento personalzado de cargas, repeticiones y
+                  rendimiento.
+                </p>
+              </div>
+            </div>
+            <!-- Benefit 04 -->
+            <div
+              class="group bg-surface-container p-10 h-80 flex flex-col justify-between transition-colors hover:bg-surface-container-high"
+            >
+              <span
+                class="font-headline text-5xl font-black text-outline-variant opacity-30 group-hover:text-primary transition-colors"
+                style=""
+                >04</span
+              >
+              <div>
+                <h3
+                  class="font-headline text-xl font-bold uppercase mb-3"
+                  style=""
+                >
+                  Comunicacón constante
+                </h3>
+                <p class="text-sm text-secondary leading-relaxed" style="">
+                  Consultas directas, dudas y seguimiento constante
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-center mt-12">
+            <a
+              class="bg-gradient-to-r from-primary-container to-on-primary-fixed-variant px-12 py-4 rounded-md font-headline text-lg font-bold uppercase text-on-primary-container scale-100 hover:scale-105 active:scale-95 transition-all hover:shadow-[0px_0px_30px_rgba(123,44,191,0.5)] flex items-center justify-center"
+              href="#contact"
+              style=""
+              >SOLICITAR PLAN
+              <span class="material-symbols-outlined ml-2 align-middle" style=""
+                >expand_more</span
+              ></a
+            >
+          </div>
+        </div>
+      </section>
+      <!-- Instalaciones -->
+      <section
+        class="relative py-24 bg-secondary-container overflow-hidden"
+        id="facilities"
+      >
+        <div class="absolute inset-0 opacity-20">
+          <img
+            class="w-full h-full object-cover"
+            data-alt="close up of heavy duty gym equipment with matte black finishes and violet neon accent lighting in the background"
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpz0R7-rAi3omOO55xCZnKLXc_NQTr9n4lO95B_V5OCwaYdYzAQwjumYSZthi0oQfdQZNGx8vSci-1W0QWQGVJTd_8-Zc5lxr2begrfD_fvvCCBilE7JBy-_5VJUqKw4zWRLqGJNJROx0R4p4fV9eqODFC2JFk4d7Unw6b4J3ff41dA20ZSlpCRT1VJp6s_OverLXQIYuNyDn8PNBFBi4ihl6u6HK0T3djOafVVLQED4SD4XykuPEKz_9bwfDDxULZ5mJeLLM-rGWn"
+            style=""
+          />
+        </div>
+        <div class="container mx-auto px-8 relative z-10">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <h2
+                class="font-headline text-5xl font-black uppercase tracking-tighter mb-8 leading-tight"
+                style=""
+              >
+                Instalaciones <br /><span class="text-primary-fixed" style=""
+                  >Balance estudio</span
+                >
+              </h2>
+              <div class="space-y-8">
+                <div class="flex gap-6 items-start">
+                  <div class="bg-primary-container/20 p-4 rounded-xl">
+                    <span
+                      class="material-symbols-outlined text-primary text-3xl"
+                      style=""
+                      >groups</span
+                    >
+                  </div>
+                  <div>
+                    <h4
+                      class="font-headline text-xl font-bold uppercase text-on-secondary-container"
+                      style=""
+                    >
+                      1 Profesor cada 5 alumnos
+                    </h4>
+                    <p class="text-on-secondary-container/70" style="">
+                      Horarios fijos y cupo limitado para garantizar una
+                      atención personalizada a cada uno de los alumnos
+                    </p>
+                  </div>
+                </div>
+                <div class="flex gap-6 items-start">
+                  <div class="bg-primary-container/20 p-4 rounded-xl">
+                    <span
+                      class="material-symbols-outlined text-primary text-3xl"
+                      style=""
+                      >schedule</span
+                    >
+                  </div>
+                  <div>
+                    <h4
+                      class="font-headline text-xl font-bold uppercase text-on-secondary-container"
+                      style=""
+                    >
+                      Horarios fijos
+                    </h4>
+                    <p class="text-on-secondary-container/70" style="">
+                      Bloques horarios cerrados para mantener la consistencia de
+                      tu rutina.
+                    </p>
+                  </div>
+                </div>
+                <div class="flex gap-6 items-start">
+                  <div class="bg-primary-container/20 p-4 rounded-xl">
+                    <span
+                      class="material-symbols-outlined text-primary text-3xl"
+                      style=""
+                      >lock_open</span
+                    >
+                  </div>
+                  <div>
+                    <h4
+                      class="font-headline text-xl font-bold uppercase text-on-secondary-container"
+                      style=""
+                    >
+                      CUPOS LIMITADOS
+                    </h4>
+                    <p class="text-on-secondary-container/70" style="">
+                      Entorno exclusivo. Sin esperas por máquinas ni
+                      aglomeraciones.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 h-[500px]">
+              <div class="rounded-xl overflow-hidden shadow-2xl">
+                <img
+                  class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
+                  data-alt="atmospheric photo of a modern gym with specialized weightlifting racks and moody dark blue lighting"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUadzGVqVy1GT-GfSOeY4wPU1YBR9yovWfRjHRaOHNnFRgpyHeUzwuL4vlNl7m4hpmqlb6feqW94jJ-Xk-xC5jcMY6OKdqF_drqprI0PUyc2mR3sfrPYtV4gcVUN_YGhkSBxRoNdgkjWvn5ksnl8OGHZhw9asV02zBkQbe-XC5s8Hn4RmCmUWWkGZMMlsPkWSdfxqGdsKp7-UXFgbX9OJyScTnNzG6zXjdCDIcXA891YAz8A6UdeFtKiKVrDa5gH3cGcr0qyyoRS-H"
+                  style=""
+                />
+              </div>
+              <div class="rounded-xl overflow-hidden shadow-2xl mt-12">
+                <img
+                  class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
+                  data-alt="detail shot of a heavy kettlebell on a textured black floor with dramatic purple rim lighting"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1_F-2aUM6-acxWuGrshB_ndclI3WfZoMQHAw_l89Ej0TSAnM0yVRjbRmpyK_tJp1wB5qsxZbEqDqsKjfDRfKGjLBTYV3T3Dx-tZ4lD-pc1a9JAG27ncpuigy49DOhT-uqJ1TDb6gIVf29pYIqdJ1JLVAR2wueOQfv4-pTTo0pgHS63ZHvoGbalPNojOR460EKmsETUcduG68kCEBmi9UpEqMXq-0xS86bA0nrPtZ_n48vGPQaizdE0GW-MLxb3-EKNavQ66IP8XQ7"
+                  style=""
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Photo Carousel -->
+      <section class="py-12 bg-black overflow-hidden">
+        <div class="relative flex overflow-x-hidden">
+          <div class="flex animate-marquee py-4 whitespace-nowrap">
+            <div class="flex gap-4 px-2">
+              <div
+                class="min-w-[400px] h-[300px] rounded-xl overflow-hidden grayscale hover:grayscale-0 transition-all duration-500"
+              >
+                <img
+                  class="w-full h-full object-cover"
+                  data-alt="male athlete performing intense battle rope exercises"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmA6f2IEXCTkDWBtYn3u-3Um-Njl-QBdW-BSV_SSlki7PtDQyhuzGYV-38mFA847jfWDB7UgH_xNhW3QM-6b2UFmm8Co2QCEB0sWlAJkysLOA0cbNwOvBO22u_kLa3xA5veSpw9J5xqsD2niSIIKG6qy0FL_Z3Q7nCKfWJdhD4nTdc5qh15NPsJZyFXYa84P2tDNbt8Y3gcQBxDJMAefTGl2p9ndq4xKGbIQSDL4_JchlwdJ2xIvpgBAoslIe6QCYWodcANceinTLB"
+                  style=""
+                />
+              </div>
+              <div
+                class="min-w-[400px] h-[300px] rounded-xl overflow-hidden grayscale hover:grayscale-0 transition-all duration-500"
+              >
+                <img
+                  class="w-full h-full object-cover"
+                  data-alt="dark atmospheric shot of a professional gym interior"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBe-VCvqgOoPuViud8qJsG06_A2pFbVSLWpJ8wtbks8Wo_iS-uLOMY0jCMFw2hjA4lY3QPEJ7Sccl211VTABI2PfpK-udNS63sv0YKGih2wQTIqnmxoAeO1OSafulRqwdY77MznrvO8pWBhnElmcjVBK7T8Yh9qhgNLH9pxOl79w_Fq9Bn-MOF7NGdG56K4v2EvT5tqZ6DWEX35_wcSFtxMeSlzqKfyRKhWO8KIrlAzpvwBpPu5KVnL2yieUSSFzQ1D41UhjE3O29Vx"
+                  style=""
+                />
+              </div>
+              <div
+                class="min-w-[400px] h-[300px] rounded-xl overflow-hidden grayscale hover:grayscale-0 transition-all duration-500"
+              >
+                <img
+                  class="w-full h-full object-cover"
+                  data-alt="female athlete focus face during heavy lifting"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5lLbr_kBsEEoy4mJ0Gp9fNKkCS3kX02VhJ_ACW6s3Kpb0eyIhwbvJb96EXXsmdMUYbongo3jI85psXUzWD3LfkRPiL3fVM1IaLg8CKYJUjso199f9uq5LfBHaglfutVf4Gbm_bDxHlQISI-6yZ-TlYzqyV4QkRHPzUvXVAXodMRlqrgGHH7wFgKJmiVzUmtnQ-2Kccd79HsypQkvKkcidVNMrFjXZPDDTZPaBV27KwUr2ZdIXE9zFh3YbIHUEsxCIJkrGCT3TfZ3P"
+                  style=""
+                />
+              </div>
+              <div
+                class="min-w-[400px] h-[300px] rounded-xl overflow-hidden grayscale hover:grayscale-0 transition-all duration-500"
+              >
+                <img
+                  class="w-full h-full object-cover"
+                  data-alt="abstract training photo showing motion blur"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSRu3Oo5jS603b9i7ij8FuMxnGGTCFuxkAkr3o7jx9W1b-Rv82aZ8N9wTkCKFOrjwZ4X6_94uDYSmMiKJ23gw0P_1DNCdU3D9oZ7bppXZZaXLGKLtdy8oPRay-sCwy90f5-4PZFgn32RsKk8byTtNJqPKaEN5RvguYTqme4z2smbC-6X14PYGKA_Wr29RsiGPo7OOqNOp_NxQ88RY5tuvlaf2KqyJFdqokCFK0b5jMEKiNC33-4HBjL-Nl2a2Lxd72oGAbGTboN0Mo"
+                  style=""
+                />
+              </div>
+            </div>
+            <div class="flex gap-4 px-2">
+              <div
+                class="min-w-[400px] h-[300px] rounded-xl overflow-hidden grayscale hover:grayscale-0 transition-all duration-500"
+              >
+                <img
+                  class="w-full h-full object-cover"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCmA6f2IEXCTkDWBtYn3u-3Um-Njl-QBdW-BSV_SSlki7PtDQyhuzGYV-38mFA847jfWDB7UgH_xNhW3QM-6b2UFmm8Co2QCEB0sWlAJkysLOA0cbNwOvBO22u_kLa3xA5veSpw9J5xqsD2niSIIKG6qy0FL_Z3Q7nCKfWJdhD4nTdc5qh15NPsJZyFXYa84P2tDNbt8Y3gcQBxDJMAefTGl2p9ndq4xKGbIQSDL4_JchlwdJ2xIvpgBAoslIe6QCYWodcANceinTLB"
+                  style=""
+                />
+              </div>
+              <div
+                class="min-w-[400px] h-[300px] rounded-xl overflow-hidden grayscale hover:grayscale-0 transition-all duration-500"
+              >
+                <img
+                  class="w-full h-full object-cover"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBe-VCvqgOoPuViud8qJsG06_A2pFbVSLWpJ8wtbks8Wo_iS-uLOMY0jCMFw2hjA4lY3QPEJ7Sccl211VTABI2PfpK-udNS63sv0YKGih2wQTIqnmxoAeO1OSafulRqwdY77MznrvO8pWBhnElmcjVBK7T8Yh9qhgNLH9pxOl79w_Fq9Bn-MOF7NGdG56K4v2EvT5tqZ6DWEX35_wcSFtxMeSlzqKfyRKhWO8KIrlAzpvwBpPu5KVnL2yieUSSFzQ1D41UhjE3O29Vx"
+                  style=""
+                />
+              </div>
+              <div
+                class="min-w-[400px] h-[300px] rounded-xl overflow-hidden grayscale hover:grayscale-0 transition-all duration-500"
+              >
+                <img
+                  class="w-full h-full object-cover"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5lLbr_kBsEEoy4mJ0Gp9fNKkCS3kX02VhJ_ACW6s3Kpb0eyIhwbvJb96EXXsmdMUYbongo3jI85psXUzWD3LfkRPiL3fVM1IaLg8CKYJUjso199f9uq5LfBHaglfutVf4Gbm_bDxHlQISI-6yZ-TlYzqyV4QkRHPzUvXVAXodMRlqrgGHH7wFgKJmiVzUmtnQ-2Kccd79HsypQkvKkcidVNMrFjXZPDDTZPaBV27KwUr2ZdIXE9zFh3YbIHUEsxCIJkrGCT3TfZ3P"
+                  style=""
+                />
+              </div>
+              <div
+                class="min-w-[400px] h-[300px] rounded-xl overflow-hidden grayscale hover:grayscale-0 transition-all duration-500"
+              >
+                <img
+                  class="w-full h-full object-cover"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSRu3Oo5jS603b9i7ij8FuMxnGGTCFuxkAkr3o7jx9W1b-Rv82aZ8N9wTkCKFOrjwZ4X6_94uDYSmMiKJ23gw0P_1DNCdU3D9oZ7bppXZZaXLGKLtdy8oPRay-sCwy90f5-4PZFgn32RsKk8byTtNJqPKaEN5RvguYTqme4z2smbC-6X14PYGKA_Wr29RsiGPo7OOqNOp_NxQ88RY5tuvlaf2KqyJFdqokCFK0b5jMEKiNC33-4HBjL-Nl2a2Lxd72oGAbGTboN0Mo"
+                  style=""
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- FAQ -->
+      <section class="py-24 bg-black" id="faq">
+        <div class="container mx-auto px-8 max-w-4xl">
+          <h2
+            class="font-headline text-4xl font-black uppercase text-center mb-16 tracking-widest"
+            style=""
+          >
+            Preguntas Frecuentes
+          </h2>
+          <div class="space-y-2">
+            <details
+              class="group bg-surface-container rounded-lg transition-all duration-300 open:bg-surface-container-high"
+              style=""
+            >
+              <summary
+                class="flex items-center justify-between p-6 cursor-pointer list-none font-bold uppercase tracking-tight text-on-surface"
+                style=""
+              >
+                ¿Necesito experiencia previa en fuerza?
+                <span
+                  class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180"
+                  style=""
+                  >expand_more</span
+                >
+              </summary>
+              <div
+                class="px-6 pb-6 text-secondary text-sm leading-relaxed"
+                style=""
+              >
+                No. Diseñamos planes desde nivel cero hasta atletas de
+                competición. La técnica se enseña desde el primer día con videos
+                y corrección directa.
+              </div>
+            </details>
+            <details
+              class="group bg-surface-container rounded-lg transition-all duration-300 open:bg-surface-container-high"
+              style=""
+            >
+              <summary
+                class="flex items-center justify-between p-6 cursor-pointer list-none font-bold uppercase tracking-tight text-on-surface"
+                style=""
+              >
+                ¿Cómo funcionan los grupos de 5 personas?
+                <span
+                  class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180"
+                  style=""
+                  >expand_more</span
+                >
+              </summary>
+              <div
+                class="px-6 pb-6 text-secondary text-sm leading-relaxed"
+                style=""
+              >
+                Cada persona sigue su propio plan personalizado, pero comparte
+                el bloque horario con otros 4 alumnos. Esto permite que el
+                profesor rote constantemente corrigiendo a cada uno.
+              </div>
+            </details>
+            <details
+              class="group bg-surface-container rounded-lg transition-all duration-300 open:bg-surface-container-high"
+              style=""
+            >
+              <summary
+                class="flex items-center justify-between p-6 cursor-pointer list-none font-bold uppercase tracking-tight text-on-surface"
+                style=""
+              >
+                ¿Qué pasa si falto a una clase fija?
+                <span
+                  class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180"
+                  style=""
+                  >expand_more</span
+                >
+              </summary>
+              <div
+                class="px-6 pb-6 text-secondary text-sm leading-relaxed"
+                style=""
+              >
+                Debido a los cupos limitados, las inasistencias deben avisarse
+                con 24hs de antelación para intentar reprogramar en otro bloque
+                con lugar disponible.
+              </div>
+            </details>
+            <details
+              class="group bg-surface-container rounded-lg transition-all duration-300 open:bg-surface-container-high"
+              style=""
+            >
+              <summary
+                class="flex items-center justify-between p-6 cursor-pointer list-none font-bold uppercase tracking-tight text-on-surface"
+                style=""
+              >
+                ¿Es necesario tener experiencia previa en entrenamiento de
+                fuerza?
+                <span
+                  class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180"
+                  style=""
+                  >expand_more</span
+                >
+              </summary>
+              <div
+                class="px-6 pb-6 text-secondary text-sm leading-relaxed"
+                style=""
+              >
+                Para nada. El programa está diseñado para adaptarse a cualquier
+                nivel, desde principiantes totales hasta atletas avanzados. La
+                enseñanza de la técnica correcta es nuestra prioridad desde el
+                primer día.
+              </div>
+            </details>
+            <details
+              class="group bg-surface-container rounded-lg transition-all duration-300 open:bg-surface-container-high"
+              style=""
+            >
+              <summary
+                class="flex items-center justify-between p-6 cursor-pointer list-none font-bold uppercase tracking-tight text-on-surface"
+                style=""
+              >
+                ¿Cómo funcionan los grupos de 5 personas?
+                <span
+                  class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180"
+                  style=""
+                  >expand_more</span
+                >
+              </summary>
+              <div
+                class="px-6 pb-6 text-secondary text-sm leading-relaxed"
+                style=""
+              >
+                Trabajamos con un sistema de entrenamiento semi-personalizado.
+                Aunque compartes el espacio con otros 4 alumnos, tú sigues tu
+                propia rutina específica y el profesor supervisa y corrige
+                individualmente a cada integrante.
+              </div>
+            </details>
+            <details
+              class="group bg-surface-container rounded-lg transition-all duration-300 open:bg-surface-container-high"
+              style=""
+            >
+              <summary
+                class="flex items-center justify-between p-6 cursor-pointer list-none font-bold uppercase tracking-tight text-on-surface"
+                style=""
+              >
+                ¿Qué sucede si falto a una clase fija?
+                <span
+                  class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180"
+                  style=""
+                  >expand_more</span
+                >
+              </summary>
+              <div
+                class="px-6 pb-6 text-secondary text-sm leading-relaxed"
+                style=""
+              >
+                Entendemos que pueden surgir imprevistos. Si avisas con la
+                antelación requerida (24hs), buscaremos un espacio disponible en
+                otro bloque horario durante la misma semana para que no pierdas
+                tu sesión.
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+      <!-- Contact & Map -->
+      <section class="py-24 bg-surface" id="contact">
+        <div class="container mx-auto px-8">
+          <div
+            class="grid grid-cols-1 lg:grid-cols-2 gap-16 max-w-6xl mx-auto justify-center"
+          >
+            <div>
+              <h2
+                class="font-headline text-5xl font-black uppercase tracking-tighter mb-8 text-center"
+                style=""
+              >
+                Contáctame
+              </h2>
+              <form class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <input
+                    class="bg-surface-container-low border-none focus:ring-2 focus:ring-primary-container rounded-md text-on-surface placeholder:text-outline p-4 font-headline uppercase text-sm tracking-widest"
+                    placeholder="Nombre"
+                    type="text"
+                  />
+                  <input
+                    class="bg-surface-container-low border-none focus:ring-2 focus:ring-primary-container rounded-md text-on-surface placeholder:text-outline p-4 font-headline uppercase text-sm tracking-widest"
+                    placeholder="Email"
+                    type="email"
+                  />
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <input
+                    class="bg-surface-container-low border-none focus:ring-2 focus:ring-primary-container rounded-md text-on-surface placeholder:text-outline p-4 font-headline uppercase text-sm tracking-widest"
+                    placeholder="Asunto"
+                    type="text"
+                  />
+                  <input
+                    class="bg-surface-container-low border-none focus:ring-2 focus:ring-primary-container rounded-md text-on-surface placeholder:text-outline p-4 font-headline uppercase text-sm tracking-widest"
+                    placeholder="Teléfono"
+                    type="tel"
+                  />
+                </div>
+                <textarea
+                  class="w-full bg-surface-container-low border-none focus:ring-2 focus:ring-primary-container rounded-md text-on-surface placeholder:text-outline p-4 font-headline uppercase text-sm tracking-widest"
+                  placeholder="Mensaje"
+                  rows="5"
+                ></textarea>
+                <button
+                  class="w-full bg-gradient-to-r from-primary-container to-on-primary-fixed-variant p-4 font-headline font-black uppercase tracking-[0.2em] hover:shadow-[0_0_30px_rgba(123,44,191,0.3)] transition-all"
+                  style=""
+                  type="submit"
+                >
+                  Enviar Mensaje
+                </button>
+              </form>
+            </div>
+            <div class="flex flex-col gap-8">
+              <div
+                class="bg-surface-container p-8 rounded-xl border border-outline-variant/10"
+              >
+                <h3
+                  class="font-headline text-2xl font-bold uppercase mb-4 text-primary text-center"
+                  style=""
+                >
+                  Nuestra Ubicación
+                </h3>
+                <p
+                  class="text-secondary mb-2 items-center gap-3 justify-center flex"
+                  style=""
+                >
+                  <span class="material-symbols-outlined text-primary" style=""
+                    >location_on</span
+                  >
+                  Hilario Lagos 474, Rojas - Buenos Aires.
+                </p>
+                <p
+                  class="text-secondary items-center gap-3 justify-center flex"
+                  style=""
+                >
+                  <span class="material-symbols-outlined text-primary" style=""
+                    >call</span
+                  >
+                  +54 2475 123456
+                </p>
+              </div>
+              <div
+                class="h-full min-h-[300px] bg-surface-container-highest rounded-xl overflow-hidden relative grayscale opacity-70"
+              >
+                <!-- Map Placeholder -->
+                <div
+                  class="absolute inset-0 flex items-center justify-center bg-surface-container-highest"
+                  data-location="Rojas, Buenos Aires"
+                  style=""
+                >
+                  <div class="text-center">
+                    <span
+                      class="material-symbols-outlined text-5xl text-primary mb-4"
+                      style="font-variation-settings: &quot;FILL&quot; 1"
+                      >map</span
+                    >
+                    <p
+                      class="font-headline font-bold uppercase tracking-widest text-sm"
+                      style=""
+                    >
+                      Mapa Interactivo cargando...
+                    </p>
+                  </div>
+                </div>
+                <img
+                  class="w-full h-full object-cover"
+                  data-alt="abstract dark map texture with glowing violet nodes and lines connecting city points"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpzsIVK6Eqya_vu7BTdl4lARgPWiXXkvLxfXOJr8HsYL_ftuiUzJpXAPv71zU5Wyb0CMxEMKtn5k2xWsBLTZcxPyNiANnhn3yH0S9zNPuhOfzQbcdIdbJhfoIoFWNhvJjc-YpEeNeN7ZpH2370HnR40UUyTJcETSwmmuN7PGtxp0vVqJZdE8UqLucTwjgZ4ozJlIT0RMyG04z2o3H0gpxVSpdHMqRMXCCg1kbJCigBDxUdo3fqxk13VGzE4GMphaNpZn0GYFCcsANM"
+                  style=""
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <!-- Footer -->
+    <footer
+      class="bg-[#000000] w-full pt-20 pb-10 px-8 border-t border-white/5"
+    >
+      <div
+        class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8"
+      >
+        <div
+          class="text-lg font-bold text-purple-400 font-headline tracking-tighter"
+          style=""
+        >
+          AGUSTÍNTURRIEDF
+        </div>
+        <div class="flex gap-8">
+          <a
+            class="font-body text-sm leading-relaxed text-gray-500 hover:text-white transition-colors opacity-80 hover:opacity-100"
+            href="#"
+            style=""
+            >Instagram</a
+          >
+          <a
+            class="font-body text-sm leading-relaxed text-gray-500 hover:text-white transition-colors opacity-80 hover:opacity-100"
+            href="#"
+            style=""
+            >WhatsApp</a
+          >
+          <a
+            class="font-body text-sm leading-relaxed text-gray-500 hover:text-white transition-colors opacity-80 hover:opacity-100"
+            href="#"
+            style=""
+            ><br
+          /></a>
+          <a
+            class="font-body text-sm leading-relaxed text-gray-500 hover:text-white transition-colors opacity-80 hover:opacity-100"
+            href="#"
+            style=""
+            ><br
+          /></a>
+        </div>
+        <div
+          class="font-body text-sm leading-relaxed text-gray-400 opacity-60"
+          style=""
+        >
+          © 2026 Agustin Turri. Todos los derechos reservados.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

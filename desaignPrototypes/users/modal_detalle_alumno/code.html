@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#deb7ff",
+                        "inverse-on-surface": "#303030",
+                        "secondary-container": "#3c4962",
+                        "outline": "#988d9e",
+                        "inverse-surface": "#e2e2e2",
+                        "surface-bright": "#393939",
+                        "secondary-fixed-dim": "#b9c7e4",
+                        "primary-fixed-dim": "#deb7ff",
+                        "on-primary-fixed-variant": "#680eac",
+                        "inverse-primary": "#8234c6",
+                        "surface": "#131313",
+                        "tertiary-container": "#7e4d00",
+                        "surface-container": "#1f1f1f",
+                        "tertiary-fixed": "#ffddba",
+                        "on-tertiary-container": "#ffc480",
+                        "on-secondary-container": "#abb9d6",
+                        "on-secondary": "#233148",
+                        "on-primary": "#4a007f",
+                        "tertiary-fixed-dim": "#fdb969",
+                        "surface-container-low": "#1b1b1b",
+                        "primary-fixed": "#f1dbff",
+                        "surface-variant": "#353535",
+                        "on-surface": "#e2e2e2",
+                        "surface-tint": "#deb7ff",
+                        "outline-variant": "#4c4353",
+                        "surface-container-highest": "#353535",
+                        "surface-container-high": "#2a2a2a",
+                        "on-secondary-fixed-variant": "#39475f",
+                        "secondary-fixed": "#d6e3ff",
+                        "background": "#131313",
+                        "on-tertiary-fixed": "#2b1700",
+                        "on-secondary-fixed": "#0d1c32",
+                        "on-primary-fixed": "#2d0050",
+                        "on-background": "#e2e2e2",
+                        "surface-dim": "#131313",
+                        "on-surface-variant": "#cfc2d5",
+                        "on-error": "#690005",
+                        "secondary": "#b9c7e4",
+                        "on-tertiary-fixed-variant": "#663e00",
+                        "on-tertiary": "#482a00",
+                        "on-primary-container": "#e4c2ff",
+                        "primary-container": "#7b2cbf",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-lowest": "#0e0e0e",
+                        "error-container": "#93000a",
+                        "tertiary": "#fdb969",
+                        "error": "#ffb4ab"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .noir-gradient-button {
+            background: linear-gradient(135deg, #7b2cbf 0%, #680eac 100%);
+        }
+        .noir-glass {
+            background: rgba(31, 31, 31, 0.7);
+            backdrop-filter: blur(40px);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body min-h-screen">
+<!-- Background Content: Gestion de Alumnos Screen (Simulated) -->
+<div class="fixed inset-0 z-0 overflow-hidden opacity-30 grayscale blur-sm">
+<header class="bg-[#131313] text-[#deb7ff] font-['Space_Grotesk'] tracking-tight border-b border-[#ffffff15] fixed top-0 w-full z-50 flex justify-between items-center px-8 h-16 w-full">
+<div class="text-xl font-bold tracking-tighter text-[#deb7ff]">StudentCore</div>
+<nav class="flex gap-8">
+<span class="text-[#deb7ff] border-b-2 border-[#7b2cbf] pb-1 cursor-pointer">Dashboard</span>
+<span class="text-[#e2e2e2] opacity-70 hover:text-[#deb7ff] transition-colors duration-300 cursor-pointer">Students</span>
+<span class="text-[#e2e2e2] opacity-70 hover:text-[#deb7ff] transition-colors duration-300 cursor-pointer">Roster</span>
+<span class="text-[#e2e2e2] opacity-70 hover:text-[#deb7ff] transition-colors duration-300 cursor-pointer">Schedule</span>
+</nav>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#deb7ff]">notifications</span>
+<span class="material-symbols-outlined text-[#deb7ff]">settings</span>
+</div>
+</header>
+<main class="pt-24 px-12 max-w-7xl mx-auto">
+<h1 class="font-headline text-5xl font-bold mb-8 uppercase tracking-tighter text-primary">Gestion de Alumnos</h1>
+<div class="grid grid-cols-12 gap-6">
+<div class="col-span-8 bg-surface-container p-6 rounded-lg border border-[#ffffff10]">
+<div class="h-96 w-full bg-surface-variant animate-pulse opacity-20"></div>
+</div>
+<div class="col-span-4 space-y-6">
+<div class="h-44 bg-surface-container p-6 rounded-lg border border-[#ffffff10]"></div>
+<div class="h-44 bg-surface-container p-6 rounded-lg border border-[#ffffff10]"></div>
+</div>
+</div>
+</main>
+</div>
+<!-- Modal Overlay -->
+<div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+<!-- Modal Container -->
+<div class="w-full max-w-2xl bg-surface-container-low border border-outline-variant/20 rounded-xl overflow-hidden shadow-[0px_20px_40px_rgba(123,44,191,0.08)]">
+<!-- Modal Header -->
+<div class="px-8 py-6 flex justify-between items-start border-b border-outline-variant/10">
+<div>
+<h2 class="font-headline text-2xl font-bold text-on-surface tracking-tight">Perfil de Usuario</h2>
+<p class="text-on-surface-variant text-sm mt-1">Detalles completos e información personal.</p>
+</div>
+<button class="p-2 hover:bg-surface-container-highest rounded-full transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Modal Content -->
+<div class="px-8 py-8 space-y-10">
+<!-- Profile Summary Section -->
+<div class="flex items-center gap-8">
+<div class="relative">
+<div class="w-24 h-24 rounded-full noir-gradient-button flex items-center justify-center text-on-primary text-3xl font-headline font-bold shadow-[0_0_20px_rgba(123,44,191,0.3)]">
+                            LS
+                        </div>
+<div class="absolute -bottom-1 -right-1 bg-surface-container-highest border border-outline-variant/30 rounded-full px-2.5 py-1 flex items-center gap-1.5">
+<span class="w-2 h-2 bg-[#deb7ff] rounded-full animate-pulse"></span>
+<span class="text-[10px] font-bold tracking-widest uppercase text-primary">Activo</span>
+</div>
+</div>
+<div class="flex-1">
+<h3 class="font-headline text-3xl font-bold text-on-surface">Lucas Silva</h3>
+<div class="mt-2 flex flex-wrap gap-2">
+<span class="px-3 py-1 bg-surface-container-highest text-primary-fixed text-xs font-bold rounded-full tracking-wider uppercase border border-primary-container/20">Estudiante</span>
+<span class="px-3 py-1 bg-surface-container-highest text-on-surface-variant text-xs font-bold rounded-full tracking-wider uppercase border border-outline-variant/20">Membresía Premium</span>
+</div>
+</div>
+</div>
+<!-- Bento Grid Info -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<!-- Personal Info Section -->
+<div class="space-y-4">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-lg">badge</span>
+<h4 class="font-headline text-sm font-bold uppercase tracking-[0.15em]">Información Personal</h4>
+</div>
+<div class="space-y-3 bg-surface-container p-5 rounded-lg border border-outline-variant/10">
+<div>
+<label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">Nombre Completo</label>
+<p class="text-on-surface font-medium">Lucas Silva de Oliveira</p>
+</div>
+<div>
+<label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">Email</label>
+<p class="text-on-surface font-medium">lucas.silva@studentcore.edu</p>
+</div>
+<div>
+<label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">Teléfono</label>
+<p class="text-on-surface font-medium">+55 11 98765-4321</p>
+</div>
+</div>
+</div>
+<!-- Physical Section -->
+<div class="space-y-4">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-lg">fitness_center</span>
+<h4 class="font-headline text-sm font-bold uppercase tracking-[0.15em]">Físico &amp; Biometría</h4>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-surface-container p-5 rounded-lg border border-outline-variant/10">
+<label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">Género</label>
+<p class="text-on-surface font-medium">Masculino</p>
+</div>
+<div class="bg-surface-container p-5 rounded-lg border border-outline-variant/10">
+<label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">Fecha Nac.</label>
+<p class="text-on-surface font-medium">12/05/1998</p>
+</div>
+<div class="bg-surface-container p-5 rounded-lg border border-outline-variant/10">
+<label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">Altura</label>
+<p class="text-on-surface font-medium">1.82 m</p>
+</div>
+<div class="bg-surface-container p-5 rounded-lg border border-outline-variant/10">
+<label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">Peso</label>
+<p class="text-on-surface font-medium">78.5 kg</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Modal Footer -->
+<div class="px-8 py-6 bg-surface-container border-t border-outline-variant/10 flex items-center justify-between">
+<div class="flex items-center gap-2 text-on-surface-variant/40 text-xs font-label">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span>Creado: 03/04/2026</span>
+</div>
+<div class="flex gap-4">
+<button class="px-6 py-2.5 text-sm font-bold tracking-widest uppercase text-on-surface-variant hover:text-on-surface transition-colors">
+                        Cerrar
+                    </button>
+<button class="px-8 py-2.5 noir-gradient-button text-on-primary font-bold text-sm rounded-md tracking-widest uppercase shadow-[0_0_15px_rgba(123,44,191,0.2)] hover:shadow-[0_0_25px_rgba(123,44,191,0.4)] transition-all active:scale-95">
+                        Editar Perfil
+                    </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Shared Component: Footer (Required per instructions) -->
+<footer class="fixed bottom-0 w-full py-4 bg-[#131313] text-[#7b2cbf] font-['Inter'] text-xs border-t border-[#ffffff15] flex justify-between items-center px-8 z-50">
+<div>© 2024 Kinetic Noir Systems</div>
+<div class="flex gap-6">
+<span class="text-[#e2e2e2] opacity-40 hover:opacity-100 transition-opacity cursor-pointer">Privacy Policy</span>
+<span class="text-[#e2e2e2] opacity-40 hover:opacity-100 transition-opacity cursor-pointer">Support</span>
+<span class="text-[#e2e2e2] opacity-40 hover:opacity-100 transition-opacity cursor-pointer underline">Audit Log</span>
+</div>
+</footer>
+</body></html>

@@ -1,0 +1,86 @@
+---
+const carouselImages = [
+  "/images/Espacio4.jpeg",
+  "/images/teisa3.png",
+  "/images/Entrenamiento2.png",
+  "/images/Espacio2.jpeg",
+  "/images/Entrenamientoo3.png",
+  "/images/Espacio3.jpeg",
+  "/images/Entrenamiento4.png",
+  "/images/Entrenamiento5.png",
+  "/images/Entrenamiento10.jpeg",
+  "/images/tecla1.png",
+  "/images/teisa.png",
+  "/images/Espacio1.jpeg",
+  "/images/Entrenamiento8.jpeg",
+  "/images/Entrenamiento9.jpeg",
+];
+---
+
+<section class="py-12 bg-black overflow-hidden">
+  <div class="relative flex overflow-x-hidden">
+    <div class="flex animate-marquee py-4 whitespace-nowrap" id="carousel-container">
+      <div class="flex gap-4 px-2">
+        {
+          carouselImages.map((img) => (
+            <div class="min-w-[400px] h-[300px] rounded-xl overflow-hidden grayscale md:grayscale md:hover:grayscale-0 transition-all duration-500 hover:scale-105">
+              <img
+                class="w-full h-full object-cover"
+                data-alt="training photo"
+                src={img}
+              />
+            </div>
+          ))
+        }
+      </div>
+      <div class="flex gap-4 px-2">
+        {
+          carouselImages.map((img) => (
+            <div class="min-w-[400px] h-[300px] rounded-xl overflow-hidden grayscale md:grayscale md:hover:grayscale-0 transition-all duration-500 hover:scale-105">
+              <img class="w-full h-full object-cover" src={img} />
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const container = document.getElementById('carousel-container');
+  const items = container?.querySelectorAll('.grayscale');
+  
+  if (container) {
+    container.addEventListener('touchstart', () => {
+      container.style.animationPlayState = 'paused';
+      items?.forEach((item) => item.classList.remove('grayscale'));
+    });
+    
+    container.addEventListener('touchend', () => {
+      container.style.animationPlayState = 'running';
+      items?.forEach((item) => {
+        if (window.innerWidth < 768) {
+          item.classList.remove('grayscale');
+        } else {
+          item.classList.add('grayscale');
+        }
+      });
+    });
+    
+    container.addEventListener('mouseenter', () => {
+      if (window.innerWidth >= 768) {
+        container.style.animationPlayState = 'paused';
+        items?.forEach((item) => item.classList.remove('grayscale'));
+      }
+    });
+    
+    container.addEventListener('mouseleave', () => {
+      container.style.animationPlayState = 'running';
+      items?.forEach((item) => {
+        if (window.innerWidth >= 768) {
+          item.classList.add('grayscale');
+        }
+      });
+    });
+  }
+</script>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Acceso Privado | KINETIC NOIR</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary-fixed": "#ffddba",
+                      "surface-tint": "#deb7ff",
+                      "on-tertiary": "#482a00",
+                      "on-surface": "#e2e2e2",
+                      "secondary": "#b9c7e4",
+                      "tertiary-fixed-dim": "#fdb969",
+                      "tertiary-container": "#7e4d00",
+                      "background": "#131313",
+                      "inverse-surface": "#e2e2e2",
+                      "surface-container": "#1f1f1f",
+                      "secondary-container": "#3c4962",
+                      "surface-bright": "#393939",
+                      "on-primary-fixed-variant": "#680eac",
+                      "on-secondary": "#233148",
+                      "on-tertiary-container": "#ffc480",
+                      "surface-container-low": "#1b1b1b",
+                      "on-error": "#690005",
+                      "surface-container-high": "#2a2a2a",
+                      "primary-container": "#7b2cbf",
+                      "outline-variant": "#4c4353",
+                      "surface-container-highest": "#353535",
+                      "outline": "#988d9e",
+                      "error": "#ffb4ab",
+                      "on-primary-container": "#e4c2ff",
+                      "surface": "#131313",
+                      "primary-fixed-dim": "#deb7ff",
+                      "surface-dim": "#131313",
+                      "primary-fixed": "#f1dbff",
+                      "on-primary": "#4a007f",
+                      "secondary-fixed-dim": "#b9c7e4",
+                      "surface-variant": "#353535",
+                      "on-surface-variant": "#cfc2d5",
+                      "inverse-on-surface": "#303030",
+                      "error-container": "#93000a",
+                      "on-tertiary-fixed-variant": "#663e00",
+                      "inverse-primary": "#8234c6",
+                      "surface-container-lowest": "#0e0e0e",
+                      "on-error-container": "#ffdad6",
+                      "on-secondary-fixed": "#0d1c32",
+                      "secondary-fixed": "#d6e3ff",
+                      "on-tertiary-fixed": "#2b1700",
+                      "on-primary-fixed": "#2d0050",
+                      "on-secondary-fixed-variant": "#39475f",
+                      "on-secondary-container": "#abb9d6",
+                      "on-background": "#e2e2e2",
+                      "tertiary": "#fdb969",
+                      "primary": "#deb7ff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "fontFamily": {
+                      "headline": ["Space Grotesk"],
+                      "body": ["Inter"],
+                      "label": ["Inter"]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        body {
+            background-color: #000000;
+            color: #e2e2e2;
+            font-family: 'Inter', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .noir-gradient-bg {
+            background: radial-gradient(circle at 50% 50%, rgba(123, 44, 191, 0.05) 0%, rgba(0, 0, 0, 0) 70%);
+        }
+        .kinetic-gradient-glow {
+            background: linear-gradient(135deg, #7b2cbf 0%, #680eac 100%);
+        }
+        .void-shadow {
+            box-shadow: 0px 20px 40px rgba(123, 44, 191, 0.08);
+        }
+        .glass-panel {
+            background-color: rgba(31, 31, 31, 0.7);
+            backdrop-filter: blur(40px);
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-primary-container selection:text-white min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-50 bg-[#131313] bg-gradient-to-b from-[#131313] to-transparent">
+<nav class="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
+<div class="flex items-center gap-3">
+<img alt="KINETIC NOIR Logo" class="h-10 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/ADBb0uiFASrxKtx9DqR3QI66cbtyH1iCZti_upCwu1XWQZvlNHEUGGWkEm05gd_ma029ofB8nJx0GvAIRTzpr54R2yLtct52GAf-kV_3k0rwxiIgLojAAG9c0FWd9TL35EwK0VtYPRdP4DAjjReBPWhFwBsu6w8cK4Tb0JSZBi0S7C-p8E6ztWA7e5r7z9VG5wquEDUopAxOHThWNbcNsrZCkY-nBvtYVIDZSQq2jZcFkk_4QFZ8yP9uQQwViqxKL2RdDKYKTi2Fh3RteQk"/>
+</div>
+<div class="flex items-center gap-6">
+<a class="text-[#e2e2e2] opacity-70 font-['Space_Grotesk'] tracking-tight hover:text-[#deb7ff] hover:bg-[#1f1f1f] transition-all duration-300 px-3 py-1 rounded text-sm uppercase" href="#">
+                    Volver al inicio
+                </a>
+</div>
+</nav>
+</header>
+<main class="flex-grow flex flex-col items-center justify-center relative overflow-hidden pt-20 pb-20"><div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary-container/10 rounded-full blur-[120px] -z-10"></div>
+<!-- Abstract Background Elements -->
+<div class="w-full max-w-md px-6 z-10">
+<!-- Header Content -->
+<div class="mb-12 text-center">
+<h1 class="font-headline text-5xl font-extrabold tracking-tighter text-on-surface uppercase mb-2">
+                    Acceso privado
+                </h1>
+<p class="font-body text-secondary text-lg tracking-wide opacity-80">
+                    Inicia sesión
+                </p>
+</div>
+<!-- Login Card -->
+<div class="glass-panel p-8 md:p-10 rounded-lg void-shadow border border-outline-variant/15 relative overflow-hidden">
+<!-- Kinetic Accent Line -->
+<div class="absolute top-0 left-0 w-1 h-full kinetic-gradient-glow"></div>
+<form class="space-y-6">
+<!-- Email Field -->
+<div class="space-y-2">
+<label class="font-label text-xs font-bold tracking-[0.1em] uppercase text-primary" for="email">Email</label>
+<div class="relative group">
+<input class="w-full bg-surface-container-high border-none rounded-md px-4 py-4 text-on-surface focus:ring-2 focus:ring-primary-container transition-all placeholder:text-outline/50" id="email" name="email" placeholder="tu@email.com" required="" type="email"/>
+</div>
+</div>
+<!-- Password Field -->
+<div class="space-y-2">
+<div class="flex justify-between items-center">
+<label class="font-label text-xs font-bold tracking-[0.1em] uppercase text-primary" for="password">Password</label>
+</div>
+<div class="relative group">
+<input class="w-full bg-surface-container-high border-none rounded-md px-4 py-4 text-on-surface focus:ring-2 focus:ring-primary-container transition-all placeholder:text-outline/50" id="password" name="password" placeholder="••••••••" required="" type="password"/>
+</div>
+</div>
+<!-- Forgot Password Link -->
+<div class="text-right">
+<a class="font-label text-xs font-semibold tracking-wide text-primary hover:text-on-primary-container transition-colors" href="#">¿Olvidaste tu contraseña?</a>
+</div>
+<!-- Primary Action -->
+<button class="w-full kinetic-gradient-glow text-on-primary-container font-headline font-bold py-4 rounded-md uppercase tracking-[0.1em] hover:brightness-110 active:scale-[0.98] transition-all duration-300 void-shadow" type="submit">Iniciar Sesión</button>
+</form>
+</div>
+<!-- Visual Accent -->
+<div class="mt-12 flex items-center gap-4 opacity-30">
+<div class="h-[1px] flex-grow bg-outline-variant"></div>
+<span class="font-label text-[10px] tracking-[0.3em] uppercase">Architects of Transformation</span>
+<div class="h-[1px] flex-grow bg-outline-variant"></div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full py-8 border-t border-[#1f1f1f] bg-black">
+<div class="flex flex-col md:flex-row justify-between items-center px-8 w-full gap-4 max-w-7xl mx-auto">
+<div class="font-['Inter'] text-xs uppercase tracking-widest text-[#e2e2e2]/40 order-2 md:order-1 text-center md:text-left">
+                © 2024 KINETIC NOIR. ARCHITECT OF TRANSFORMATION.
+            </div>
+<div class="flex gap-8 order-1 md:order-2">
+<a class="font-['Inter'] text-xs uppercase tracking-widest text-[#e2e2e2]/40 hover:text-[#deb7ff] transition-colors" href="#">Privacy</a>
+<a class="font-['Inter'] text-xs uppercase tracking-widest text-[#e2e2e2]/40 hover:text-[#deb7ff] transition-colors" href="#">Terms</a>
+<a class="font-['Inter'] text-xs uppercase tracking-widest text-[#e2e2e2]/40 hover:text-[#deb7ff] transition-colors" href="#">Support</a>
+</div>
+</div>
+</footer>
+</body></html>

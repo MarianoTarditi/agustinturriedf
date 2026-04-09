@@ -1,0 +1,148 @@
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL,wght,GRAD,opsz@0..1,100..700,-25..200,20..48&display=swap");
+
+:root {
+  --surface: #131313;
+  --surface-lowest: #0e0e0e;
+  --surface-low: #1b1b1b;
+  --surface-container: #1f1f1f;
+  --surface-high: #2a2a2a;
+  --surface-highest: #353535;
+  --on-surface: #e2e2e2;
+  --on-surface-variant: #cfc2d5;
+  --primary: #deb7ff;
+  --primary-container: #7b2cbf;
+  --primary-variant: #680eac;
+  --outline-variant: rgba(76, 67, 83, 0.15);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #000;
+  color: var(--on-surface);
+}
+
+body {
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.kinetic-gradient {
+  background: linear-gradient(135deg, var(--primary-container) 0%, var(--primary-variant) 100%);
+}
+
+.void-shadow {
+  box-shadow: 0 20px 40px rgba(123, 44, 191, 0.08);
+}
+
+.glass-panel {
+  background: rgba(31, 31, 31, 0.7);
+  backdrop-filter: blur(40px);
+}
+
+.login-header {
+  transition: all 0.3s ease;
+}
+
+.login-brand {
+  display: inline-block;
+  transition: all 0.3s ease;
+}
+
+.login-brand:hover {
+  transform: scale(1.05);
+  text-shadow: 0 0 15px rgba(123, 44, 191, 0.6);
+}
+
+.auth-title {
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+.auth-title:hover {
+  color: #ffffff;
+  text-shadow: 0 0 14px rgba(255, 255, 255, 0.18);
+}
+
+.auth-secondary-link {
+  color: var(--primary);
+  opacity: 0.9;
+  transition: color 0.3s ease, text-shadow 0.3s ease, opacity 0.3s ease;
+}
+
+.auth-secondary-link:hover {
+  color: #ffffff;
+  opacity: 1;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
+}
+
+.header-cta {
+  transform: scale(0.95);
+  transition: all 0.3s ease;
+}
+
+.header-cta:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(123, 44, 191, 0.4);
+}
+
+.header-cta:active {
+  transform: scale(0.9);
+}
+
+.login-submit {
+  transform: scale(0.95);
+  transition: all 0.3s ease;
+  box-shadow: 0 20px 40px rgba(123, 44, 191, 0.08);
+}
+
+.login-submit:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(123, 44, 191, 0.4);
+}
+
+.login-submit:active {
+  transform: scale(0.9);
+}
+
+.footer-logo {
+  transition: all 0.3s ease;
+}
+
+.footer-logo-link:hover .footer-logo {
+  transform: scale(1.05);
+  filter: drop-shadow(0 0 10px rgba(123, 44, 191, 0.5));
+}
+
+.footer-social-link {
+  transition: all 0.3s ease;
+}
+
+.footer-social-link:hover {
+  opacity: 1;
+  transform: scale(1.05);
+}

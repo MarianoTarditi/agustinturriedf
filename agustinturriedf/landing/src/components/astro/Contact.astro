@@ -1,0 +1,248 @@
+---
+const location = {
+  address: "Hilario Lagos 474, Rojas - Buenos Aires.",
+  phone: "+54 9 11 7829-6710",
+  lat: -33.7528,
+  lng: -60.2475,
+  embedUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d105085.61565246847!2d-60.40153928847588!3d-33.75282899881314!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95c4d789%3A0x1c8a9f9c0b8f4e5c!2sHilario%20Lagos%20474%2C%20Rojas%2C%20Buenos%20Aires%2C%20Argentina!5e0!3m2!1ses!2s!4v1700000000000!5m2!1ses!2s&z=17",
+};
+---
+
+<section class="py-24 bg-surface" id="contact">
+  <div class="container mx-auto px-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 max-w-6xl mx-auto items-stretch">
+      <div class="flex flex-col">
+        <h2 class="font-headline text-5xl font-black uppercase tracking-tighter mb-8 text-center">
+          Contáctame
+        </h2>
+        <form class="space-y-6 flex-grow" action="https://formspree.io/f/xaqlaewv" method="POST">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="relative">
+              <input
+                class="bg-surface-container-low border-none focus:ring-2 focus:ring-primary-container rounded-md text-on-surface placeholder:text-outline p-4 font-headline uppercase text-sm tracking-widest w-full"
+                placeholder="Nombre"
+                type="text"
+                name="nombre"
+                required
+              />
+              <p class="error-message text-red-500 text-xs mt-1 hidden" data-error="nombre">El nombre es requerido</p>
+            </div>
+            <div class="relative">
+              <input
+                class="bg-surface-container-low border-none focus:ring-2 focus:ring-primary-container rounded-md text-on-surface placeholder:text-outline p-4 font-headline uppercase text-sm tracking-widest w-full"
+                placeholder="Email"
+                type="email"
+                name="email"
+                required
+              />
+              <p class="error-message text-red-500 text-xs mt-1 hidden" data-error="email">Ingresa un email válido</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="relative">
+              <input
+                class="bg-surface-container-low border-none focus:ring-2 focus:ring-primary-container rounded-md text-on-surface placeholder:text-outline p-4 font-headline uppercase text-sm tracking-widest w-full"
+                placeholder="Asunto"
+                type="text"
+                name="asunto"
+                required
+              />
+              <p class="error-message text-red-500 text-xs mt-1 hidden" data-error="asunto">El asunto es requerido</p>
+            </div>
+            <div class="relative">
+              <input
+                class="bg-surface-container-low border-none focus:ring-2 focus:ring-primary-container rounded-md text-on-surface placeholder:text-outline p-4 font-headline uppercase text-sm tracking-widest w-full"
+                placeholder="Teléfono"
+                type="tel"
+                name="telefono"
+                required
+              />
+              <p class="error-message text-red-500 text-xs mt-1 hidden" data-error="telefono">El teléfono debe tener al menos 8 dígitos</p>
+            </div>
+          </div>
+          <div class="relative">
+            <textarea
+              class="w-full bg-surface-container-low border-none focus:ring-2 focus:ring-primary-container rounded-md text-on-surface placeholder:text-outline p-4 font-headline uppercase text-sm tracking-widest"
+              placeholder="Mensaje"
+              name="mensaje"
+              rows="5"
+              required
+            ></textarea>
+            <p class="error-message text-red-500 text-xs mt-1 hidden" data-error="mensaje">El mensaje debe tener al menos 10 caracteres</p>
+          </div>
+          <button
+            class="w-full bg-gradient-to-r from-primary-container to-on-primary-fixed-variant p-4 font-headline font-black uppercase tracking-[0.2em] hover:shadow-[0_0_30px_rgba(123,44,191,0.3)] transition-all flex items-center justify-center gap-2 cursor-pointer"
+            type="submit"
+            id="submit-btn"
+          >
+            <span id="btn-text">Enviar Mensaje</span>
+            <span id="btn-loading" class="hidden">
+              <span class="material-symbols-outlined animate-spin">sync</span>
+            </span>
+          </button>
+          <p id="success-message" class="text-green-500 text-center hidden">¡Mensaje enviado con éxito!</p>
+        </form>
+      </div>
+      <div class="flex flex-col gap-8">
+        <div class="bg-surface-container p-8 rounded-xl border border-outline-variant/10 flex-shrink-0">
+          <h3 class="font-headline text-2xl font-bold uppercase mb-4 text-primary text-center">
+            Nuestra Ubicación
+          </h3>
+          <div class="flex flex-col gap-3">
+            <p class="text-secondary items-center gap-3 justify-center flex">
+              <span class="material-symbols-outlined text-primary">location_on</span>
+              {location.address}
+            </p>
+            <p class="text-secondary items-center gap-3 justify-center flex">
+              <span class="material-symbols-outlined text-primary">call</span>
+              {location.phone}
+            </p>
+          </div>
+        </div>
+        <div class="flex-grow bg-surface-container-highest rounded-xl overflow-hidden grayscale-0">
+          <iframe
+            id="google-map"
+            class="w-full"
+            style="height: 100%; min-height: 250px;"
+            loading="lazy"
+            allowfullscreen
+            referrerpolicy="no-referrer-when-downgrade"
+            src={location.embedUrl}
+            title="Ubicación - Hilario Lagos 474, Rojas"
+          >
+          </iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const form = document.querySelector('form[action*="formspree"]') as HTMLFormElement;
+  const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+  const btnText = document.getElementById('btn-text') as HTMLSpanElement;
+  const btnLoading = document.getElementById('btn-loading') as HTMLSpanElement;
+  const successMessage = document.getElementById('success-message') as HTMLParagraphElement;
+
+  function validateEmail(email: string): boolean {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  }
+
+  function hasMinDigits(text: string, minDigits: number): boolean {
+    const digits = text.replace(/\D/g, '');
+    return digits.length >= minDigits;
+  }
+
+  function showError(input: HTMLInputElement | HTMLTextAreaElement, message: string) {
+    const parent = input.parentElement;
+    const errorMsg = parent?.querySelector('.error-message') as HTMLParagraphElement;
+    if (errorMsg) {
+      errorMsg.textContent = message;
+      errorMsg.classList.remove('hidden');
+    }
+    input.classList.add('ring-2', 'ring-red-500');
+  }
+
+  function hideError(input: HTMLInputElement | HTMLTextAreaElement) {
+    const parent = input.parentElement;
+    const errorMsg = parent?.querySelector('.error-message') as HTMLParagraphElement;
+    if (errorMsg) {
+      errorMsg.classList.add('hidden');
+    }
+    input.classList.remove('ring-2', 'ring-red-500');
+  }
+
+  function validateForm(): boolean {
+    let isValid = true;
+    const inputs = form.querySelectorAll('input[required], textarea[required]') as NodeListOf<HTMLInputElement | HTMLTextAreaElement>;
+    
+    inputs.forEach((input) => {
+      hideError(input);
+      const name = input.name;
+      const value = input.value.trim();
+
+      if (!value) {
+        if (name === 'nombre') showError(input, 'El nombre es requerido');
+        else if (name === 'email') showError(input, 'El email es requerido');
+        else if (name === 'asunto') showError(input, 'El asunto es requerido');
+        else if (name === 'telefono') showError(input, 'El teléfono es requerido');
+        else if (name === 'mensaje') showError(input, 'El mensaje es requerido');
+        else showError(input, 'Este campo es requerido');
+        isValid = false;
+        return;
+      }
+
+      if (name === 'nombre') {
+        const digitCount = (value.match(/\d/g) || []).length;
+        if (digitCount >= value.length) {
+          showError(input, 'El nombre no puede contener solo dígitos');
+          isValid = false;
+        } else if (value.length < 2) {
+          showError(input, 'El nombre debe tener al menos 2 caracteres');
+          isValid = false;
+        }
+      } else if (name === 'email') {
+        if (!validateEmail(value)) {
+          showError(input, 'Ingresa un email válido');
+          isValid = false;
+        }
+      } else if (name === 'telefono') {
+        if (!hasMinDigits(value, 8)) {
+          showError(input, 'El teléfono debe tener al menos 8 dígitos');
+          isValid = false;
+        }
+      } else if (name === 'mensaje') {
+        if (value.length < 10) {
+          showError(input, 'El mensaje debe tener al menos 10 caracteres');
+          isValid = false;
+        }
+      }
+    });
+
+    return isValid;
+  }
+
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      if (!validateForm()) return;
+      
+      submitBtn.disabled = true;
+      btnText.classList.add('hidden');
+      btnLoading.classList.remove('hidden');
+
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          successMessage.classList.remove('hidden');
+          form.reset();
+          setTimeout(() => {
+            successMessage.classList.add('hidden');
+          }, 5000);
+        } else {
+          alert('Hubo un error al enviar el mensaje. Por favor, intenta nuevamente.');
+        }
+      } catch (error) {
+        alert('Hubo un error al enviar el mensaje. Por favor, intenta nuevamente.');
+      } finally {
+        submitBtn.disabled = false;
+        btnText.classList.remove('hidden');
+        btnLoading.classList.add('hidden');
+      }
+    });
+
+    const inputs = form.querySelectorAll('input, textarea') as NodeListOf<HTMLInputElement | HTMLTextAreaElement>;
+    inputs.forEach((input) => {
+      input.addEventListener('input', () => hideError(input));
+    });
+  }
+</script>

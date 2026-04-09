@@ -1,0 +1,52 @@
+.shell {
+  min-height: 100vh;
+  background: var(--surface);
+  color: var(--on-surface);
+  position: relative;
+}
+
+.canvas {
+  min-height: 100vh;
+  margin-left: 16rem;
+  background: var(--surface);
+  position: relative;
+  z-index: 1;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+.glowPrimary,
+.glowSecondary {
+  position: fixed;
+  pointer-events: none;
+  border-radius: 9999px;
+  z-index: 0;
+}
+
+.glowPrimary {
+  top: 25%;
+  right: -6rem;
+  width: 31.25rem;
+  height: 31.25rem;
+  background: rgba(123, 44, 191, 0.065);
+  filter: blur(132px);
+}
+
+.glowSecondary {
+  bottom: -6rem;
+  left: -6rem;
+  width: 25rem;
+  height: 25rem;
+  background: rgba(123, 44, 191, 0.12);
+  filter: blur(112px);
+}
+
+@media (max-width: 1024px) {
+  .canvas {
+    margin-left: 0;
+  }
+}
