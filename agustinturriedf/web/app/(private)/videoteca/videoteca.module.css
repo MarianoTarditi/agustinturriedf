@@ -1,0 +1,670 @@
+.page {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+.content {
+  width: min(100%, 82rem);
+  margin: 0 auto;
+  padding: 1.5rem 2rem 2rem;
+  display: grid;
+  gap: 2.6rem;
+}
+
+.hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.createFolderButton {
+  border: 0;
+  border-radius: 0.45rem;
+  min-height: 3rem;
+  padding: 0.72rem 1.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  background: linear-gradient(135deg, var(--primary-container), var(--primary-variant));
+  color: #e4c2ff;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 20px 40px rgba(123, 44, 191, 0.15);
+  cursor: pointer;
+  transition:
+    filter 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 140ms cubic-bezier(0.4, 0, 1, 1),
+    box-shadow 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.createFolderButton:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 24px 44px rgba(123, 44, 191, 0.2);
+}
+
+.createFolderButton:active {
+  transform: scale(0.95);
+}
+
+.createFolderIcon {
+  font-size: 1.15rem;
+}
+
+.controlsRow {
+  border-top: 1px solid rgba(76, 67, 83, 0.22);
+  border-bottom: 1px solid rgba(76, 67, 83, 0.22);
+  padding: 1rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filtersWrap {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.sortWrap {
+  position: relative;
+}
+
+.sortWrap select {
+  appearance: none;
+  min-height: 2.45rem;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(76, 67, 83, 0.22);
+  background: var(--surface-container);
+  color: var(--on-surface);
+  padding: 0.48rem 2.1rem 0.48rem 0.9rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  transition:
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sortWrap select:focus {
+  border-color: rgba(222, 183, 255, 0.45);
+  box-shadow: 0 0 0 2px rgba(123, 44, 191, 0.12);
+}
+
+.selectIcon {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(207, 194, 213, 0.62);
+  pointer-events: none;
+  font-size: 1rem;
+}
+
+.filterButton {
+  min-height: 2.45rem;
+  border: 1px solid rgba(76, 67, 83, 0.22);
+  border-radius: 0.45rem;
+  background: var(--surface-container);
+  color: rgba(207, 194, 213, 0.82);
+  padding: 0.48rem 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 140ms cubic-bezier(0.4, 0, 1, 1);
+}
+
+.filterButton:hover {
+  color: var(--primary);
+  border-color: rgba(222, 183, 255, 0.26);
+}
+
+.filterButton:active {
+  transform: scale(0.96);
+}
+
+.filterIcon {
+  font-size: 1rem;
+}
+
+.viewToggle {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 0.45rem;
+  background: var(--surface-low);
+  border: 1px solid rgba(76, 67, 83, 0.2);
+  padding: 0.2rem;
+}
+
+.viewButton {
+  border: 0;
+  background: transparent;
+  color: rgba(207, 194, 213, 0.52);
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 0.36rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.viewButton:hover {
+  color: var(--on-surface);
+}
+
+.viewButtonActive {
+  background: var(--surface-highest);
+  color: var(--primary);
+}
+
+.viewIcon {
+  font-size: 1.15rem;
+}
+
+.folderGrid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.folderCard,
+.addCard {
+  border-radius: 0.75rem;
+  min-height: 14rem;
+}
+
+.folderCard {
+  background: var(--surface-container);
+  border: 1px solid transparent;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.15rem;
+  position: relative;
+  overflow: hidden;
+  transition:
+    background-color 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.folderCard::after {
+  content: "";
+  position: absolute;
+  right: -3.2rem;
+  top: -3.2rem;
+  width: 8.8rem;
+  height: 8.8rem;
+  border-radius: 999px;
+  background: rgba(123, 44, 191, 0.06);
+  filter: blur(54px);
+  pointer-events: none;
+  transition: background-color 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.folderCard:hover {
+  background: var(--surface-high);
+  border-color: rgba(76, 67, 83, 0.35);
+  box-shadow: 0 20px 40px rgba(123, 44, 191, 0.1);
+  transform: translateY(-2px);
+}
+
+.folderCard:hover::after {
+  background: rgba(123, 44, 191, 0.11);
+}
+
+.cardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.folderIconWrap {
+  width: 2.65rem;
+  height: 2.65rem;
+  border-radius: 0.5rem;
+  background: rgba(123, 44, 191, 0.12);
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 260ms cubic-bezier(0.22, 1, 0.36, 1), color 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.folderCard:hover .folderIconWrap {
+  background: var(--primary-container);
+  color: #e4c2ff;
+}
+
+.folderIcon {
+  font-size: 1.3rem;
+}
+
+.moreButton {
+  border: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(207, 194, 213, 0.55);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 220ms cubic-bezier(0.22, 1, 0.36, 1), background-color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.moreButton:hover {
+  color: var(--on-surface);
+  background: rgba(76, 67, 83, 0.2);
+}
+
+.moreIcon {
+  font-size: 1.1rem;
+}
+
+.cardBody h3 {
+  margin: 0;
+  text-transform: uppercase;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.22rem;
+  letter-spacing: -0.02em;
+  transition: color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.folderCard:hover .cardBody h3 {
+  color: var(--primary);
+}
+
+.cardMeta {
+  margin: 0.34rem 0 0;
+  color: rgba(207, 194, 213, 0.44);
+  font-size: 0.72rem;
+}
+
+.cardFooter {
+  margin-top: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.filesCount {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: rgba(207, 194, 213, 0.74);
+  font-size: 0.73rem;
+  font-weight: 700;
+}
+
+.filesIcon {
+  font-size: 0.96rem;
+}
+
+.tags {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.tag {
+  border-radius: 999px;
+  background: var(--surface-highest);
+  color: #dcb7fd;
+  padding: 0.16rem 0.5rem;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+}
+
+.addCard {
+  border: 2px dashed rgba(76, 67, 83, 0.44);
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 260ms cubic-bezier(0.22, 1, 0.36, 1), transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.addCard:hover {
+  border-color: rgba(123, 44, 191, 0.55);
+  transform: translateY(-2px);
+}
+
+.addCardIconWrap {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  background: var(--surface-container);
+  color: rgba(207, 194, 213, 0.6);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 220ms cubic-bezier(0.22, 1, 0.36, 1), transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.addCard:hover .addCardIconWrap {
+  transform: scale(1.08);
+  color: var(--primary);
+}
+
+.addCardIcon {
+  font-size: 1.35rem;
+}
+
+.addCard p {
+  margin: 0.82rem 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(207, 194, 213, 0.58);
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+}
+
+.featuredSection {
+  margin-top: 1.5rem;
+  display: grid;
+  gap: 1.2rem;
+}
+
+.featuredSection h2 {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  font-size: clamp(1.35rem, 2.2vw, 1.9rem);
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+}
+
+.featuredGrid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: 2fr 1fr;
+}
+
+.masterCard {
+  border-radius: 1rem;
+  overflow: hidden;
+  min-height: 24rem;
+  position: relative;
+  isolation: isolate;
+}
+
+.masterCard img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.masterCard:hover img {
+  transform: scale(1.04);
+}
+
+.masterOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(10, 10, 10, 0.95), rgba(10, 10, 10, 0.2) 45%, transparent);
+}
+
+.masterContent {
+  position: absolute;
+  left: 1.5rem;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 2;
+}
+
+.masterBadge {
+  display: inline-flex;
+  margin-bottom: 0.85rem;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #2f0f4f;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  padding: 0.2rem 0.66rem;
+  font-size: 0.57rem;
+  font-weight: 800;
+}
+
+.masterContent h3 {
+  margin: 0;
+  font-size: clamp(1.4rem, 2.3vw, 1.95rem);
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.masterContent p {
+  margin: 0.56rem 0 0;
+  color: rgba(207, 194, 213, 0.72);
+  max-width: 34rem;
+  font-size: 0.84rem;
+}
+
+.playButton {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0.85);
+  width: 4.9rem;
+  height: 4.9rem;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(123, 44, 191, 0.78);
+  color: #e4c2ff;
+  backdrop-filter: blur(14px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  cursor: pointer;
+  transition:
+    opacity 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.masterCard:hover .playButton {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.playIcon {
+  font-size: 2.3rem;
+}
+
+.tipCard {
+  border-radius: 1rem;
+  background: var(--surface-container);
+  border: 1px solid rgba(76, 67, 83, 0.2);
+  padding: 1.35rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.tipCopy {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.tipIcon {
+  color: var(--primary);
+  font-size: 2rem;
+}
+
+.tipCopy h3 {
+  margin: 0;
+  text-transform: uppercase;
+  line-height: 1.15;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.22rem;
+}
+
+.tipCopy p {
+  margin: 0;
+  color: rgba(207, 194, 213, 0.85);
+  line-height: 1.55;
+  font-size: 0.84rem;
+}
+
+.tipButton {
+  width: 100%;
+  min-height: 2.75rem;
+  border-radius: 0.44rem;
+  border: 1px solid rgba(123, 44, 191, 0.6);
+  background: transparent;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  font-size: 0.69rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tipButton:hover {
+  background: rgba(123, 44, 191, 0.1);
+  border-color: rgba(123, 44, 191, 0.9);
+}
+
+.fab {
+  position: fixed;
+  right: 2rem;
+  bottom: 2rem;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 999px;
+  border: 0;
+  background: var(--primary);
+  color: #36145a;
+  box-shadow: 0 0 0 1px rgba(123, 44, 191, 0.25), 0 18px 32px rgba(123, 44, 191, 0.35);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  cursor: pointer;
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fab:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 0 1px rgba(123, 44, 191, 0.35), 0 24px 42px rgba(123, 44, 191, 0.42);
+}
+
+.fab:active {
+  transform: scale(0.94);
+}
+
+.fabIcon {
+  font-size: 1.42rem;
+}
+
+.localGlowPrimary,
+.localGlowSecondary {
+  position: fixed;
+  pointer-events: none;
+  border-radius: 999px;
+  z-index: 0;
+}
+
+.localGlowPrimary {
+  right: 12%;
+  top: 35%;
+  width: 22rem;
+  height: 22rem;
+  background: rgba(123, 44, 191, 0.07);
+  filter: blur(96px);
+}
+
+.localGlowSecondary {
+  left: 20%;
+  bottom: -6rem;
+  width: 18rem;
+  height: 18rem;
+  background: rgba(123, 44, 191, 0.08);
+  filter: blur(84px);
+}
+
+@media (max-width: 1200px) {
+  .folderGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .featuredGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .tipCard {
+    min-height: 18rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  .content {
+    padding-inline: 1rem;
+  }
+}
+
+@media (max-width: 860px) {
+  .folderGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .content {
+    padding-top: 1.35rem;
+  }
+
+  .folderGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .controlsRow {
+    align-items: stretch;
+  }
+
+  .viewToggle {
+    margin-left: auto;
+  }
+
+  .fab {
+    right: 1rem;
+    bottom: 1rem;
+  }
+}

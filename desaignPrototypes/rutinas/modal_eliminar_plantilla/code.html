@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Rutinas - Eliminar Plantilla</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error": "#690005",
+                        "on-surface-variant": "#cfc2d5",
+                        "on-error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#fdb969",
+                        "secondary-fixed-dim": "#b9c7e4",
+                        "inverse-on-surface": "#303030",
+                        "outline": "#988d9e",
+                        "secondary-container": "#3c4962",
+                        "on-secondary": "#233148",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-primary": "#4a007f",
+                        "primary": "#deb7ff",
+                        "on-surface": "#e2e2e2",
+                        "surface-container": "#1f1f1f",
+                        "inverse-surface": "#e2e2e2",
+                        "surface-dim": "#131313",
+                        "tertiary-fixed": "#ffddba",
+                        "on-tertiary-fixed-variant": "#663e00",
+                        "on-secondary-fixed": "#0d1c32",
+                        "secondary": "#b9c7e4",
+                        "on-tertiary-fixed": "#2b1700",
+                        "background": "#131313",
+                        "surface-tint": "#deb7ff",
+                        "surface-container-highest": "#353535",
+                        "surface-bright": "#393939",
+                        "on-primary-fixed-variant": "#680eac",
+                        "surface": "#131313",
+                        "primary-fixed": "#f1dbff",
+                        "primary-container": "#7b2cbf",
+                        "primary-fixed-dim": "#deb7ff",
+                        "outline-variant": "#4c4353",
+                        "surface-container-low": "#1b1b1b",
+                        "surface-variant": "#353535",
+                        "surface-container-high": "#2a2a2a",
+                        "secondary-fixed": "#d6e3ff",
+                        "error-container": "#93000a",
+                        "on-tertiary": "#482a00",
+                        "on-background": "#e2e2e2",
+                        "error": "#ffb4ab",
+                        "on-secondary-fixed-variant": "#39475f",
+                        "inverse-primary": "#8234c6",
+                        "tertiary-container": "#7e4d00",
+                        "on-tertiary-container": "#ffc480",
+                        "on-secondary-container": "#abb9d6",
+                        "on-primary-fixed": "#2d0050",
+                        "on-primary-container": "#e4c2ff",
+                        "tertiary": "#fdb969"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #131313;
+            color: #e2e2e2;
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background">
+<!-- Top Navigation Anchor -->
+<header class="fixed top-0 w-full z-50 bg-black/70 backdrop-blur-xl border-b border-white/5 shadow-[0px_20px_40px_rgba(123,44,191,0.08)] flex justify-between items-center px-8 py-4 w-full">
+<div class="text-2xl font-bold tracking-tighter text-purple-400 uppercase font-['Space_Grotesk']">Rutinas</div>
+<nav class="hidden md:flex gap-8 font-['Space_Grotesk'] tracking-tight">
+<a class="text-zinc-400 hover:text-purple-200 transition-colors duration-300" href="#">Dashboard</a>
+<a class="text-purple-300 border-b-2 border-purple-500 pb-1 hover:text-purple-200 transition-colors duration-300" href="#">Rutinas</a>
+<a class="text-zinc-400 hover:text-purple-200 transition-colors duration-300" href="#">Atletas</a>
+<a class="text-zinc-400 hover:text-purple-200 transition-colors duration-300" href="#">Calendario</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-zinc-400 scale-95 active:scale-90 transition-transform">notifications</button>
+<button class="material-symbols-outlined text-zinc-400 scale-95 active:scale-90 transition-transform">settings</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-purple-500/30">
+<img alt="User profile" data-alt="close-up portrait of a professional athletic coach with a focused expression in a dimly lit modern fitness studio" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGITEYRNcq3x0XYLVpQ-vbum4cSX9caT6bD1lxONpuiXdrufhQJsWVhkl0sPMcgegoS1ahI1Odkkql46lp7yFhQEKmnAN_Mw5Pa9iN6FE913NVe6buFsQCUA3slt9ByQawgRrWQurN6oEFT4eUWg2HlZu6jlZa-2ze_Z4xXkB7Z0SWszzr7UmByYbwv2RQP6alY8CVXB6iCNgbLg9hSaJ4JTD0vytV3Elqh1CCIUOM2ZspGFV69RV4RMucahLnsPGVTtVMZBi2zBBQ"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas (Background for Modal) -->
+<main class="pt-24 pb-32 px-8 min-h-screen">
+<div class="max-w-7xl mx-auto">
+<div class="flex justify-between items-end mb-12">
+<header>
+<p class="text-primary-fixed-dim font-headline tracking-[0.2em] text-xs uppercase mb-2">Workspace</p>
+<h1 class="text-5xl font-headline font-bold tracking-tighter text-on-background">MIS PLANTILLAS</h1>
+</header>
+<div class="flex gap-4">
+<button class="px-6 py-2 bg-surface-container-high border border-outline-variant/15 text-sm font-label tracking-widest uppercase hover:bg-surface-container-highest transition-all">Filtrar</button>
+<button class="px-6 py-2 bg-gradient-to-r from-primary-container to-on-primary-fixed-variant text-on-primary-container text-sm font-label font-bold tracking-widest uppercase rounded-md shadow-[0px_20px_40px_rgba(123,44,191,0.08)]">Nueva Plantilla</button>
+</div>
+</div>
+<!-- Bento Grid of Templates -->
+<div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+<!-- Active Template Being Deleted -->
+<div class="bg-surface-container border border-primary/20 p-6 rounded-xl relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-2">
+<span class="material-symbols-outlined text-primary text-sm">push_pin</span>
+</div>
+<div class="flex items-center gap-4 mb-6">
+<div class="w-12 h-12 bg-surface-container-highest rounded-lg flex items-center justify-center text-primary-fixed-dim">
+<span class="material-symbols-outlined text-3xl">picture_as_pdf</span>
+</div>
+<div>
+<h3 class="font-headline font-bold text-lg leading-tight">sdfsd</h3>
+<p class="text-zinc-500 text-xs font-label tracking-widest uppercase">PDF Document</p>
+</div>
+</div>
+<div class="space-y-2 mb-6">
+<div class="flex justify-between text-xs font-label">
+<span class="text-zinc-500 uppercase">Created</span>
+<span class="text-zinc-300">Oct 24, 2023</span>
+</div>
+<div class="flex justify-between text-xs font-label">
+<span class="text-zinc-500 uppercase">Size</span>
+<span class="text-zinc-300">2.4 MB</span>
+</div>
+</div>
+<button class="w-full py-2 bg-surface-container-highest text-zinc-400 text-xs font-label uppercase tracking-widest hover:text-error transition-colors">Eliminar</button>
+</div>
+<!-- Ghost Cards for Background context -->
+<div class="bg-surface-container/40 border border-white/5 p-6 rounded-xl blur-[2px]">
+<div class="w-12 h-12 bg-surface-container-high rounded-lg mb-6"></div>
+<div class="h-4 w-2/3 bg-surface-container-high mb-2"></div>
+<div class="h-3 w-1/3 bg-surface-container-high"></div>
+</div>
+<div class="bg-surface-container/40 border border-white/5 p-6 rounded-xl blur-[2px]">
+<div class="w-12 h-12 bg-surface-container-high rounded-lg mb-6"></div>
+<div class="h-4 w-2/3 bg-surface-container-high mb-2"></div>
+<div class="h-3 w-1/3 bg-surface-container-high"></div>
+</div>
+</div>
+</div>
+</main>
+<!-- Modal Overlay -->
+<div class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
+<!-- Modal Container -->
+<div class="relative w-full max-w-lg bg-surface-container-lowest border border-outline-variant/20 rounded-xl overflow-hidden shadow-[0px_40px_80px_rgba(0,0,0,0.8)]">
+<!-- Modal Accent Line -->
+<div class="h-1 w-full bg-gradient-to-r from-transparent via-primary-container to-transparent opacity-50"></div>
+<div class="p-10">
+<!-- Title -->
+<h2 class="text-3xl font-headline font-bold tracking-tighter text-on-background mb-4 uppercase">
+                    ¿ELIMINAR PLANTILLA?
+                </h2>
+<!-- Message -->
+<p class="text-zinc-400 font-body leading-relaxed mb-8">
+                    Esta acción es permanente y no se podrá recuperar el archivo. ¿Estás seguro?
+                </p>
+<!-- Targeted Entity Card -->
+<div class="bg-surface-container-low border border-outline-variant/10 p-4 rounded-lg flex items-center gap-4 mb-10">
+<div class="w-10 h-10 bg-primary-container/20 rounded flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">description</span>
+</div>
+<div>
+<p class="text-zinc-500 text-[10px] uppercase tracking-widest font-label mb-0.5">Nombre del archivo</p>
+<h4 class="font-headline font-medium text-on-surface">sdfsd <span class="text-zinc-500 font-normal">.PDF</span></h4>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex flex-col sm:flex-row gap-4">
+<button class="flex-1 px-6 py-4 bg-primary-container text-on-primary-container font-headline font-bold text-sm tracking-widest uppercase rounded-md shadow-[0px_20px_40px_rgba(123,44,191,0.15)] hover:bg-on-primary-fixed-variant transition-all active:scale-95">
+                        ELIMINAR PERMANENTEMENTE
+                    </button>
+<button class="px-8 py-4 bg-transparent border border-outline-variant/30 text-zinc-400 font-headline font-bold text-sm tracking-widest uppercase rounded-md hover:bg-white/5 transition-all active:scale-95">
+                        CANCELAR
+                    </button>
+</div>
+</div>
+<!-- Kinetic Noir Texture: Subtle glow at bottom corner -->
+<div class="absolute -bottom-20 -right-20 w-40 h-40 bg-primary-container/10 blur-[60px] rounded-full pointer-events-none"></div>
+</div>
+</div>
+<!-- Bottom Navigation Anchor (Mobile) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 pb-8 pt-4 bg-black/80 backdrop-blur-2xl rounded-t-3xl border-t border-white/10 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+<div class="flex flex-col items-center justify-center text-zinc-500 hover:text-purple-300 tap-highlight-none active:scale-95 transition-transform">
+<span class="material-symbols-outlined">home</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest mt-1">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-purple-600 text-black rounded-xl px-4 py-1 tap-highlight-none active:scale-95 transition-transform">
+<span class="material-symbols-outlined">exercise</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest mt-1">Rutinas</span>
+</div>
+<div class="flex flex-col items-center justify-center text-zinc-500 hover:text-purple-300 tap-highlight-none active:scale-95 transition-transform">
+<span class="material-symbols-outlined">insights</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest mt-1">Stats</span>
+</div>
+<div class="flex flex-col items-center justify-center text-zinc-500 hover:text-purple-300 tap-highlight-none active:scale-95 transition-transform">
+<span class="material-symbols-outlined">person</span>
+<span class="font-['Space_Grotesk'] text-[10px] uppercase tracking-widest mt-1">Perfil</span>
+</div>
+</nav>
+</body></html>

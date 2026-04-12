@@ -1,5 +1,6 @@
 import styles from "@/app/(private)/usuarios/usuarios.module.css";
 import { MaterialSymbol } from "@/components/material-symbol";
+import { PrivateBreadcrumb } from "@/components/private-breadcrumb";
 import { PrivateTopbar } from "@/components/private-topbar";
 
 type UserRow = {
@@ -44,6 +45,7 @@ function DotIcon() {
 export default function UsuariosPage() {
   return (
     <section className={styles.page}>
+      <PrivateBreadcrumb current="Usuarios" />
       <PrivateTopbar
         title="Gestión de Alumnos"
         subtitle="Controla perfiles, roles y estado operativo de la base para mantener seguimiento preciso y comunicación efectiva."

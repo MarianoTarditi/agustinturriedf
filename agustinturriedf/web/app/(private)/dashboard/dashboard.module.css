@@ -1,0 +1,630 @@
+.page {
+  position: relative;
+  z-index: 1;
+}
+
+.content {
+  display: grid;
+  gap: 2rem;
+  padding: 1.6rem 2rem 2.4rem;
+  max-width: 96rem;
+}
+
+.hero {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.hero h1 {
+  margin: 0;
+  text-transform: uppercase;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: clamp(2rem, 3.1vw, 3.1rem);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+}
+
+.hero span {
+  color: var(--primary);
+}
+
+.hero p {
+  margin: 0;
+  max-width: 52rem;
+  color: rgba(226, 226, 226, 0.7);
+  font-size: clamp(1rem, 1.2vw, 1.15rem);
+  line-height: 1.5;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.35rem;
+}
+
+.metricCard {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.7rem;
+  padding: 1.5rem;
+  background: var(--surface-container);
+  border: 1px solid rgba(76, 67, 83, 0.2);
+  transition:
+    background-color 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.metricCard:hover {
+  background: var(--surface-high);
+  border-color: rgba(222, 183, 255, 0.24);
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px rgba(123, 44, 191, 0.08);
+}
+
+.metricGlow {
+  position: absolute;
+  width: 10rem;
+  height: 10rem;
+  left: 50%;
+  bottom: -8rem;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgba(123, 44, 191, 0.16);
+  filter: blur(56px);
+  pointer-events: none;
+}
+
+.metricTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  min-height: 2.25rem;
+  position: relative;
+  z-index: 1;
+}
+
+.metricIcon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.metricIcon_secondary {
+  color: #b9c7e4;
+  background: rgba(60, 73, 98, 0.25);
+}
+
+.metricIcon_primary {
+  color: var(--primary);
+  background: rgba(123, 44, 191, 0.28);
+}
+
+.metricIcon_tertiary {
+  color: #fdb969;
+  background: rgba(126, 77, 0, 0.28);
+}
+
+.metricIcon_neutral {
+  color: rgba(207, 194, 213, 0.9);
+  background: rgba(53, 53, 53, 0.9);
+}
+
+.metricSymbol {
+  font-size: 1.36rem;
+}
+
+.metricBadge {
+  font-size: 0.64rem;
+  color: rgba(226, 226, 226, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-top: 0.35rem;
+}
+
+.pulseDot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  margin-top: 0.2rem;
+  background: #e09e94;
+  box-shadow: 0 0 12px rgba(224, 158, 148, 0.9);
+  animation: pulse 1.7s infinite;
+}
+
+.metricValue {
+  margin: 1.95rem 0 0;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 2.25rem;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  font-weight: 700;
+}
+
+.metricLabel {
+  margin: 0.45rem 0 0;
+  font-size: 1.08rem;
+  line-height: 1.2;
+  font-weight: 500;
+  color: rgba(226, 226, 226, 0.75);
+}
+
+.metricFooter {
+  margin-top: 1.35rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(31, 31, 31, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  color: rgba(226, 226, 226, 0.42);
+  font-size: 0.8rem;
+}
+
+.metricArrow {
+  font-size: 1rem;
+  color: var(--primary);
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.metricCard:hover .metricArrow {
+  transform: translateX(2px);
+}
+
+.lowerGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 2.05fr) minmax(18rem, 1fr);
+  gap: 1.5rem;
+}
+
+.activityCard,
+.profileCard,
+.logCard {
+  border-radius: 0.7rem;
+  border: 1px solid rgba(76, 67, 83, 0.16);
+  background: rgba(31, 31, 31, 0.95);
+  overflow: hidden;
+}
+
+.activityHeader {
+  padding: 1.8rem 1.8rem 1.35rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+}
+
+.activityHeader h3 {
+  margin: 0;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  text-transform: uppercase;
+  font-size: 1.65rem;
+  letter-spacing: -0.01em;
+}
+
+.activityHeader p {
+  margin: 0.3rem 0 0;
+  color: rgba(226, 226, 226, 0.45);
+  font-size: 0.86rem;
+}
+
+.activityControls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.selectWrap {
+  position: relative;
+}
+
+.selectWrap select {
+  appearance: none;
+  border: 1px solid rgba(76, 67, 83, 0.3);
+  background: rgba(31, 31, 31, 0.95);
+  color: var(--on-surface);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.68rem;
+  border-radius: 0.2rem;
+  padding: 0.62rem 1.9rem 0.62rem 0.9rem;
+  min-width: 11.4rem;
+  outline: none;
+}
+
+.selectWrap select:focus {
+  border-color: rgba(222, 183, 255, 0.45);
+  box-shadow: 0 0 0 2px rgba(123, 44, 191, 0.14);
+}
+
+.selectIcon {
+  position: absolute;
+  right: 0.45rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: rgba(226, 226, 226, 0.4);
+  font-size: 0.9rem;
+}
+
+.rangeActive,
+.rangeMuted {
+  border: 0;
+  border-radius: 0.18rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.62rem 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rangeActive {
+  color: var(--on-surface);
+  background: rgba(53, 53, 53, 1);
+}
+
+.rangeMuted {
+  color: rgba(226, 226, 226, 0.35);
+  background: transparent;
+}
+
+.chartArea {
+  background: rgba(0, 0, 0, 0.26);
+  border-top: 1px solid rgba(31, 31, 31, 0.95);
+  border-bottom: 1px solid rgba(31, 31, 31, 0.9);
+  padding: 2rem 1.8rem;
+}
+
+.chartPlot {
+  position: relative;
+  min-height: 16rem;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  align-items: end;
+  gap: 0.9rem;
+  padding: 0.5rem 0.7rem 0.6rem;
+  border-left: 1px solid rgba(31, 31, 31, 1);
+  border-bottom: 1px solid rgba(31, 31, 31, 1);
+}
+
+.chartBar {
+  border-radius: 0.1rem 0.1rem 0 0;
+  background: rgba(31, 31, 31, 0.95);
+}
+
+.chartBarAccent {
+  background: linear-gradient(180deg, #8234c6 0%, #6f18b7 100%);
+  box-shadow: 0 20px 40px rgba(123, 44, 191, 0.2);
+}
+
+.chartPlot .chartBar:nth-child(3) {
+  background: rgba(123, 44, 191, 0.34);
+}
+
+.chartBadge {
+  position: absolute;
+  left: 50%;
+  top: 54%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  padding: 0.66rem 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.84rem;
+  color: var(--primary);
+  background: rgba(19, 19, 19, 0.95);
+  border: 1px solid rgba(123, 44, 191, 0.42);
+  white-space: nowrap;
+}
+
+.activityTail {
+  height: 15rem;
+  background: linear-gradient(90deg, rgba(31, 31, 31, 1), rgba(42, 42, 42, 0.6));
+}
+
+.sideColumn {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.profileCard {
+  position: relative;
+  padding: 1.65rem;
+}
+
+.profileGlow {
+  position: absolute;
+  right: -3.5rem;
+  top: -3.5rem;
+  width: 9rem;
+  height: 9rem;
+  border-radius: 999px;
+  background: rgba(123, 44, 191, 0.18);
+  filter: blur(56px);
+}
+
+.profileTop {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.avatarWrap {
+  position: relative;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 0.35rem;
+  overflow: hidden;
+  border: 2px solid rgba(123, 44, 191, 0.95);
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarBadge {
+  position: absolute;
+  right: -0.52rem;
+  bottom: -0.52rem;
+  width: 1.45rem;
+  height: 1.45rem;
+  border-radius: 0.2rem;
+  background: var(--primary-container);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 20px rgba(123, 44, 191, 0.24);
+}
+
+.avatarBadgeIcon {
+  font-size: 0.8rem;
+  color: #fff;
+}
+
+.profileName {
+  margin: 0;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.95rem;
+  line-height: 1;
+}
+
+.profileLabel {
+  margin: 0.5rem 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.17em;
+  color: rgba(222, 183, 255, 0.92);
+  font-size: 0.75rem;
+}
+
+.profileMeta {
+  margin: 1.8rem 0 0;
+  display: grid;
+  gap: 1.15rem;
+}
+
+.profileMeta div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 0.76rem;
+  border-bottom: 1px solid rgba(31, 31, 31, 0.95);
+}
+
+.profileMeta div:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.profileMeta dt {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+  color: rgba(226, 226, 226, 0.4);
+}
+
+.profileMeta dd {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.metaAccent {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.metaError {
+  color: #e09e94;
+}
+
+.profileButton {
+  width: 100%;
+  margin-top: 1.6rem;
+  border: 0;
+  border-radius: 0.2rem;
+  padding: 0.86rem 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: #e4c2ff;
+  background: linear-gradient(135deg, var(--primary-container), var(--primary-variant));
+  box-shadow: 0 20px 40px rgba(123, 44, 191, 0.08);
+  transition: filter 240ms cubic-bezier(0.22, 1, 0.36, 1), transform 120ms cubic-bezier(0.4, 0, 1, 1);
+}
+
+.profileButton:hover {
+  filter: brightness(1.1);
+}
+
+.profileButton:active {
+  transform: scale(0.97);
+}
+
+.logCard {
+  padding: 1.4rem 1.35rem;
+  background: rgba(31, 31, 31, 0.65);
+}
+
+.logHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.15rem;
+}
+
+.logHeader h3 {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: rgba(226, 226, 226, 0.64);
+  font-size: 0.68rem;
+}
+
+.logIcon {
+  font-size: 0.95rem;
+  color: var(--primary);
+}
+
+.logItems {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.logItem {
+  display: flex;
+  gap: 0.62rem;
+}
+
+.logStripe {
+  width: 0.22rem;
+  border-radius: 999px;
+  background: var(--primary-container);
+}
+
+.logStripeError {
+  background: #e09e94;
+}
+
+.logItem p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: rgba(226, 226, 226, 0.92);
+}
+
+.logItem p span {
+  color: var(--primary);
+}
+
+.logItem time {
+  margin-top: 0.6rem;
+  display: inline-block;
+  font-size: 0.72rem;
+  color: rgba(226, 226, 226, 0.28);
+}
+
+.fab {
+  position: fixed;
+  right: 2.1rem;
+  bottom: 2.15rem;
+  width: 3.85rem;
+  height: 3.85rem;
+  border-radius: 0.85rem;
+  border: 0;
+  color: #e4c2ff;
+  background: linear-gradient(135deg, var(--primary-container), var(--primary-variant));
+  box-shadow: 0 22px 48px rgba(123, 44, 191, 0.22);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 35;
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fab:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 26px 54px rgba(123, 44, 191, 0.3);
+}
+
+.fab:active {
+  transform: scale(0.96);
+}
+
+.fabIcon {
+  font-size: 2rem;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.45;
+  }
+
+  55% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.45;
+  }
+}
+
+@media (max-width: 1280px) {
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lowerGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .profileName {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .content {
+    padding: 1rem 1rem 6rem;
+  }
+
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .activityHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .activityControls {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .selectWrap {
+    width: 100%;
+  }
+
+  .selectWrap select {
+    width: 100%;
+  }
+
+  .chartBadge {
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+  }
+
+  .fab {
+    right: 1rem;
+    bottom: 1rem;
+  }
+}

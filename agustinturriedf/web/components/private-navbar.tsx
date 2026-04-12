@@ -46,6 +46,7 @@ function isActive(pathname: string, href: string) {
 
 export function PrivateNavbar() {
   const pathname = usePathname();
+  const profileActive = pathname === "/perfil" || pathname.startsWith("/perfil/");
 
   return (
     <aside className={styles.sidebar}>
@@ -75,14 +76,27 @@ export function PrivateNavbar() {
         })}
       </nav>
 
-      <div className={styles.profileArea}>
-        <div className={styles.avatar}>
-          <MaterialSymbol name="person" className={styles.avatarIcon} fill={1} weight={450} opticalSize={20} />
-        </div>
-        <div>
-          <p className={styles.profileName}>Agustín Turri</p>
-          <p className={styles.profileRole}>Entrenador</p>
-        </div>
+      <div className={styles.bottomArea}>
+        <Link href="/perfil" className={`${styles.profileArea} ${styles.profileLink} ${profileActive ? styles.profileActive : ""}`}>
+          <div className={styles.avatar}>
+            <MaterialSymbol
+              name={profileActive ? "account_circle" : "person"}
+              className={styles.avatarIcon}
+              fill={profileActive ? 1 : 0}
+              weight={profileActive ? 500 : 450}
+              opticalSize={20}
+            />
+          </div>
+          <div>
+            <p className={styles.profileName}>Agustín Turri</p>
+            <p className={styles.profileRole}>Entrenador</p>
+          </div>
+        </Link>
+
+        <Link href="/login" className={styles.logoutButton}>
+          <MaterialSymbol name="logout" className={styles.logoutIcon} opticalSize={20} />
+          <span>Cerrar sesión</span>
+        </Link>
       </div>
     </aside>
   );

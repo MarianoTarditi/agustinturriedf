@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-tint": "#deb7ff",
+                        "on-tertiary-container": "#ffc480",
+                        "secondary-container": "#3c4962",
+                        "background": "#131313",
+                        "surface-variant": "#353535",
+                        "on-primary-fixed": "#2d0050",
+                        "on-background": "#e2e2e2",
+                        "primary": "#deb7ff",
+                        "outline": "#988d9e",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-lowest": "#0e0e0e",
+                        "primary-container": "#7b2cbf",
+                        "on-primary-fixed-variant": "#680eac",
+                        "on-surface-variant": "#cfc2d5",
+                        "on-surface": "#e2e2e2",
+                        "tertiary": "#fdb969",
+                        "surface-container": "#1f1f1f",
+                        "inverse-surface": "#e2e2e2",
+                        "on-error": "#690005",
+                        "tertiary-fixed-dim": "#fdb969",
+                        "secondary": "#b9c7e4",
+                        "on-primary": "#4a007f",
+                        "on-secondary": "#233148",
+                        "error": "#ffb4ab",
+                        "inverse-primary": "#8234c6",
+                        "surface-container-highest": "#353535",
+                        "outline-variant": "#4c4353",
+                        "inverse-on-surface": "#303030",
+                        "on-tertiary-fixed-variant": "#663e00",
+                        "error-container": "#93000a",
+                        "surface": "#131313",
+                        "secondary-fixed-dim": "#b9c7e4",
+                        "secondary-fixed": "#d6e3ff",
+                        "primary-fixed": "#f1dbff",
+                        "on-primary-container": "#e4c2ff",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-dim": "#131313",
+                        "surface-container-low": "#1b1b1b",
+                        "surface-bright": "#393939",
+                        "on-secondary-fixed": "#0d1c32",
+                        "on-secondary-container": "#abb9d6",
+                        "on-secondary-fixed-variant": "#39475f",
+                        "on-tertiary-fixed": "#2b1700",
+                        "tertiary-fixed": "#ffddba",
+                        "tertiary-container": "#7e4d00",
+                        "primary-fixed-dim": "#deb7ff",
+                        "on-tertiary": "#482a00"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #000000;
+            color: #e2e2e2;
+            font-family: 'Inter', sans-serif;
+        }
+        .kinetic-gradient {
+            background: linear-gradient(135deg, #7b2cbf 0%, #680eac 100%);
+        }
+        .obsidian-card {
+            background-color: #1f1f1f;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .obsidian-card:hover {
+            background-color: #2a2a2a;
+            transform: translateY(-2px);
+        }
+        .tonal-bloom {
+            box-shadow: 0px 20px 40px rgba(123, 44, 191, 0.08);
+        }
+    </style>
+</head>
+<body class="bg-[#000000]">
+<!-- SideNavBar Anchor -->
+<nav class="fixed left-0 top-0 h-full w-64 bg-[#000000] border-r border-[#1f1f1f] flex flex-col z-40">
+<div class="p-8 flex flex-col gap-2">
+<div class="flex items-center gap-3">
+<div>
+<h1 class="text-2xl font-bold tracking-tighter text-[#deb7ff] font-headline" style="">AGUSTINTURRI</h1>
+<p class="text-[10px] tracking-[0.2em] text-[#e2e2e2]/40 font-body uppercase" style="">ENTRENADOR DE FUERZA</p>
+</div>
+</div>
+</div>
+<div class="mt-8 flex flex-col px-4 gap-1">
+<!-- Active: Dashboard -->
+<a class="flex items-center gap-3 px-4 py-3 text-[#deb7ff] bg-[#7b2cbf]/10 border-r-2 border-[#7b2cbf] transition-all duration-300" href="#" style="">
+<span class="material-symbols-outlined" style='font-variation-settings: "FILL" 1;'>dashboard</span>
+<span class="font-label text-sm tracking-wide" style="">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#e2e2e2]/60 hover:text-[#e2e2e2] hover:bg-[#1f1f1f] transition-all duration-300" href="#" style="">
+<span class="material-symbols-outlined" style="">group</span>
+<span class="font-label text-sm tracking-wide" style="">Usuarios</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#e2e2e2]/60 hover:text-[#e2e2e2] hover:bg-[#1f1f1f] transition-all duration-300" href="#" style="">
+<span class="material-symbols-outlined" style="">payments</span>
+<span class="font-label text-sm tracking-wide" style="">Pagos</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#e2e2e2]/60 hover:text-[#e2e2e2] hover:bg-[#1f1f1f] transition-all duration-300" href="#" style="">
+<span class="material-symbols-outlined" style="">fitness_center</span>
+<span class="font-label text-sm tracking-wide" style="">Rutinas</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-[#e2e2e2]/60 hover:text-[#e2e2e2] hover:bg-[#1f1f1f] transition-all duration-300" href="#" style="">
+<span class="material-symbols-outlined" style="">movie</span>
+<span class="font-label text-sm tracking-wide" style="">Videoteca</span>
+</a>
+</div>
+<div class="mt-auto flex flex-col gap-1"><div class="p-6 border-t border-[#1f1f1f] mt-auto mb-0 mx-[-1rem]">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-surface-container-high rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">person</span>
+</div>
+<div>
+<p class="text-xs font-bold font-headline text-on-surface">Agustín Turri</p>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest">Entrenador</p>
+</div>
+</div>
+</div></div>
+</nav>
+<!-- Main Canvas -->
+<main class="ml-64 min-h-screen bg-[#131313]">
+<!-- TopAppBar Anchor -->
+<header class="flex justify-between items-center w-full px-8 py-6 sticky top-0 bg-[#131313]/70 backdrop-blur-xl z-30">
+<div class="flex items-center gap-4">
+<span class="text-[#e2e2e2]/30 text-xs tracking-widest font-label uppercase" style="">Performance Command Center</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 border-l border-[#1f1f1f] pl-6">
+<button class="text-[#e2e2e2]/60 hover:text-[#deb7ff] transition-all duration-300" style="">
+<span class="material-symbols-outlined" style="">notifications</span>
+</button>
+<button class="text-[#e2e2e2]/60 hover:text-[#deb7ff] transition-all duration-300" style="">
+<span class="material-symbols-outlined" style="">help</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Dashboard Content -->
+<div class="px-8 py-10 max-w-7xl mx-auto">
+<!-- Header Section -->
+<div class="mb-12">
+<h2 class="text-5xl font-extrabold tracking-tight font-headline text-[#e2e2e2] mb-4 uppercase" style="">Performance <span class="text-[#deb7ff]" style="">Command Center</span></h2>
+<p class="text-lg text-[#e2e2e2]/60 font-body max-w-3xl leading-relaxed" style="">
+                    Monitorea alumnos, pagos, rutinas y progreso en un tablero con foco total en <span class="text-[#e2e2e2]" style="">consistencia, disciplina y resultados medibles.</span>
+</p>
+</div>
+<!-- Bento Grid Statistics -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Card 1: Estudiantes -->
+<div class="obsidian-card p-6 rounded-xl border border-outline-variant/15 tonal-bloom group">
+<div class="flex justify-between items-start mb-8">
+<div class="p-3 bg-secondary-container/20 rounded-lg text-secondary">
+<span class="material-symbols-outlined text-2xl" style="">group</span>
+</div>
+<span class="text-[10px] font-label text-[#e2e2e2]/40 tracking-widest uppercase" style="">Estatus: Activo</span>
+</div>
+<div class="flex flex-col">
+<span class="text-4xl font-headline font-bold text-[#e2e2e2] mb-1" style="">1</span>
+<span class="text-sm font-label text-[#e2e2e2]/60 mb-4" style="">Estudiantes activos</span>
+<div class="mt-4 pt-4 border-t border-[#1f1f1f] flex justify-between items-center">
+<span class="text-xs text-[#e2e2e2]/40" style="">Total registrado: 1</span>
+<span class="material-symbols-outlined text-xs text-[#deb7ff] group-hover:translate-x-1 transition-transform" style="">arrow_forward</span>
+</div>
+</div>
+</div>
+<!-- Card 2: Pagos -->
+<div class="obsidian-card p-6 rounded-xl border border-outline-variant/15 tonal-bloom group">
+<div class="flex justify-between items-start mb-8">
+<div class="p-3 bg-primary-container/20 rounded-lg text-primary">
+<span class="material-symbols-outlined text-2xl" style="">payments</span>
+</div>
+<div class="w-2 h-2 rounded-full bg-error animate-pulse"></div>
+</div>
+<div class="flex flex-col">
+<span class="text-4xl font-headline font-bold text-[#e2e2e2] mb-1" style="">1</span>
+<span class="text-sm font-label text-[#e2e2e2]/60 mb-4" style="">Pagos pendientes</span>
+<div class="mt-4 pt-4 border-t border-[#1f1f1f] flex justify-between items-center">
+<span class="text-xs text-[#e2e2e2]/40" style="">Seguimiento financiero</span>
+<span class="material-symbols-outlined text-xs text-[#deb7ff] group-hover:translate-x-1 transition-transform" style="">arrow_forward</span>
+</div>
+</div>
+</div>
+<!-- Card 3: Rutinas -->
+<div class="obsidian-card p-6 rounded-xl border border-outline-variant/15 tonal-bloom group">
+<div class="flex justify-between items-start mb-8">
+<div class="p-3 bg-tertiary-container/20 rounded-lg text-tertiary">
+<span class="material-symbols-outlined text-2xl" style="">fitness_center</span>
+</div>
+</div>
+<div class="flex flex-col">
+<span class="text-4xl font-headline font-bold text-[#e2e2e2] mb-1" style="">20</span>
+<span class="text-sm font-label text-[#e2e2e2]/60 mb-4" style="">Rutinas + Ejercicios</span>
+<div class="mt-4 pt-4 border-t border-[#1f1f1f] flex justify-between items-center">
+<span class="text-xs text-[#e2e2e2]/40" style="">8 rutinas · 12 ejercicios</span>
+<span class="material-symbols-outlined text-xs text-[#deb7ff] group-hover:translate-x-1 transition-transform" style="">arrow_forward</span>
+</div>
+</div>
+</div>
+<!-- Card 4: Progreso -->
+<div class="obsidian-card p-6 rounded-xl border border-outline-variant/15 tonal-bloom group">
+<div class="flex justify-between items-start mb-8">
+<div class="p-3 bg-surface-container-highest rounded-lg text-on-surface-variant">
+<span class="material-symbols-outlined text-2xl" style="">monitoring</span>
+</div>
+</div>
+<div class="flex flex-col">
+<span class="text-4xl font-headline font-bold text-[#e2e2e2] mb-1" style="">0</span>
+<span class="text-sm font-label text-[#e2e2e2]/60 mb-4" style="">Progreso del mes</span>
+<div class="mt-4 pt-4 border-t border-[#1f1f1f] flex justify-between items-center">
+<span class="text-xs text-[#e2e2e2]/40" style="">Entrenamientos registrados</span>
+<span class="material-symbols-outlined text-xs text-[#deb7ff] group-hover:translate-x-1 transition-transform" style="">arrow_forward</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Focus Section: Detailed Analytics (Asymmetric Split) -->
+<div class="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Large Activity Plot (2/3) -->
+<div class="lg:col-span-2 obsidian-card rounded-xl border border-outline-variant/15 overflow-hidden flex flex-col">
+<div class="p-8 border-b border-[#1f1f1f] flex justify-between items-center">
+<div>
+<h3 class="text-lg font-headline font-bold tracking-tight text-[#e2e2e2] uppercase" style="">Actividad de Alumnos</h3>
+<p class="text-xs font-label text-[#e2e2e2]/40" style="">Análisis de consistencia semanal</p>
+</div>
+<div class="flex gap-2"><div class="relative flex items-center mr-2">
+<select class="appearance-none bg-[#1f1f1f] border border-[#4c4353]/30 text-[10px] font-label text-[#e2e2e2] py-1 pl-3 pr-8 rounded uppercase tracking-wider focus:outline-none focus:ring-1 focus:ring-[#7b2cbf] focus:border-[#7b2cbf] transition-all cursor-pointer">
+<option value="">Seleccionar alumno...</option>
+<option value="1">Lucas Silva</option>
+<option value="2">Ana Garcia</option>
+<option value="3">Mateo Rodriguez</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-[#e2e2e2]/40 text-sm" style="">expand_more</span>
+</div>
+<button class="px-3 py-1 bg-surface-container-highest text-[10px] font-label text-[#e2e2e2] rounded uppercase tracking-wider" style="">7D</button>
+<button class="px-3 py-1 text-[10px] font-label text-[#e2e2e2]/40 hover:text-[#e2e2e2] rounded uppercase tracking-wider" style="">30D</button>
+</div>
+</div>
+<div class="h-64 p-8 flex items-center justify-center bg-[#000000]/20">
+<div class="relative w-full h-full border-b border-l border-[#1f1f1f] flex items-end px-4 py-2 gap-4">
+<!-- Visualizing an empty chart state with aesthetic placeholders -->
+<div class="flex-1 bg-[#1f1f1f] rounded-t-sm h-1/4"></div>
+<div class="flex-1 bg-[#1f1f1f] rounded-t-sm h-2/4"></div>
+<div class="flex-1 kinetic-gradient rounded-t-sm h-3/4 opacity-20"></div>
+<div class="flex-1 bg-[#1f1f1f] rounded-t-sm h-1/5"></div>
+<div class="flex-1 bg-[#1f1f1f] rounded-t-sm h-1/3"></div>
+<div class="flex-1 bg-[#1f1f1f] rounded-t-sm h-1/2"></div>
+<div class="flex-1 kinetic-gradient rounded-t-sm h-[90%] tonal-bloom"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<p class="text-[#deb7ff] font-headline font-medium text-sm tracking-widest uppercase bg-background px-4 py-2 border border-[#7b2cbf]/30" style="">Esperando Datos de Sesión</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Profile Sidebar (1/3) -->
+<div class="lg:col-span-1 flex flex-col gap-8">
+<div class="obsidian-card rounded-xl border border-outline-variant/15 p-8 relative overflow-hidden group">
+<div class="absolute -right-8 -top-8 w-32 h-32 bg-[#7b2cbf]/10 rounded-full blur-3xl group-hover:bg-[#7b2cbf]/20 transition-all duration-500"></div>
+<div class="flex items-center gap-6 mb-8">
+<div class="relative">
+<div class="w-16 h-16 rounded-lg overflow-hidden border-2 border-[#7b2cbf]">
+<img alt="Student Profile" class="w-full h-full object-cover" data-alt="Close-up of a fit young athlete in professional training gear, focused gaze, dark atmospheric lighting with sharp highlights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAYdgZZiIGjY1M50xZfuVWoMXH9MLRSFpOBDdtNn2MQOFsEHlQ6fdDSNaD3YAlscipjigeL1Mx-XZS-wp7wc3i7qpnfSb8os44heYBtcoQwDJB_YD1kKD-IiljV1M8LY7BlN9Xbbb3XfYjl6q_XRhhhDWiryvzs9rvgysDVcCXNg7cDsGOyMacd-MjUv-Aw7eLfVjNEPUeUxOEHL1JLMjCypzewVazCnyWiWobs810wusmglP50CyOtmCHjssBNBaSLp_93Uis3ow1b" style=""/>
+</div>
+<div class="absolute -bottom-2 -right-2 bg-primary-container p-1 rounded-sm">
+<span class="material-symbols-outlined text-[10px] text-white" style="">star</span>
+</div>
+</div>
+<div>
+<h4 class="font-headline font-bold text-[#e2e2e2] text-xl" style="">Lucas Silva</h4>
+<span class="text-xs font-label text-[#deb7ff] uppercase tracking-widest" style="">Alumno desde hace 3 meses</span>
+</div>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-center py-2 border-b border-[#1f1f1f]">
+<span class="text-xs text-[#e2e2e2]/40 uppercase tracking-wider" style="">Última sesión</span>
+<span class="text-xs text-[#e2e2e2]" style="">Hace 2 horas</span>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-[#1f1f1f]">
+<span class="text-xs text-[#e2e2e2]/40 uppercase tracking-wider" style="">Inicio</span>
+<span class="text-xs text-[#deb7ff] font-bold" style="">02/02/2026</span>
+</div>
+<div class="flex justify-between items-center py-2">
+<span class="text-xs text-[#e2e2e2]/40 uppercase tracking-wider" style="">Próximo Pago</span>
+<span class="text-xs text-error" style="">Vencido</span>
+</div>
+</div>
+<button class="w-full mt-6 py-3 kinetic-gradient text-on-primary-container font-headline font-bold text-xs uppercase tracking-[0.2em] rounded hover:brightness-110 active:scale-95 transition-all duration-200" style="">
+                            Ver detalles</button>
+</div>
+<!-- Notification Log -->
+<div class="flex-1 bg-[#1f1f1f]/50 rounded-xl border border-outline-variant/15 p-6 flex flex-col">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-sm text-[#deb7ff]" style="">history</span>
+<span class="text-[10px] font-label text-[#e2e2e2]/60 uppercase tracking-widest" style="">Bitácora Reciente</span>
+</div>
+<div class="space-y-6">
+<div class="flex gap-4">
+<div class="w-1 bg-[#7b2cbf] h-8 rounded-full"></div>
+<div>
+<p class="text-xs text-[#e2e2e2] mb-1" style="">Nueva rutina asignada: <span class="text-[#deb7ff]" style="">Power-Lift X</span></p>
+<span class="text-[10px] text-[#e2e2e2]/30" style="">Hoy, 09:12 AM</span>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="w-1 bg-error h-8 rounded-full"></div>
+<div>
+<p class="text-xs text-[#e2e2e2] mb-1" style="">Pago pendiente detectado para <span class="text-[#e2e2e2]/80" style="">Lucas Silva</span></p>
+<span class="text-[10px] text-[#e2e2e2]/30" style="">Ayer, 06:45 PM</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Floating Action Trigger - Restricted to Dashboard Context -->
+<button class="fixed bottom-10 right-10 w-16 h-16 kinetic-gradient rounded-full shadow-2xl tonal-bloom flex items-center justify-center text-on-primary-container hover:scale-110 active:scale-90 transition-all duration-300 z-50 group" style="">
+<span class="material-symbols-outlined text-3xl group-hover:rotate-90 transition-transform duration-500" style="">add</span>
+</button>
+</body></html>

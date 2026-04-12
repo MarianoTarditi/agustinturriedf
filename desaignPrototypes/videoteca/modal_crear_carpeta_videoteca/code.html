@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary": "#233148",
+                        "on-tertiary": "#482a00",
+                        "on-primary": "#4a007f",
+                        "inverse-primary": "#8234c6",
+                        "on-secondary-container": "#abb9d6",
+                        "surface-container": "#1f1f1f",
+                        "tertiary-fixed-dim": "#fdb969",
+                        "primary": "#deb7ff",
+                        "surface-tint": "#deb7ff",
+                        "secondary": "#b9c7e4",
+                        "primary-fixed": "#f1dbff",
+                        "on-primary-container": "#e4c2ff",
+                        "on-error": "#690005",
+                        "surface-container-low": "#1b1b1b",
+                        "on-tertiary-container": "#ffc480",
+                        "secondary-fixed": "#d6e3ff",
+                        "error-container": "#93000a",
+                        "inverse-surface": "#e2e2e2",
+                        "primary-fixed-dim": "#deb7ff",
+                        "tertiary-fixed": "#ffddba",
+                        "secondary-container": "#3c4962",
+                        "on-background": "#e2e2e2",
+                        "surface-variant": "#353535",
+                        "on-secondary-fixed": "#0d1c32",
+                        "surface": "#131313",
+                        "on-surface-variant": "#cfc2d5",
+                        "surface-bright": "#393939",
+                        "on-secondary-fixed-variant": "#39475f",
+                        "inverse-on-surface": "#303030",
+                        "outline-variant": "#4c4353",
+                        "primary-container": "#7b2cbf",
+                        "on-tertiary-fixed-variant": "#663e00",
+                        "on-surface": "#e2e2e2",
+                        "on-primary-fixed": "#2d0050",
+                        "tertiary-container": "#7e4d00",
+                        "background": "#131313",
+                        "on-error-container": "#ffdad6",
+                        "outline": "#988d9e",
+                        "on-tertiary-fixed": "#2b1700",
+                        "surface-container-lowest": "#0e0e0e",
+                        "surface-container-highest": "#353535",
+                        "on-primary-fixed-variant": "#680eac",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-dim": "#131313",
+                        "tertiary": "#fdb969",
+                        "secondary-fixed-dim": "#b9c7e4",
+                        "error": "#ffb4ab"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .noir-gradient {
+            background: linear-gradient(135deg, #7b2cbf 0%, #680eac 100%);
+        }
+        .obsidian-glass {
+            background: rgba(31, 31, 31, 0.8);
+            backdrop-filter: blur(24px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body antialiased overflow-hidden">
+<!-- Background Context: Videoteca (Blurred for Modal) -->
+<div class="flex h-screen w-full blur-sm grayscale-[0.2]">
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-full w-64 border-r border-white/5 bg-[#131313] flex flex-col py-8 z-10">
+<div class="px-8 mb-12">
+<span class="text-xl font-black text-[#deb7ff] font-headline">Kinetic Noir</span>
+<p class="font-['Space_Grotesk'] uppercase tracking-widest text-[10px] text-primary/60">Elite Performance</p>
+</div>
+<div class="flex-1 space-y-2">
+<div class="flex items-center px-8 py-3 text-[#e2e2e2]/60 font-headline text-xs tracking-widest uppercase">
+<span class="material-symbols-outlined mr-4">dashboard</span> Dashboard
+                </div>
+<div class="flex items-center px-8 py-3 text-[#e2e2e2]/60 font-headline text-xs tracking-widest uppercase">
+<span class="material-symbols-outlined mr-4">group</span> Usuarios
+                </div>
+<div class="flex items-center px-8 py-3 text-[#e2e2e2]/60 font-headline text-xs tracking-widest uppercase">
+<span class="material-symbols-outlined mr-4">payments</span> Pagos
+                </div>
+<div class="flex items-center px-8 py-3 text-[#e2e2e2]/60 font-headline text-xs tracking-widest uppercase">
+<span class="material-symbols-outlined mr-4">fitness_center</span> Rutinas
+                </div>
+<!-- Active Tab: Videoteca -->
+<div class="flex items-center px-8 py-3 text-[#deb7ff] font-bold border-r-2 border-[#deb7ff] bg-gradient-to-r from-[#7b2cbf]/10 to-transparent font-headline text-xs tracking-widest uppercase">
+<span class="material-symbols-outlined mr-4">video_library</span> Videoteca
+                </div>
+</div>
+<div class="px-8 space-y-4 pt-8 border-t border-white/5">
+<div class="flex items-center text-[#e2e2e2]/60 font-headline text-xs tracking-widest uppercase">
+<span class="material-symbols-outlined mr-4">settings</span> Ajustes
+                </div>
+<div class="flex items-center text-[#e2e2e2]/60 font-headline text-xs tracking-widest uppercase">
+<span class="material-symbols-outlined mr-4">logout</span> Cerrar Sesión
+                </div>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="ml-64 flex-1 p-12 overflow-y-auto">
+<header class="flex justify-between items-end mb-12">
+<div>
+<h1 class="text-5xl font-black font-headline tracking-tighter uppercase mb-2">Videoteca</h1>
+<p class="text-on-surface-variant max-w-xl">Gestiona el repositorio de técnicas y ejercicios para tus atletas de alto rendimiento.</p>
+</div>
+<button class="noir-gradient px-6 py-3 rounded-md flex items-center gap-2 font-headline font-bold text-xs tracking-widest uppercase text-on-primary-container">
+<span class="material-symbols-outlined text-sm">add_circle</span> Nuevo Video
+                </button>
+</header>
+<!-- Bento Grid Preview -->
+<div class="grid grid-cols-3 gap-6">
+<div class="col-span-2 bg-surface-container h-80 rounded-lg p-6 border border-white/5 relative overflow-hidden group">
+<img class="absolute inset-0 w-full h-full object-cover opacity-40" data-alt="Intense athlete lifting heavy barbell in a dark moody industrial gym setting with dramatic lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCy-n7dLDZj2Oosv_Kp_-BC7Y73g9I6JrK8fMTrmqQVpy2kN4xoKdjFkvc_VeFvu5hDtI840FcS8L0CQB7dAU3JhNdQkXAnDaG0qx8hqJ0zGq6oe84KudhKiLVZULHXfobPzoB7SgyBZLFRxlYjUiAb03TdW9fmDi7VSOVy1wFvi_uvfklRemeL1qWlghHDKIRAetB47kn27AcgPgAmpKgDYWGzW8c38l6IM1eFRghImASSEWcE01x3jBzNRSdZ56MrMeLxwwxeB5-H"/>
+<div class="relative z-10 h-full flex flex-col justify-end">
+<span class="text-primary font-headline font-bold tracking-widest text-[10px] uppercase mb-1">Categoría Destacada</span>
+<h3 class="text-3xl font-black font-headline uppercase leading-none">Fuerza Máxima</h3>
+</div>
+</div>
+<div class="bg-surface-container h-80 rounded-lg border border-white/5 p-6 flex flex-col gap-4">
+<div class="w-full h-1/2 bg-surface-container-high rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-primary/40 text-4xl">folder</span>
+</div>
+<div class="w-full h-1/2 bg-surface-container-high rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-primary/40 text-4xl">folder</span>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Modal Overlay -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
+<!-- Modal Container -->
+<div class="w-full max-w-lg bg-surface-container border border-outline-variant/20 rounded-lg shadow-[0px_20px_40px_rgba(123,44,191,0.15)] overflow-hidden relative">
+<!-- Subtle Violet Glow Effect -->
+<div class="absolute -top-24 -left-24 w-48 h-48 bg-primary/10 rounded-full blur-[80px]"></div>
+<div class="p-10 relative z-10">
+<!-- Header -->
+<div class="mb-8">
+<h2 class="text-3xl font-bold font-headline tracking-tight uppercase text-on-surface mb-2">CREAR CARPETA</h2>
+<p class="text-on-surface-variant text-sm leading-relaxed">
+                        Organiza tus videos por articulación o categoría para un acceso rápido.
+                    </p>
+</div>
+<!-- Form -->
+<div class="space-y-6">
+<!-- Input Field -->
+<div class="space-y-2">
+<label class="block font-headline text-[10px] tracking-widest uppercase text-primary/80 font-bold" for="folder-name">
+                            Nombre de la carpeta
+                        </label>
+<input class="w-full bg-surface-container-high border border-outline-variant/30 text-on-surface rounded-md px-4 py-3 focus:ring-1 focus:ring-primary focus:border-primary transition-all outline-none placeholder:text-on-surface-variant/40" id="folder-name" placeholder="Ej: Hombro, Espalda" type="text"/>
+</div>
+<!-- Select Field -->
+<div class="space-y-2">
+<label class="block font-headline text-[10px] tracking-widest uppercase text-primary/80 font-bold" for="suggested-tags">
+                            Etiquetas sugeridas
+                        </label>
+<div class="relative">
+<select class="w-full appearance-none bg-surface-container-high border border-outline-variant/30 text-on-surface rounded-md px-4 py-3 focus:ring-1 focus:ring-primary focus:border-primary transition-all outline-none" id="suggested-tags">
+<option disabled="" selected="" value="">Seleccionar etiqueta...</option>
+<option value="fuerza">Fuerza</option>
+<option value="movilidad">Movilidad</option>
+<option value="tecnica">Técnica</option>
+<option value="hipertrofia">Hipertrofia</option>
+</select>
+<div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+<span class="material-symbols-outlined text-on-surface-variant">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Visual Feedback of Selection (Optional Editorial Touch) -->
+<div class="flex flex-wrap gap-2 pt-2">
+<span class="px-3 py-1 bg-surface-container-highest rounded-full text-[10px] font-bold font-headline uppercase tracking-wider text-primary border border-primary/20">#Fuerza</span>
+<span class="px-3 py-1 bg-surface-container-highest rounded-full text-[10px] font-bold font-headline uppercase tracking-wider text-on-surface-variant/60 border border-white/5 cursor-pointer hover:border-primary/40 transition-colors">#Movilidad</span>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="mt-10 flex gap-4">
+<button class="flex-1 px-6 py-4 rounded-md border border-outline-variant text-on-surface font-headline font-bold text-xs tracking-widest uppercase hover:bg-surface-container-high transition-colors active:scale-95">
+                        CANCELAR
+                    </button>
+<button class="flex-1 noir-gradient px-6 py-4 rounded-md text-on-primary font-headline font-bold text-xs tracking-widest uppercase shadow-[0px_4px_15px_rgba(123,44,191,0.3)] active:scale-95 transition-transform">
+                        CREAR CARPETA
+                    </button>
+</div>
+</div>
+<!-- Close icon in corner -->
+<button class="absolute top-6 right-6 text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+</div>
+</body></html>
