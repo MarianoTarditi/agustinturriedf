@@ -1,0 +1,67 @@
+{
+  "pages": {
+    "/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/layout.css",
+      "static/chunks/app/layout.js"
+    ],
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
+    ],
+    "/(auth)/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(auth)/layout.js"
+    ],
+    "/(auth)/login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(auth)/login/page.js"
+    ],
+    "/(private)/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(private)/layout.css",
+      "static/chunks/app/(private)/layout.js"
+    ],
+    "/(private)/dashboard/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(private)/dashboard/page.css",
+      "static/chunks/app/(private)/dashboard/page.js"
+    ],
+    "/(private)/videoteca/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(private)/videoteca/page.css",
+      "static/chunks/app/(private)/videoteca/page.js"
+    ],
+    "/(private)/rutinas/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(private)/rutinas/page.css",
+      "static/chunks/app/(private)/rutinas/page.js"
+    ],
+    "/(private)/pagos/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(private)/pagos/page.css",
+      "static/chunks/app/(private)/pagos/page.js"
+    ],
+    "/(private)/usuarios/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(private)/usuarios/page.css",
+      "static/chunks/app/(private)/usuarios/page.js"
+    ],
+    "/(private)/perfil/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(private)/perfil/page.css",
+      "static/chunks/app/(private)/perfil/page.js"
+    ]
+  }
+}

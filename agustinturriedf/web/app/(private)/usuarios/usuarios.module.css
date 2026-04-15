@@ -420,6 +420,56 @@
   transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.rowActionsWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.rowMenu {
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  right: 0;
+  width: 12.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(76, 67, 83, 0.4);
+  background: rgba(14, 14, 14, 0.96);
+  box-shadow: 0 20px 36px rgba(0, 0, 0, 0.44), 0 10px 24px rgba(123, 44, 191, 0.12);
+  backdrop-filter: blur(16px);
+  padding: 0.35rem;
+  z-index: 15;
+  display: grid;
+  gap: 0.1rem;
+}
+
+.rowMenu button {
+  border: 0;
+  background: transparent;
+  color: rgba(226, 226, 226, 0.9);
+  padding: 0.52rem 0.58rem;
+  border-radius: 0.32rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 0.42rem;
+  cursor: pointer;
+  transition: background-color 180ms cubic-bezier(0.22, 1, 0.36, 1), color 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.rowMenu button:hover {
+  background: rgba(123, 44, 191, 0.18);
+  color: var(--primary);
+}
+
+.rowMenuIcon {
+  font-size: 0.95rem;
+}
+
+.rowMenuIconDanger {
+  color: #ffb4ab;
+}
+
 .moreButton:hover .rowActionIcon {
   transform: scale(1.08);
 }
@@ -472,6 +522,878 @@
   color: rgba(207, 194, 213, 0.33);
 }
 
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(6px);
+}
+
+.createModal,
+.detailModal,
+.editModal {
+  max-height: min(92vh, 58rem);
+  border-radius: 0.86rem;
+  border: 1px solid rgba(76, 67, 83, 0.34);
+  background: rgba(27, 27, 27, 0.94);
+  box-shadow: 0 42px 70px rgba(0, 0, 0, 0.56), 0 20px 40px rgba(123, 44, 191, 0.15);
+  overflow: auto;
+}
+
+.createModal,
+.editModal {
+  width: min(100%, 48rem);
+}
+
+.detailModal {
+  width: min(100%, 51rem);
+}
+
+.createModalBody {
+  padding: 2rem;
+}
+
+.modalHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+}
+
+.modalDescription {
+  margin: 0.65rem 0 0;
+  max-width: 38rem;
+  color: rgba(207, 194, 213, 0.85);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+.modalCodeLabel {
+  color: var(--primary);
+  font-style: italic;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.modalCloseButton {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  color: rgba(207, 194, 213, 0.86);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 200ms cubic-bezier(0.22, 1, 0.36, 1), background-color 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.modalCloseButton:hover {
+  color: var(--on-surface);
+  background: rgba(53, 53, 53, 0.9);
+}
+
+.modalCloseIcon {
+  font-size: 1.12rem;
+}
+
+.createForm {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.formGroupGrid2,
+.formGroupGrid3,
+.subGrid2 {
+  display: grid;
+  gap: 1rem;
+}
+
+.formGroupGrid2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.formGroupGrid3 {
+  grid-template-columns: 1fr 1fr 1.2fr;
+}
+
+.subGrid2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.fieldWrap {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.fieldWrap > span {
+  color: rgba(207, 194, 213, 0.85);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 700;
+}
+
+.fieldWrap > input,
+.fieldWrap > select,
+.moneyInputWrap,
+.leadingIconInput,
+.trailingUnitInput,
+.selectWrap {
+  width: 100%;
+  border: 0;
+  border-radius: 0.5rem;
+  background: var(--surface-highest);
+  color: var(--on-surface);
+  min-height: 2.9rem;
+}
+
+.fieldWrap > input,
+.fieldWrap > select {
+  padding: 0.7rem 0.9rem;
+  outline: none;
+  border: 1px solid transparent;
+  
+    font-size: 15px;
+
+}
+
+.fieldWrap > input::placeholder {
+  color: rgba(207, 194, 213, 0.44);
+}
+
+.fieldWrap > input:focus,
+.fieldWrap > select:focus {
+  border-color: rgba(222, 183, 255, 0.35);
+  box-shadow: 0 0 0 2px rgba(123, 44, 191, 0.2);
+}
+
+.paymentSection {
+  border-top: 1px solid rgba(76, 67, 83, 0.28);
+  padding-top: 1.45rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.paymentFieldsGrid {
+  align-items: start;
+}
+
+.paymentFieldsGrid .fieldWrap > span {
+  white-space: nowrap;
+}
+
+.paymentTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.paymentTitleRow h4 {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  color: var(--primary);
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+}
+
+.paymentTitleIcon {
+  color: var(--primary);
+  font-size: 1rem;
+}
+
+.moneyInputWrap {
+  display: flex;
+  align-items: center;
+  padding-inline: 0.8rem;
+  border: 1px solid transparent;
+  transition: border-color 220ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.moneyInputWrap:focus-within {
+  border-color: rgba(222, 183, 255, 0.35);
+  box-shadow: 0 0 0 2px rgba(123, 44, 191, 0.2);
+}
+
+.moneyField {
+  align-self: stretch;
+}
+
+.moneyInputWrap i {
+  font-style: normal;
+  color: rgba(207, 194, 213, 0.7);
+}
+
+.moneyInputWrap input {
+  width: 100%;
+  min-height: 2.9rem;
+  border: 0;
+  background: transparent;
+  color: var(--on-surface);
+  padding-inline: 0.35rem;
+  outline: none;
+}
+
+.fieldWrap small {
+  color: rgba(207, 194, 213, 0.55);
+  font-size: 0.62rem;
+  font-style: italic;
+}
+
+.modalActionsCreate,
+.detailFooterActions,
+.editFooter,
+.deleteActions {
+  display: flex;
+  gap: 0.85rem;
+}
+
+.modalActionsCreate {
+  margin-top: 0.2rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid rgba(76, 67, 83, 0.2);
+}
+
+.modalCancelButton,
+.modalCancelGhostButton,
+.modalDeleteCancelButton {
+  border: 1px solid rgba(76, 67, 83, 0.5);
+  background: transparent;
+  color: var(--on-surface);
+  border-radius: 0.5rem;
+  min-height: 2.9rem;
+  padding: 0.7rem 1rem;
+  flex: 1;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.modalConfirmButton,
+.modalDeleteButton {
+  border: 0;
+  border-radius: 0.5rem;
+  min-height: 2.9rem;
+  padding: 0.7rem 1rem;
+  flex: 1;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: #e4c2ff;
+  background: linear-gradient(135deg, var(--primary-container), var(--primary-variant));
+  box-shadow: 0 12px 24px rgba(123, 44, 191, 0.24);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.modalCancelButton:hover,
+.modalCancelGhostButton:hover,
+.modalDeleteCancelButton:hover {
+  background: rgba(53, 53, 53, 0.85);
+}
+
+.modalConfirmButton:hover,
+.modalDeleteButton:hover {
+  filter: brightness(1.08);
+}
+
+.detailModal,
+.editModal {
+  background: var(--surface);
+}
+
+.detailHeader,
+.editHeader {
+  padding: 1.85rem 2rem;
+  border-bottom: 1px solid rgba(76, 67, 83, 0.2);
+  display: flex;
+  justify-content: space-between;
+  gap: 2.5rem;
+}
+
+.detailHeader h2,
+.editHeader h2 {
+  margin: 0;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.72rem;
+  letter-spacing: -0.03em;
+}
+
+.detailHeader p,
+.editHeader p {
+  margin: 0.25rem 0 0;
+  color: rgba(207, 194, 213, 0.78);
+  font-size: 0.85rem;
+}
+
+.detailBody,
+.editBody {
+  padding: 1.85rem 2rem;
+  display: grid;
+  gap: 2.5rem;
+}
+
+.profileHero {
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+}
+
+.heroAvatarWrap {
+  position: relative;
+}
+
+.heroAvatar {
+  width: 5.6rem;
+  height: 5.6rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary-container), var(--primary-variant));
+  color: #f1dbff;
+  font-size: 2rem;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 700;
+  box-shadow: 0 0 20px rgba(123, 44, 191, 0.36);
+}
+
+.heroStatusPill {
+  position: absolute;
+  right: -0.6rem;
+  bottom: -0.4rem;
+  background: var(--surface-highest);
+  border: 1px solid rgba(76, 67, 83, 0.35);
+  border-radius: 999px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+}
+
+.heroStatusPill span {
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: var(--primary);
+  box-shadow: 0 0 8px var(--primary);
+}
+
+.profileHero h3 {
+  margin: 0;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 2rem;
+}
+
+.profileBadges {
+  display: flex;
+  gap: 0.45rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.profileBadges span {
+  border-radius: 999px;
+  border: 1px solid rgba(76, 67, 83, 0.36);
+  background: var(--surface-highest);
+  color: var(--on-surface-variant);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.26rem 0.55rem;
+}
+
+.profileBadges span:first-child {
+  color: var(--primary);
+  border-color: rgba(222, 183, 255, 0.25);
+}
+
+.detailGrid {
+  display: grid;
+  gap: 1.2rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.detailSection {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.detailSection > header {
+  display: flex;
+  align-items: center;
+  gap: 0.38rem;
+}
+
+.detailSection h4 {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 0.7rem;
+  color: var(--primary);
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+}
+
+.detailSectionIcon {
+  color: var(--primary);
+  font-size: 1rem;
+}
+
+.personalCard,
+.metricsGrid > div {
+  background: var(--surface-container);
+  border: 1px solid rgba(76, 67, 83, 0.2);
+  border-radius: 0.5rem;
+}
+
+.personalCard {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.95rem;
+}
+
+.personalCard label,
+.metricsGrid label {
+  display: block;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(207, 194, 213, 0.64);
+  margin-bottom: 0.24rem;
+  font-weight: 700;
+}
+
+.personalCard p,
+.metricsGrid p {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.metricsGrid {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.metricsGrid > div {
+  padding: 0.95rem;
+}
+
+.detailFooter,
+.editFooter {
+  padding: 1.2rem 2rem;
+  border-top: 1px solid rgba(76, 67, 83, 0.2);
+  background: var(--surface-container);
+}
+
+.detailFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.detailFooter > div:first-child {
+  color: rgba(207, 194, 213, 0.55);
+  font-size: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.detailFooterIcon {
+  font-size: 0.92rem;
+}
+
+.detailFooterActions .modalConfirmButton {
+  flex: initial;
+  padding-inline: 1.2rem;
+}
+
+.editTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.2rem;
+}
+
+.editProfileRow {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.editAvatarWrap {
+  width: 6rem;
+  height: 6rem;
+  border-radius: 999px;
+  border: 2px solid rgba(123, 44, 191, 0.45);
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 0 15px rgba(123, 44, 191, 0.3);
+}
+
+.editAvatarWrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.editAvatarWrap button {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(0, 0, 0, 0.38);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.editAvatarWrap:hover button {
+  opacity: 1;
+}
+
+.editUploadWrap {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.editUploadWrap label {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(207, 194, 213, 0.82);
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 700;
+}
+
+.editUploadWrap button {
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+  padding: 0;
+  width: fit-content;
+}
+
+.editUploadWrap small {
+  color: rgba(207, 194, 213, 0.58);
+  font-size: 0.62rem;
+  font-style: italic;
+}
+
+.editForm {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.createForm input,
+.createForm select,
+.createForm textarea,
+.editForm input,
+.editForm select,
+.editForm textarea {
+  font-size: 15px;
+}
+
+.createForm input::placeholder,
+.createForm textarea::placeholder,
+.editForm input::placeholder,
+.editForm textarea::placeholder {
+  font-size: 15px;
+}
+
+.editFullRow {
+  grid-column: 1 / -1;
+}
+
+.leadingIconInput,
+.trailingUnitInput,
+.selectWrap {
+  display: flex;
+  align-items: center;
+}
+
+.leadingIconInput {
+  padding-inline: 0.85rem;
+}
+
+.trailingUnitInput {
+  padding-left: 0.85rem;
+}
+
+.leadingIconInput input,
+.trailingUnitInput input,
+.selectWrap select {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--on-surface);
+  min-height: 2.9rem;
+  outline: none;
+}
+
+.leadingInputIcon,
+.selectIcon,
+.editCameraIcon,
+.editUploadIcon,
+.confirmIcon {
+  font-size: 1rem;
+}
+
+.leadingInputIcon,
+.selectIcon {
+  color: rgba(207, 194, 213, 0.64);
+}
+
+.trailingUnitInput i {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(207, 194, 213, 0.62);
+  font-style: normal;
+  padding-right: 0.8rem;
+}
+
+.selectWrap {
+  position: relative;
+  padding-left: 0.8rem;
+  padding-right: 0.55rem;
+  border: 1px solid transparent;
+  transition: border-color 220ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.selectWrap:focus-within {
+  border-color: rgba(222, 183, 255, 0.35);
+  box-shadow: 0 0 0 2px rgba(123, 44, 191, 0.2);
+}
+
+.selectWrap select {
+  appearance: none;
+  padding-right: 1.4rem;
+  cursor: pointer;
+}
+
+.selectWrap select option {
+  color: var(--on-surface);
+  background: var(--surface-highest);
+}
+
+.selectIcon {
+  color: rgba(207, 194, 213, 0.8);
+  pointer-events: none;
+}
+
+.editFooter {
+  display: flex;
+  justify-content: stretch;
+}
+
+.editFooter .modalCancelGhostButton,
+.editFooter .modalConfirmButton {
+  flex: 1;
+}
+
+.modalCancelGhostButton {
+  flex: initial;
+  padding-inline: 1.2rem;
+}
+
+.deleteModal {
+  position: relative;
+  width: min(100%, 34rem);
+  border-radius: 0.7rem;
+  border: 1px solid rgba(123, 44, 191, 0.24);
+  background: #000;
+  box-shadow: 0 0 40px rgba(123, 44, 191, 0.15), 0 30px 60px rgba(0, 0, 0, 0.62);
+  overflow: hidden;
+  padding: 2rem;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.deleteTopAccent,
+.deleteBottomAccent {
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(123, 44, 191, 0.55), transparent);
+}
+
+.deleteTopAccent {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.deleteBottomAccent {
+  margin-top: 0;
+}
+
+.deleteClose {
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  border: 0;
+  background: transparent;
+  color: rgba(207, 194, 213, 0.75);
+  cursor: pointer;
+}
+
+.deleteHeader {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 0.75rem;
+}
+
+.deleteWarningIcon {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 180, 171, 0.22);
+  background: rgba(147, 0, 10, 0.22);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;
+}
+
+.deleteWarningSymbol {
+  color: #ffb4ab;
+  font-size: 1.95rem;
+}
+
+.deleteHeader h2 {
+  margin: 0;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 2rem;
+  text-transform: uppercase;
+  letter-spacing: -0.04em;
+}
+
+.deleteHeader p {
+  margin: 0;
+  max-width: 24rem;
+  color: rgba(207, 194, 213, 0.82);
+  font-size: 0.85rem;
+  line-height: 1.52;
+}
+
+.deleteTargetCard {
+  margin: 0;
+  border: 1px solid rgba(76, 67, 83, 0.34);
+  background: var(--surface-low);
+  border-radius: 0.45rem;
+  padding: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.deleteAvatarWrap {
+  position: relative;
+  width: 3rem;
+  height: 3rem;
+}
+
+.deleteAvatarWrap img {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  object-fit: cover;
+  filter: grayscale(1) brightness(0.8);
+  border: 1px solid rgba(222, 183, 255, 0.26);
+}
+
+.deleteAvatarWrap span {
+  position: absolute;
+  right: -0.1rem;
+  bottom: -0.1rem;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  background: #93000a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.deleteAvatarBadgeIcon {
+  color: #ffdad6;
+}
+
+.deleteTargetCard small {
+  display: block;
+  color: var(--primary);
+  font-size: 0.56rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.deleteTargetCard strong {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.04rem;
+}
+
+.deleteTargetCard em {
+  margin-left: auto;
+  font-style: normal;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(207, 194, 213, 0.72);
+  border: 1px solid rgba(76, 67, 83, 0.38);
+  border-radius: 999px;
+  padding: 0.25rem 0.52rem;
+}
+
+.deleteActions {
+  flex-direction: row-reverse;
+}
+
+.modalDeleteCancelButton,
+.modalDeleteButton {
+  min-height: 3rem;
+}
+
 @media (max-width: 1200px) {
   .metrics {
     grid-template-columns: 1fr;
@@ -489,5 +1411,39 @@
 
   .tableWrap table {
     min-width: 58rem;
+  }
+
+  .formGroupGrid3 {
+    grid-template-columns: 1fr;
+  }
+
+  .editForm,
+  .detailGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .editProfileRow {
+    align-items: flex-start;
+  }
+
+  .modalActionsCreate,
+  .editFooter,
+  .detailFooter,
+  .deleteActions {
+    flex-direction: column;
+  }
+
+  .detailFooter {
+    align-items: stretch;
+    gap: 0.8rem;
+  }
+
+  .detailFooterActions {
+    width: 100%;
+  }
+
+  .detailFooterActions .modalConfirmButton,
+  .modalCancelGhostButton {
+    flex: 1;
   }
 }

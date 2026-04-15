@@ -1,0 +1,256 @@
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(6px);
+}
+
+.deleteModal {
+  position: relative;
+  width: min(100%, 34rem);
+  border-radius: 0.72rem;
+  border: 1px solid rgba(76, 67, 83, 0.34);
+  background: rgba(20, 20, 20, 0.95);
+  box-shadow: 0 40px 70px rgba(0, 0, 0, 0.56), 0 20px 40px rgba(123, 44, 191, 0.14);
+  overflow: hidden;
+  padding: 2rem;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.deleteModal_compact {
+  width: min(100%, 31rem);
+  border-radius: 0.72rem;
+  padding: 1.72rem;
+  gap: 1.32rem;
+}
+
+.deleteModal_compact .deleteClose {
+  right: 0.9rem;
+  top: 0.9rem;
+  width: 2.2rem;
+  height: 2.2rem;
+}
+
+.deleteModal_compact .modalCloseIcon {
+  font-size: 1.08rem;
+}
+
+.deleteModal_compact .deleteHeader {
+  gap: 0.84rem;
+}
+
+.deleteModal_compact .deleteWarningIcon {
+  width: 3.64rem;
+  height: 3.64rem;
+}
+
+.deleteModal_compact .deleteWarningSymbol {
+  font-size: 1.76rem;
+}
+
+.deleteModal_compact .deleteHeader h2 {
+  font-size: 1.66rem;
+}
+
+.deleteModal_compact .deleteHeader p {
+  max-width: 24rem;
+  font-size: 0.82rem;
+  line-height: 1.52;
+}
+
+.deleteModal_compact .deleteTargetCard {
+  padding: 1.02rem;
+  gap: 0.82rem;
+}
+
+.deleteModal_compact .deleteTargetCard strong {
+  font-size: 1.02rem;
+}
+
+.deleteModal_compact .deleteTargetCard em {
+  font-size: 0.62rem;
+}
+
+.deleteModal_compact .deleteActions {
+  gap: 0.74rem;
+}
+
+.deleteModal_compact .modalDeleteCancelButton,
+.deleteModal_compact .modalDeleteButton {
+  min-height: 2.9rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+}
+
+.deleteClose {
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  color: rgba(207, 194, 213, 0.75);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 200ms cubic-bezier(0.22, 1, 0.36, 1), background-color 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.deleteClose:hover {
+  color: var(--on-surface);
+  background: rgba(53, 53, 53, 0.9);
+}
+
+.modalCloseIcon {
+  font-size: 1.1rem;
+}
+
+.deleteHeader {
+  display: grid;
+  gap: 0.84rem;
+}
+
+.deleteHeader_center {
+  justify-items: center;
+  text-align: center;
+}
+
+.deleteWarningIcon {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 180, 171, 0.2);
+  background: rgba(147, 0, 10, 0.16);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.deleteWarningSymbol {
+  color: #ffb4ab;
+  font-size: 1.95rem;
+}
+
+.deleteHeader h2 {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.44rem;
+}
+
+.deleteHeader p {
+  margin: 0;
+  max-width: 24rem;
+  color: rgba(207, 194, 213, 0.82);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.deleteTargetCard {
+  margin: 0;
+  border: 1px solid rgba(76, 67, 83, 0.35);
+  background: var(--surface-low);
+  border-radius: 0.5rem;
+  padding: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.deleteTargetCard small {
+  display: block;
+  color: var(--primary);
+  font-size: 0.56rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+}
+
+.deleteTargetCard strong {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.04rem;
+}
+
+.deleteTargetCard em {
+  margin-left: auto;
+  font-style: normal;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(207, 194, 213, 0.72);
+  border: 1px solid rgba(76, 67, 83, 0.38);
+  border-radius: 999px;
+  padding: 0.25rem 0.52rem;
+}
+
+.deleteActions {
+  display: flex;
+  gap: 0.85rem;
+}
+
+.modalDeleteCancelButton {
+  border: 1px solid rgba(76, 67, 83, 0.28);
+  background: rgba(34, 34, 34, 0.9);
+  color: rgba(207, 194, 213, 0.86);
+  border-radius: 0.5rem;
+  min-height: 3rem;
+  padding: 0.7rem 1rem;
+  flex: 1;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.modalDeleteButton {
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  min-height: 3rem;
+  padding: 0.7rem 1rem;
+  flex: 1;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: #e4c2ff;
+  background: linear-gradient(135deg, var(--primary-container), var(--primary-variant));
+  box-shadow: 0 12px 24px rgba(123, 44, 191, 0.24);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.modalDeleteCancelButton:hover {
+  background: rgba(53, 53, 53, 0.92);
+  border-color: rgba(222, 183, 255, 0.22);
+}
+
+.modalDeleteButton:hover {
+  filter: brightness(1.08);
+}
+
+@media (max-width: 680px) {
+  .deleteActions {
+    flex-direction: column;
+  }
+
+  .modalDeleteCancelButton,
+  .modalDeleteButton {
+    width: 100%;
+  }
+}

@@ -1,0 +1,1299 @@
+/*!************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[2]!../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[3]!./app/(private)/videoteca/videoteca.module.css ***!
+  \************************************************************************************************************************************************************************************************************************************************************************************************/
+.videoteca_page__RaH2U {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+.videoteca_content__t7Xig {
+  width: min(100%, 82rem);
+  margin: 0 auto;
+  padding: 1.5rem 2rem 2rem;
+  display: grid;
+  grid-gap: 2.6rem;
+  gap: 2.6rem;
+}
+
+.videoteca_createFolderButton__U4CCs {
+  border: 0;
+  border-radius: 0.45rem;
+  min-height: 2.45rem;
+  height: 2.45rem;
+  padding: 0 1.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  background: linear-gradient(135deg, var(--primary-container), var(--primary-variant));
+  color: #e4c2ff;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 20px 40px rgba(123, 44, 191, 0.15);
+  cursor: pointer;
+  transition:
+    filter 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 140ms cubic-bezier(0.4, 0, 1, 1),
+    box-shadow 300ms cubic-bezier(0.22, 1, 0.36, 1);
+  white-space: nowrap;
+}
+
+.videoteca_createFolderButton__U4CCs:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 24px 44px rgba(123, 44, 191, 0.2);
+}
+
+.videoteca_createFolderButton__U4CCs:active {
+  transform: scale(0.95);
+}
+
+.videoteca_createFolderIcon__ytrOH {
+  font-size: 1.15rem;
+}
+
+.videoteca_controlsRow__lldlV {
+  border-bottom: 1px solid rgba(76, 67, 83, 0.22);
+  padding: 1rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.videoteca_controlsMain__Maw3D {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1 1 20rem;
+  flex-wrap: wrap;
+}
+
+.videoteca_filtersWrap__zVsWX {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.videoteca_sortWrap__2Hn03 {
+  position: relative;
+}
+
+.videoteca_sortWrap__2Hn03 select {
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
+  min-height: 2.45rem;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(76, 67, 83, 0.22);
+  background: var(--surface-container);
+  color: var(--on-surface);
+  padding: 0.48rem 2.1rem 0.48rem 0.9rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  transition:
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.videoteca_sortWrap__2Hn03 select:focus {
+  border-color: rgba(222, 183, 255, 0.45);
+  box-shadow: 0 0 0 2px rgba(123, 44, 191, 0.12);
+}
+
+.videoteca_selectIcon__0bdIn {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(207, 194, 213, 0.62);
+  pointer-events: none;
+  font-size: 1rem;
+}
+
+.videoteca_filterButton__pWKe_ {
+  min-height: 2.45rem;
+  border: 1px solid rgba(76, 67, 83, 0.22);
+  border-radius: 0.45rem;
+  background: var(--surface-container);
+  color: rgba(207, 194, 213, 0.82);
+  padding: 0.48rem 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 140ms cubic-bezier(0.4, 0, 1, 1);
+}
+
+.videoteca_filterButton__pWKe_:hover {
+  color: var(--primary);
+  border-color: rgba(222, 183, 255, 0.26);
+}
+
+.videoteca_filterButton__pWKe_:active {
+  transform: scale(0.96);
+}
+
+.videoteca_filterIcon__OzL1J {
+  font-size: 1rem;
+}
+
+.videoteca_viewToggle__3Re28 {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 0.45rem;
+  background: var(--surface-low);
+  border: 1px solid rgba(76, 67, 83, 0.2);
+  padding: 0.2rem;
+}
+
+.videoteca_viewButton__pNr6R {
+  border: 0;
+  background: transparent;
+  color: rgba(207, 194, 213, 0.52);
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 0.36rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.videoteca_viewButton__pNr6R:hover {
+  color: var(--on-surface);
+}
+
+.videoteca_viewButtonActive__ZdVXB {
+  background: var(--surface-highest);
+  color: var(--primary);
+}
+
+.videoteca_viewIcon__d3EZ1 {
+  font-size: 1.15rem;
+}
+
+.videoteca_folderGrid___saWo {
+  display: grid;
+  grid-gap: 1.25rem;
+  gap: 1.25rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.videoteca_folderCard__jacfX,
+.videoteca_addCard___dmA1 {
+  border-radius: 0.75rem;
+  min-height: 14rem;
+}
+
+.videoteca_folderCard__jacfX {
+  background: var(--surface-container);
+  border: 1px solid transparent;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.15rem;
+  position: relative;
+  overflow: hidden;
+  transition:
+    background-color 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.videoteca_folderCard__jacfX::after {
+  content: "";
+  position: absolute;
+  right: -3.2rem;
+  top: -3.2rem;
+  width: 8.8rem;
+  height: 8.8rem;
+  border-radius: 999px;
+  background: rgba(123, 44, 191, 0.06);
+  filter: blur(54px);
+  pointer-events: none;
+  transition: background-color 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.videoteca_folderCard__jacfX:hover {
+  background: var(--surface-high);
+  border-color: rgba(76, 67, 83, 0.35);
+  box-shadow: 0 20px 40px rgba(123, 44, 191, 0.1);
+  transform: translateY(-2px);
+}
+
+.videoteca_folderCard__jacfX:hover::after {
+  background: rgba(123, 44, 191, 0.11);
+}
+
+.videoteca_cardHead__L43Kb {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.videoteca_folderIconWrap__eSq2i {
+  width: 2.65rem;
+  height: 2.65rem;
+  border-radius: 0.5rem;
+  background: rgba(123, 44, 191, 0.12);
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 260ms cubic-bezier(0.22, 1, 0.36, 1), color 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.videoteca_folderCard__jacfX:hover .videoteca_folderIconWrap__eSq2i {
+  background: var(--primary-container);
+  color: #e4c2ff;
+}
+
+.videoteca_folderIcon__s9svm {
+  font-size: 1.3rem;
+}
+
+.videoteca_cardActions__ibk1W {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.videoteca_cardActionButton__m2fgC {
+  border: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: rgba(76, 67, 83, 0.12);
+  color: rgba(207, 194, 213, 0.72);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.videoteca_cardActionButton__m2fgC:hover {
+  color: var(--on-surface);
+  background: rgba(76, 67, 83, 0.34);
+  transform: translateY(-1px);
+}
+
+.videoteca_cardActionButton__m2fgC:focus-visible {
+  outline: 2px solid rgba(222, 183, 255, 0.45);
+  outline-offset: 2px;
+}
+
+.videoteca_cardActionDelete__xUeGo {
+  color: rgba(255, 180, 171, 0.82);
+  background: rgba(147, 0, 10, 0.2);
+}
+
+.videoteca_cardActionDelete__xUeGo:hover {
+  color: #ffb4ab;
+  background: rgba(147, 0, 10, 0.35);
+}
+
+.videoteca_cardActionIcon__ZCvUl {
+  font-size: 1rem;
+}
+
+.videoteca_cardBody__U5J7E h3 {
+  margin: 0;
+  text-transform: uppercase;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.22rem;
+  letter-spacing: -0.02em;
+  transition: color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.videoteca_folderCard__jacfX:hover .videoteca_cardBody__U5J7E h3 {
+  color: var(--primary);
+}
+
+.videoteca_cardMeta___trr2 {
+  margin: 0.34rem 0 0;
+  color: rgba(207, 194, 213, 0.44);
+  font-size: 0.72rem;
+}
+
+.videoteca_cardFooter__KolyB {
+  margin-top: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.videoteca_filesCount__t6XH9 {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: rgba(207, 194, 213, 0.74);
+  font-size: 0.73rem;
+  font-weight: 700;
+}
+
+.videoteca_filesIcon__uCsp3 {
+  font-size: 0.96rem;
+}
+
+.videoteca_tags__zPtg_ {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.videoteca_tag__gyrQR {
+  border-radius: 999px;
+  background: var(--surface-highest);
+  color: #dcb7fd;
+  padding: 0.16rem 0.5rem;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+}
+
+.videoteca_addCard___dmA1 {
+  border: 2px dashed rgba(76, 67, 83, 0.44);
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 260ms cubic-bezier(0.22, 1, 0.36, 1), transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.videoteca_addCard___dmA1:hover {
+  border-color: rgba(123, 44, 191, 0.55);
+  transform: translateY(-2px);
+}
+
+.videoteca_addCardIconWrap__OECMG {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  background: var(--surface-container);
+  color: rgba(207, 194, 213, 0.6);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 220ms cubic-bezier(0.22, 1, 0.36, 1), transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.videoteca_addCard___dmA1:hover .videoteca_addCardIconWrap__OECMG {
+  transform: scale(1.08);
+  color: var(--primary);
+}
+
+.videoteca_addCardIcon__Fpl0J {
+  font-size: 1.35rem;
+}
+
+.videoteca_addCard___dmA1 p {
+  margin: 0.82rem 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(207, 194, 213, 0.58);
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+}
+
+.videoteca_featuredSection___rPQV {
+  margin-top: 1.5rem;
+  display: grid;
+  grid-gap: 1.2rem;
+  gap: 1.2rem;
+}
+
+.videoteca_featuredSection___rPQV h2 {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  font-size: clamp(1.35rem, 2.2vw, 1.9rem);
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+}
+
+.videoteca_featuredGrid__KNGGQ {
+  display: grid;
+  grid-gap: 1.25rem;
+  gap: 1.25rem;
+  grid-template-columns: 2fr 1fr;
+}
+
+.videoteca_masterCard__ec5ka {
+  border-radius: 1rem;
+  overflow: hidden;
+  min-height: 24rem;
+  position: relative;
+  isolation: isolate;
+}
+
+.videoteca_masterCard__ec5ka img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.videoteca_masterCard__ec5ka:hover img {
+  transform: scale(1.04);
+}
+
+.videoteca_masterOverlay__K4_NC {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(10, 10, 10, 0.95), rgba(10, 10, 10, 0.2) 45%, transparent);
+}
+
+.videoteca_masterContent__W_U78 {
+  position: absolute;
+  left: 1.5rem;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 2;
+}
+
+.videoteca_masterBadge__mXPE2 {
+  display: inline-flex;
+  margin-bottom: 0.85rem;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #2f0f4f;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  padding: 0.2rem 0.66rem;
+  font-size: 0.57rem;
+  font-weight: 800;
+}
+
+.videoteca_masterContent__W_U78 h3 {
+  margin: 0;
+  font-size: clamp(1.4rem, 2.3vw, 1.95rem);
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.videoteca_masterContent__W_U78 p {
+  margin: 0.56rem 0 0;
+  color: rgba(207, 194, 213, 0.72);
+  max-width: 34rem;
+  font-size: 0.84rem;
+}
+
+.videoteca_playButton__Bo12f {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0.85);
+  width: 4.9rem;
+  height: 4.9rem;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(123, 44, 191, 0.78);
+  color: #e4c2ff;
+  -webkit-backdrop-filter: blur(14px);
+          backdrop-filter: blur(14px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  cursor: pointer;
+  transition:
+    opacity 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.videoteca_masterCard__ec5ka:hover .videoteca_playButton__Bo12f {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.videoteca_playIcon__aQsrM {
+  font-size: 2.3rem;
+}
+
+.videoteca_tipCard__ZrICa {
+  border-radius: 1rem;
+  background: var(--surface-container);
+  border: 1px solid rgba(76, 67, 83, 0.2);
+  padding: 1.35rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.videoteca_tipCopy__4Wemq {
+  display: grid;
+  grid-gap: 0.8rem;
+  gap: 0.8rem;
+}
+
+.videoteca_tipIcon__8QlkX {
+  color: var(--primary);
+  font-size: 2rem;
+}
+
+.videoteca_tipCopy__4Wemq h3 {
+  margin: 0;
+  text-transform: uppercase;
+  line-height: 1.15;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.22rem;
+}
+
+.videoteca_tipCopy__4Wemq p {
+  margin: 0;
+  color: rgba(207, 194, 213, 0.85);
+  line-height: 1.55;
+  font-size: 0.84rem;
+}
+
+.videoteca_tipButton__t93iV {
+  width: 100%;
+  min-height: 2.75rem;
+  border-radius: 0.44rem;
+  border: 1px solid rgba(123, 44, 191, 0.6);
+  background: transparent;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  font-size: 0.69rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.videoteca_tipButton__t93iV:hover {
+  background: rgba(123, 44, 191, 0.1);
+  border-color: rgba(123, 44, 191, 0.9);
+}
+
+.videoteca_modalOverlay__OwSJf {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  -webkit-backdrop-filter: blur(6px);
+          backdrop-filter: blur(6px);
+}
+
+.videoteca_editModal__U1CX8 {
+  width: min(100%, 32rem);
+  max-height: min(88vh, 34rem);
+  border-radius: 0.72rem;
+  border: 1px solid rgba(76, 67, 83, 0.34);
+  background: var(--surface);
+  box-shadow: 0 38px 64px rgba(0, 0, 0, 0.56), 0 20px 40px rgba(123, 44, 191, 0.14);
+  overflow: auto;
+}
+
+.videoteca_modalHeader__3TgqR {
+  padding: 1.2rem 1.35rem;
+  border-bottom: 1px solid rgba(76, 67, 83, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.videoteca_modalHeader__3TgqR h2 {
+  margin: 0;
+  letter-spacing: -0.03em;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.34rem;
+}
+
+.videoteca_modalHeader__3TgqR p {
+  margin: 0.2rem 0 0;
+  color: rgba(207, 194, 213, 0.78);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.videoteca_modalCloseButton__XsA__ {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  color: rgba(207, 194, 213, 0.86);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 200ms cubic-bezier(0.22, 1, 0.36, 1), background-color 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.videoteca_modalCloseButton__XsA__:hover {
+  color: var(--on-surface);
+  background: rgba(53, 53, 53, 0.9);
+}
+
+.videoteca_modalCloseIcon__HzkCt {
+  font-size: 1.12rem;
+}
+
+.videoteca_modalBody__GWR_0 {
+  padding: 1rem 1.35rem;
+}
+
+.videoteca_modalField__gqRJN {
+  display: grid;
+  grid-gap: 0.4rem;
+  gap: 0.4rem;
+}
+
+.videoteca_modalField__gqRJN span {
+  color: rgba(207, 194, 213, 0.85);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.68rem;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 700;
+}
+
+.videoteca_modalField__gqRJN input {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  background: var(--surface-highest);
+  color: var(--on-surface);
+  min-height: 2.75rem;
+  padding: 0.62rem 0.82rem;
+  font-size: 14px;
+  outline: none;
+  transition:
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.videoteca_modalField__gqRJN input:focus {
+  border-color: rgba(222, 183, 255, 0.35);
+  box-shadow: 0 0 0 2px rgba(123, 44, 191, 0.2);
+}
+
+.videoteca_modalActions__F0FY9 {
+  padding: 0.9rem 1.35rem 1.1rem;
+  display: flex;
+  gap: 0.74rem;
+}
+
+.videoteca_modalCancelGhostButton__m4FEi,
+.videoteca_modalConfirmButton__MCFDw {
+  flex: 1 1;
+  border-radius: 0.5rem;
+  min-height: 2.82rem;
+  padding: 0.64rem 0.92rem;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  transition:
+    background-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.videoteca_modalCancelGhostButton__m4FEi {
+  border: 1px solid rgba(76, 67, 83, 0.5);
+  background: transparent;
+  color: var(--on-surface);
+}
+
+.videoteca_modalCancelGhostButton__m4FEi:hover {
+  background: rgba(53, 53, 53, 0.85);
+}
+
+.videoteca_modalConfirmButton__MCFDw {
+  border: 0;
+  background: linear-gradient(135deg, var(--primary-container), var(--primary-variant));
+  color: #e4c2ff;
+  box-shadow: 0 12px 24px rgba(123, 44, 191, 0.24);
+}
+
+.videoteca_modalConfirmButton__MCFDw:hover {
+  filter: brightness(1.08);
+}
+
+.videoteca_modalConfirmButton__MCFDw:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.videoteca_confirmIcon__QkUz7 {
+  font-size: 1rem;
+}
+
+.videoteca_fab__Nef79 {
+  position: fixed;
+  right: 2rem;
+  bottom: 2rem;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 999px;
+  border: 0;
+  background: var(--primary);
+  color: #36145a;
+  box-shadow: 0 0 0 1px rgba(123, 44, 191, 0.25), 0 18px 32px rgba(123, 44, 191, 0.35);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  cursor: pointer;
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.videoteca_fab__Nef79:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 0 1px rgba(123, 44, 191, 0.35), 0 24px 42px rgba(123, 44, 191, 0.42);
+}
+
+.videoteca_fab__Nef79:active {
+  transform: scale(0.94);
+}
+
+.videoteca_fabIcon__MQ2ub {
+  font-size: 1.42rem;
+}
+
+.videoteca_localGlowPrimary__9desh,
+.videoteca_localGlowSecondary__x013B {
+  position: fixed;
+  pointer-events: none;
+  border-radius: 999px;
+  z-index: 0;
+}
+
+.videoteca_localGlowPrimary__9desh {
+  right: 12%;
+  top: 35%;
+  width: 22rem;
+  height: 22rem;
+  background: rgba(123, 44, 191, 0.07);
+  filter: blur(96px);
+}
+
+.videoteca_localGlowSecondary__x013B {
+  left: 20%;
+  bottom: -6rem;
+  width: 18rem;
+  height: 18rem;
+  background: rgba(123, 44, 191, 0.08);
+  filter: blur(84px);
+}
+
+@media (max-width: 1200px) {
+  .videoteca_folderGrid___saWo {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .videoteca_featuredGrid__KNGGQ {
+    grid-template-columns: 1fr;
+  }
+
+  .videoteca_tipCard__ZrICa {
+    min-height: 18rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  .videoteca_content__t7Xig {
+    padding-inline: 1rem;
+  }
+}
+
+@media (max-width: 860px) {
+  .videoteca_folderGrid___saWo {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .videoteca_modalHeader__3TgqR,
+  .videoteca_modalBody__GWR_0,
+  .videoteca_modalActions__F0FY9 {
+    padding-inline: 0.9rem;
+  }
+
+  .videoteca_content__t7Xig {
+    padding-top: 1.35rem;
+  }
+
+  .videoteca_folderGrid___saWo {
+    grid-template-columns: 1fr;
+  }
+
+  .videoteca_controlsRow__lldlV {
+    align-items: stretch;
+  }
+
+  .videoteca_controlsMain__Maw3D {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .videoteca_createFolderButton__U4CCs {
+    width: 100%;
+  }
+
+  .videoteca_fab__Nef79 {
+    right: 1rem;
+    bottom: 1rem;
+  }
+
+  .videoteca_modalActions__F0FY9 {
+    flex-direction: column;
+  }
+
+  .videoteca_modalCancelGhostButton__m4FEi,
+  .videoteca_modalConfirmButton__MCFDw {
+    width: 100%;
+  }
+}
+
+/*!********************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[2]!../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[3]!./components/destructive-confirmation-modal.module.css ***!
+  \********************************************************************************************************************************************************************************************************************************************************************************************************/
+.destructive-confirmation-modal_modalOverlay__NL_H2 {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  -webkit-backdrop-filter: blur(6px);
+          backdrop-filter: blur(6px);
+}
+
+.destructive-confirmation-modal_deleteModal__j55kw {
+  position: relative;
+  width: min(100%, 34rem);
+  border-radius: 0.72rem;
+  border: 1px solid rgba(76, 67, 83, 0.34);
+  background: rgba(20, 20, 20, 0.95);
+  box-shadow: 0 40px 70px rgba(0, 0, 0, 0.56), 0 20px 40px rgba(123, 44, 191, 0.14);
+  overflow: hidden;
+  padding: 2rem;
+  display: grid;
+  grid-gap: 1.5rem;
+  gap: 1.5rem;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 {
+  width: min(100%, 31rem);
+  border-radius: 0.72rem;
+  padding: 1.72rem;
+  gap: 1.32rem;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteClose__3hHf8 {
+  right: 0.9rem;
+  top: 0.9rem;
+  width: 2.2rem;
+  height: 2.2rem;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_modalCloseIcon__xPWDR {
+  font-size: 1.08rem;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteHeader__j4vNM {
+  gap: 0.84rem;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteWarningIcon__smMKo {
+  width: 3.64rem;
+  height: 3.64rem;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteWarningSymbol__eyVc0 {
+  font-size: 1.76rem;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteHeader__j4vNM h2 {
+  font-size: 1.66rem;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteHeader__j4vNM p {
+  max-width: 24rem;
+  font-size: 0.82rem;
+  line-height: 1.52;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteTargetCard___2mEK {
+  padding: 1.02rem;
+  gap: 0.82rem;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteTargetCard___2mEK strong {
+  font-size: 1.02rem;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteTargetCard___2mEK em {
+  font-size: 0.62rem;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteActions__VFlAX {
+  gap: 0.74rem;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_modalDeleteCancelButton__O0akX,
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_modalDeleteButton__uNIjo {
+  min-height: 2.9rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+}
+
+.destructive-confirmation-modal_deleteClose__3hHf8 {
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  color: rgba(207, 194, 213, 0.75);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 200ms cubic-bezier(0.22, 1, 0.36, 1), background-color 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.destructive-confirmation-modal_deleteClose__3hHf8:hover {
+  color: var(--on-surface);
+  background: rgba(53, 53, 53, 0.9);
+}
+
+.destructive-confirmation-modal_modalCloseIcon__xPWDR {
+  font-size: 1.1rem;
+}
+
+.destructive-confirmation-modal_deleteHeader__j4vNM {
+  display: grid;
+  grid-gap: 0.84rem;
+  gap: 0.84rem;
+}
+
+.destructive-confirmation-modal_deleteHeader_center__hMyz_ {
+  justify-items: center;
+  text-align: center;
+}
+
+.destructive-confirmation-modal_deleteWarningIcon__smMKo {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 180, 171, 0.2);
+  background: rgba(147, 0, 10, 0.16);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.destructive-confirmation-modal_deleteWarningSymbol__eyVc0 {
+  color: #ffb4ab;
+  font-size: 1.95rem;
+}
+
+.destructive-confirmation-modal_deleteHeader__j4vNM h2 {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.44rem;
+}
+
+.destructive-confirmation-modal_deleteHeader__j4vNM p {
+  margin: 0;
+  max-width: 24rem;
+  color: rgba(207, 194, 213, 0.82);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.destructive-confirmation-modal_deleteTargetCard___2mEK {
+  margin: 0;
+  border: 1px solid rgba(76, 67, 83, 0.35);
+  background: var(--surface-low);
+  border-radius: 0.5rem;
+  padding: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.destructive-confirmation-modal_deleteTargetCard___2mEK small {
+  display: block;
+  color: var(--primary);
+  font-size: 0.56rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+}
+
+.destructive-confirmation-modal_deleteTargetCard___2mEK strong {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.04rem;
+}
+
+.destructive-confirmation-modal_deleteTargetCard___2mEK em {
+  margin-left: auto;
+  font-style: normal;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(207, 194, 213, 0.72);
+  border: 1px solid rgba(76, 67, 83, 0.38);
+  border-radius: 999px;
+  padding: 0.25rem 0.52rem;
+}
+
+.destructive-confirmation-modal_deleteActions__VFlAX {
+  display: flex;
+  gap: 0.85rem;
+}
+
+.destructive-confirmation-modal_modalDeleteCancelButton__O0akX {
+  border: 1px solid rgba(76, 67, 83, 0.28);
+  background: rgba(34, 34, 34, 0.9);
+  color: rgba(207, 194, 213, 0.86);
+  border-radius: 0.5rem;
+  min-height: 3rem;
+  padding: 0.7rem 1rem;
+  flex: 1 1;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.destructive-confirmation-modal_modalDeleteButton__uNIjo {
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  min-height: 3rem;
+  padding: 0.7rem 1rem;
+  flex: 1 1;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: #e4c2ff;
+  background: linear-gradient(135deg, var(--primary-container), var(--primary-variant));
+  box-shadow: 0 12px 24px rgba(123, 44, 191, 0.24);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.destructive-confirmation-modal_modalDeleteCancelButton__O0akX:hover {
+  background: rgba(53, 53, 53, 0.92);
+  border-color: rgba(222, 183, 255, 0.22);
+}
+
+.destructive-confirmation-modal_modalDeleteButton__uNIjo:hover {
+  filter: brightness(1.08);
+}
+
+@media (max-width: 680px) {
+  .destructive-confirmation-modal_deleteActions__VFlAX {
+    flex-direction: column;
+  }
+
+  .destructive-confirmation-modal_modalDeleteCancelButton__O0akX,
+  .destructive-confirmation-modal_modalDeleteButton__uNIjo {
+    width: 100%;
+  }
+}
+
+/*!********************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[2]!../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[3]!./components/private-breadcrumb.module.css ***!
+  \********************************************************************************************************************************************************************************************************************************************************************************************/
+.private-breadcrumb_breadcrumb__x0ypk {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 1.1rem 2rem 0;
+  color: rgba(207, 194, 213, 0.72);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.private-breadcrumb_item__BPBf2 {
+  line-height: 1;
+}
+
+.private-breadcrumb_current__fTzoK {
+  color: rgba(226, 226, 226, 0.86);
+}
+
+.private-breadcrumb_separator__knUEK {
+  font-size: 0.95rem;
+  color: rgba(207, 194, 213, 0.48);
+}
+
+@media (max-width: 1024px) {
+  .private-breadcrumb_breadcrumb__x0ypk {
+    padding: 0.95rem 1.25rem 0;
+    font-size: 0.64rem;
+  }
+}
+
+/*!****************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[2]!../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[3]!./components/private-topbar.module.css ***!
+  \****************************************************************************************************************************************************************************************************************************************************************************************/
+.private-topbar_topbar__w_Ljz {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.5rem 2rem;
+  -webkit-backdrop-filter: blur(40px);
+          backdrop-filter: blur(40px);
+  background: rgba(19, 19, 19, 0.72);
+  border-bottom: 1px solid rgba(76, 67, 83, 0.14);
+  box-shadow: 0 1px 0 rgba(226, 226, 226, 0.02), 0 20px 50px rgba(0, 0, 0, 0.22);
+}
+
+.private-topbar_leading__Re6Tb {
+  display: grid;
+  grid-gap: 0.36rem;
+  gap: 0.36rem;
+}
+
+.private-topbar_title__QGHYL {
+  margin: 0;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: clamp(1.95rem, 2.6vw, 2.35rem);
+  letter-spacing: -0.035em;
+  line-height: 1.04;
+  font-weight: 800;
+}
+
+.private-topbar_subtitle__iIlPB {
+  margin: 0;
+  color: rgba(207, 194, 213, 0.7);
+  max-width: 50rem;
+  line-height: 1.4;
+  font-size: 0.9rem;
+}
+
+.private-topbar_context___I7_u {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: rgba(207, 194, 213, 0.58);
+}
+
+.private-topbar_actions__9BAEJ {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.private-topbar_iconButton__NfdnZ {
+  width: 2.15rem;
+  height: 2.15rem;
+  border: 0;
+  color: var(--on-surface-variant);
+  background: transparent;
+  border-radius: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    color 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 140ms cubic-bezier(0.4, 0, 1, 1);
+}
+
+.private-topbar_iconButton__NfdnZ:hover {
+  color: var(--primary);
+  background: rgba(123, 44, 191, 0.16);
+}
+
+.private-topbar_iconButton__NfdnZ:active {
+  transform: scale(0.96);
+}
+
+.private-topbar_topbarIcon__HvuZ8 {
+  font-size: 1.12rem;
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.private-topbar_iconButton__NfdnZ:active .private-topbar_topbarIcon__HvuZ8 {
+  transform: scale(0.95);
+}
+
+@media (max-width: 1024px) {
+  .private-topbar_topbar__w_Ljz {
+    padding: 1rem 1.25rem;
+    align-items: flex-start;
+  }
+
+  .private-topbar_title__QGHYL {
+    font-size: clamp(1.6rem, 4vw, 2rem);
+  }
+
+  .private-topbar_subtitle__iIlPB {
+    font-size: 0.85rem;
+  }
+}
+

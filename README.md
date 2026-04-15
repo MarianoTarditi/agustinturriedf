@@ -1,56 +1,36 @@
-# Kinetic Noir - Landing Page
+# Landingpage Opecode Monorepo
 
-Landing page profesional para Kinetic Noir, servicio de entrenamiento de fuerza personalizado.
+Este repositorio usa **npm workspaces** y orquesta dos apps:
 
-## 🚀 Tecnologías
-
-- **Astro** - Framework web
-- **Tailwind CSS** - Estilos
-- **Formspree** - Envío de formularios
+- `agustinturriedf/landing` → Astro (puerto **3009**)
+- `agustinturriedf/web` → Next.js (puerto **3010**)
 
 ## 🛠️ Instalación
+
+Desde la raíz del repo:
 
 ```sh
 npm install
 ```
 
-## ▶️ Comandos
+## ▶️ Scripts (raíz)
 
-| Command | Action |
-|---------|--------|
-| `npm run dev` | Inicia el servidor de desarrollo |
-| `npm run build` | Construye el proyecto para producción |
-| `npm run preview` | Previsualiza el build localmente |
+| Script | Descripción |
+|--------|-------------|
+| `npm run dev` | Levanta **landing + web** en paralelo |
+| `npm run dev:landing` | Levanta solo `agustinturriedf/landing` |
+| `npm run dev:web` | Levanta solo `agustinturriedf/web` |
+
+## 🌐 URLs esperadas en desarrollo
+
+- Landing: `http://localhost:3009`
+- Web: `http://localhost:3010`
 
 ## 📁 Estructura
 
+```text
+.
+└── agustinturriedf/
+    ├── landing/   # Astro app
+    └── web/       # Next.js app
 ```
-/
-├── public/
-│   └── icons/           # Iconos SVG
-├── src/
-│   ├── components/      # Componentes Astro
-│   │   ├── Hero.astro
-│   │   ├── Navbar.astro
-│   │   ├── Plans.astro
-│   │   ├── Facilities.astro
-│   │   ├── Testimonials.astro
-│   │   ├── FAQ.astro
-│   │   ├── Contact.astro
-│   │   └── Footer.astro
-│   ├── layouts/
-│   │   └── Layout.astro
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
-
-## ✨ Funcionalidades
-
-- Diseño responsive
-- Navegación con scroll activo
-- Formulario de contacto con validación
-- FAQ interactivo
-- Modal "Próximamente" para inicio de sesión
-- Integración con WhatsApp
-- Envío de emails via Formspree

@@ -1,4 +1,8 @@
+"use client";
+
+import { useState } from "react";
 import styles from "@/app/(private)/rutinas/rutinas.module.css";
+import { DestructiveConfirmationModal } from "@/components/destructive-confirmation-modal";
 import { MaterialSymbol } from "@/components/material-symbol";
 import { PrivateBreadcrumb } from "@/components/private-breadcrumb";
 import { PrivateTopbar } from "@/components/private-topbar";
@@ -6,26 +10,30 @@ import { PrivateTopbar } from "@/components/private-topbar";
 type RoutineFormat = "excel" | "pdf" | "generic";
 
 type RoutineTemplate = {
+  id: string;
   name: string;
   date: string;
   size: string;
   format: RoutineFormat;
 };
 
-const templates: RoutineTemplate[] = [
+const initialTemplates: RoutineTemplate[] = [
   {
+    id: "template-1",
     name: "Plan de Volumen Avanzado v2",
     date: "31/3/2026",
     size: "67 KB",
     format: "excel",
   },
   {
+    id: "template-2",
     name: "Guía Nutricional Suplementos",
     date: "15/3/2026",
     size: "2.4 MB",
     format: "pdf",
   },
   {
+    id: "template-3",
     name: "Rutina Full Body Inicial",
     date: "10/2/2026",
     size: "142 KB",
@@ -55,12 +63,57 @@ const templateVisualMap: Record<RoutineFormat, { icon: string; borderClass: stri
 };
 
 export default function RutinasPage() {
+  const [templates, setTemplates] = useState<RoutineTemplate[]>(initialTemplates);
+  const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
+  const [activeDeleteTemplate, setActiveDeleteTemplate] = useState<RoutineTemplate | null>(null);
+  const [draftTemplateName, setDraftTemplateName] = useState("");
+
+  const activeTemplate = activeTemplateId ? templates.find((template) => template.id === activeTemplateId) ?? null : null;
+
+  const openEditModal = (template: RoutineTemplate) => {
+    setActiveTemplateId(template.id);
+    setDraftTemplateName(template.name);
+  };
+
+  const closeEditModal = () => {
+    setActiveTemplateId(null);
+    setDraftTemplateName("");
+  };
+
+  const handleConfirmEdit = () => {
+    if (!activeTemplateId) return;
+
+    const trimmedName = draftTemplateName.trim();
+    if (!trimmedName) return;
+
+    setTemplates((currentTemplates) =>
+      currentTemplates.map((template) => (template.id === activeTemplateId ? { ...template, name: trimmedName } : template)),
+    );
+
+    closeEditModal();
+  };
+
+  const openDeleteModal = (template: RoutineTemplate) => {
+    setActiveDeleteTemplate(template);
+  };
+
+  const closeDeleteModal = () => {
+    setActiveDeleteTemplate(null);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!activeDeleteTemplate) return;
+
+    setTemplates((currentTemplates) => currentTemplates.filter((template) => template.id !== activeDeleteTemplate.id));
+    closeDeleteModal();
+  };
+
   return (
     <section className={styles.page}>
       <PrivateBreadcrumb current="Rutinas" />
       <PrivateTopbar
         title="Gestión de Rutinas"
-        subtitle="Organizá plantillas en PDF y Excel desde una vista operativa para mantener planes actualizados y acceso ordenado para el equipo."
+        subtitle="Organizá plantillas en PDF y Excel para mantener planes actualizados y acceso ordenado para el equipo."
       />
 
       <div className={styles.content}>
@@ -129,7 +182,7 @@ export default function RutinasPage() {
                 const visual = templateVisualMap[template.format];
 
                 return (
-                  <article key={template.name} className={`${styles.templateItem} ${visual.borderClass}`}>
+                  <article key={template.id} className={`${styles.templateItem} ${visual.borderClass}`}>
                     <div className={`${styles.fileIconWrap} ${visual.iconClass}`}>
                       <MaterialSymbol name={visual.icon} className={styles.fileIcon} weight={420} opticalSize={28} />
                     </div>
@@ -157,7 +210,12 @@ export default function RutinasPage() {
                         Abrir
                       </button>
 
-                      <button type="button" className={styles.iconAction} aria-label={`Editar ${template.name}`}>
+                      <button
+                        type="button"
+                        className={styles.iconAction}
+                        aria-label={`Editar ${template.name}`}
+                        onClick={() => openEditModal(template)}
+                      >
                         <MaterialSymbol name="edit" className={styles.rowActionIcon} weight={500} opticalSize={20} />
                       </button>
 
@@ -165,6 +223,7 @@ export default function RutinasPage() {
                         type="button"
                         className={`${styles.iconAction} ${styles.deleteAction}`}
                         aria-label={`Eliminar ${template.name}`}
+                        onClick={() => openDeleteModal(template)}
                       >
                         <MaterialSymbol name="delete" className={styles.rowActionIcon} weight={500} opticalSize={20} />
                       </button>
@@ -175,7 +234,9 @@ export default function RutinasPage() {
             </div>
 
             <footer className={styles.libraryFooter}>
-              <p>Mostrando 3 plantillas</p>
+              <p>
+                Mostrando {templates.length} plantilla{templates.length === 1 ? "" : "s"}
+              </p>
 
               <div>
                 <button type="button">Anterior</button>
@@ -188,6 +249,81 @@ export default function RutinasPage() {
 
       <div className={styles.localGlowPrimary} aria-hidden="true" />
       <div className={styles.localGlowSecondary} aria-hidden="true" />
+
+      {activeTemplate ? (
+        <div className={styles.modalOverlay} role="presentation" onClick={closeEditModal}>
+          <div
+            className={styles.editModal}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Editar plantilla ${activeTemplate.name}`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className={styles.modalHeader}>
+              <div>
+                <h2>Editar plantilla</h2>
+                <p>Actualizá el nombre para mantener tu biblioteca ordenada.</p>
+              </div>
+
+              <button type="button" className={styles.modalCloseButton} aria-label="Cerrar modal" onClick={closeEditModal}>
+                <MaterialSymbol name="close" className={styles.modalCloseIcon} weight={500} opticalSize={22} />
+              </button>
+            </header>
+
+            <div className={styles.modalBody}>
+              <label className={styles.modalField}>
+                <span>Nombre de la plantilla</span>
+                <input
+                  type="text"
+                  value={draftTemplateName}
+                  onChange={(event) => setDraftTemplateName(event.target.value)}
+                  placeholder="Ej: Definición 12 Semanas"
+                />
+              </label>
+            </div>
+
+            <footer className={styles.modalActions}>
+              <button type="button" className={styles.modalCancelGhostButton} onClick={closeEditModal}>
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className={styles.modalConfirmButton}
+                onClick={handleConfirmEdit}
+                disabled={!draftTemplateName.trim()}
+              >
+                <MaterialSymbol name="save" className={styles.confirmIcon} fill={1} weight={500} opticalSize={18} />
+                Guardar cambios
+              </button>
+            </footer>
+          </div>
+        </div>
+      ) : null}
+
+      {activeDeleteTemplate ? (
+        <DestructiveConfirmationModal
+          ariaLabel={`Eliminar plantilla ${activeDeleteTemplate.name}`}
+          title="¿Eliminar plantilla?"
+          description="Esta acción elimina la plantilla de esta biblioteca y no se puede deshacer desde esta vista."
+          headerAlignment="center"
+          density="compact"
+          confirmLabel="Eliminar plantilla"
+          onConfirm={handleConfirmDelete}
+          onCancel={closeDeleteModal}
+          targetCard={
+            <>
+              <div>
+                <small>Rutinas</small>
+                <strong>{activeDeleteTemplate.name}</strong>
+              </div>
+
+              <em>
+                {activeDeleteTemplate.format.toUpperCase()} · {activeDeleteTemplate.size}
+              </em>
+            </>
+          }
+        />
+      ) : null}
     </section>
   );
 }

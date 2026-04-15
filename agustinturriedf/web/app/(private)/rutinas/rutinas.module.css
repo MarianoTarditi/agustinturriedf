@@ -122,7 +122,7 @@
 .dropzone span {
   margin-top: 0.38rem;
   text-transform: uppercase;
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   color: rgba(207, 194, 213, 0.5);
@@ -205,7 +205,7 @@
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  font-size: 0.58rem;
+  font-size: 0.68rem;
   font-family: var(--font-space-grotesk), system-ui, sans-serif;
   color: var(--primary);
   font-weight: 700;
@@ -492,6 +492,172 @@
   color: var(--primary);
 }
 
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(6px);
+}
+
+.editModal {
+  width: min(100%, 32rem);
+  max-height: min(88vh, 34rem);
+  border-radius: 0.72rem;
+  border: 1px solid rgba(76, 67, 83, 0.34);
+  background: var(--surface);
+  box-shadow: 0 38px 64px rgba(0, 0, 0, 0.56), 0 20px 40px rgba(123, 44, 191, 0.14);
+  overflow: auto;
+}
+
+.modalHeader {
+  padding: 1.2rem 1.35rem;
+  border-bottom: 1px solid rgba(76, 67, 83, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.modalHeader h2 {
+  margin: 0;
+  letter-spacing: -0.03em;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.34rem;
+}
+
+.modalHeader p {
+  margin: 0.2rem 0 0;
+  color: rgba(207, 194, 213, 0.78);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.modalCloseButton {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  color: rgba(207, 194, 213, 0.86);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 200ms cubic-bezier(0.22, 1, 0.36, 1), background-color 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.modalCloseButton:hover {
+  color: var(--on-surface);
+  background: rgba(53, 53, 53, 0.9);
+}
+
+.modalCloseIcon {
+  font-size: 1.12rem;
+}
+
+.modalBody {
+  padding: 1rem 1.35rem;
+}
+
+.modalField {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.modalField span {
+  color: rgba(207, 194, 213, 0.85);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.68rem;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 700;
+}
+
+.modalField input {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  background: var(--surface-highest);
+  color: var(--on-surface);
+  min-height: 2.75rem;
+  padding: 0.62rem 0.82rem;
+  font-size: 14px;
+  outline: none;
+  transition:
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.modalField input:focus {
+  border-color: rgba(222, 183, 255, 0.35);
+  box-shadow: 0 0 0 2px rgba(123, 44, 191, 0.2);
+}
+
+.modalActions {
+  padding: 0.9rem 1.35rem 1.1rem;
+  border-top: 1px solid rgba(76, 67, 83, 0.2);
+  background: var(--surface-container);
+  display: flex;
+  gap: 0.74rem;
+}
+
+.modalCancelGhostButton,
+.modalConfirmButton {
+  flex: 1;
+  border-radius: 0.5rem;
+  min-height: 2.82rem;
+  padding: 0.64rem 0.92rem;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  transition:
+    background-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.modalCancelGhostButton {
+  border: 1px solid rgba(76, 67, 83, 0.5);
+  background: transparent;
+  color: var(--on-surface);
+}
+
+.modalConfirmButton {
+  border: 0;
+  background: linear-gradient(135deg, var(--primary-container), var(--primary-variant));
+  color: #e4c2ff;
+  box-shadow: 0 12px 24px rgba(123, 44, 191, 0.24);
+}
+
+.modalConfirmButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.modalCancelGhostButton:hover {
+  background: rgba(53, 53, 53, 0.85);
+}
+
+.modalConfirmButton:hover {
+  filter: brightness(1.08);
+}
+
+.confirmIcon {
+  font-size: 1rem;
+}
+
 .localGlowPrimary,
 .localGlowSecondary {
   position: fixed;
@@ -549,6 +715,12 @@
 }
 
 @media (max-width: 680px) {
+  .modalHeader,
+  .modalBody,
+  .modalActions {
+    padding-inline: 0.9rem;
+  }
+
   .libraryHeader {
     align-items: flex-start;
   }
@@ -564,5 +736,14 @@
 
   .templateMeta h3 {
     white-space: normal;
+  }
+
+  .modalActions {
+    flex-direction: column;
+  }
+
+  .modalCancelGhostButton,
+  .modalConfirmButton {
+    width: 100%;
   }
 }

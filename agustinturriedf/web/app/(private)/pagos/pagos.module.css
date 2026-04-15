@@ -379,12 +379,63 @@
   background: rgba(123, 44, 191, 0.12);
 }
 
+.rowButtonDanger {
+  color: rgba(255, 180, 171, 0.9);
+}
+
+.rowButtonDanger:hover {
+  color: #ffb4ab;
+  background: rgba(147, 0, 10, 0.16);
+}
+
 .rowButton:active {
   transform: scale(0.95);
 }
 
 .rowActionIcon {
   font-size: 1.08rem;
+}
+
+.deletePaymentIconWrap {
+  position: relative;
+  width: 3rem;
+  height: 3rem;
+}
+
+.deletePaymentIconBadge {
+  width: 2.55rem;
+  height: 2.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(222, 183, 255, 0.24);
+  background: rgba(123, 44, 191, 0.16);
+  color: #e4c2ff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.deletePaymentIcon {
+  font-size: 1.2rem;
+}
+
+.deletePaymentDangerBadge {
+  position: absolute;
+  right: -0.1rem;
+  bottom: -0.1rem;
+  width: 1.12rem;
+  height: 1.12rem;
+  border-radius: 999px;
+  background: #93000a;
+  color: #ffdad6;
+  border: 1px solid rgba(255, 180, 171, 0.35);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.deletePaymentDangerBadgeIcon {
+  font-size: 0.74rem;
 }
 
 .alignRight {
@@ -436,6 +487,11 @@
   cursor: pointer;
 }
 
+.rowsControl select option {
+  color: var(--on-surface);
+  background: var(--surface-container);
+}
+
 .paginationButtons {
   display: inline-flex;
   gap: 0.45rem;
@@ -468,6 +524,345 @@
   font-size: 1.15rem;
 }
 
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(6px);
+}
+
+.registerModal,
+.editModal {
+  width: min(100%, 48rem);
+  max-height: min(92vh, 58rem);
+  border-radius: 0.86rem;
+  border: 1px solid rgba(76, 67, 83, 0.34);
+  background: var(--surface);
+  box-shadow: 0 42px 70px rgba(0, 0, 0, 0.56), 0 20px 40px rgba(123, 44, 191, 0.15);
+  overflow: auto;
+}
+
+.registerHeader,
+.editHeader {
+  padding: 1.85rem 2rem;
+  border-bottom: 1px solid rgba(76, 67, 83, 0.2);
+  display: flex;
+  justify-content: space-between;
+  gap: 2.5rem;
+}
+
+.registerTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.2rem;
+}
+
+.editTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.2rem;
+}
+
+.registerSectionIcon,
+.editSectionIcon,
+.selectIcon,
+.confirmIcon {
+  font-size: 1rem;
+}
+
+.registerSectionIcon,
+.editSectionIcon {
+  color: var(--primary);
+}
+
+.registerHeader h2,
+.editHeader h2 {
+  margin: 0;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.72rem;
+  letter-spacing: -0.03em;
+}
+
+.registerHeader p,
+.editHeader p {
+  margin: 0.25rem 0 0;
+  color: rgba(207, 194, 213, 0.78);
+  font-size: 0.85rem;
+}
+
+.modalCloseButton {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  color: rgba(207, 194, 213, 0.86);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 200ms cubic-bezier(0.22, 1, 0.36, 1), background-color 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.modalCloseButton:hover {
+  color: var(--on-surface);
+  background: rgba(53, 53, 53, 0.9);
+}
+
+.modalCloseIcon {
+  font-size: 1.12rem;
+}
+
+.registerBody {
+  padding: 1.85rem 2rem;
+}
+
+.editBody {
+  padding: 1.85rem 2rem;
+}
+
+.registerForm,
+.editForm {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.registerFullRow {
+  grid-column: 1 / -1;
+}
+
+.editFullRow {
+  grid-column: 1 / -1;
+}
+
+.fieldWrap {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.fieldWrap > span {
+  color: rgba(207, 194, 213, 0.85);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 700;
+}
+
+.fieldWrap > input,
+.fieldWrap > select,
+.moneyInputWrap,
+.leadingIconInput,
+.trailingUnitInput,
+.selectWrap {
+  width: 100%;
+  border: 0;
+  border-radius: 0.5rem;
+  background: var(--surface-highest);
+  color: var(--on-surface);
+  min-height: 2.9rem;
+}
+
+.fieldWrap > input,
+.fieldWrap > select {
+  padding: 0.7rem 0.9rem;
+  outline: none;
+  border: 1px solid transparent;
+  font-size: 15px;
+}
+
+.fieldWrap > input::placeholder {
+  color: rgba(207, 194, 213, 0.44);
+}
+
+.fieldWrap > input:focus,
+.fieldWrap > select:focus {
+  border-color: rgba(222, 183, 255, 0.35);
+  box-shadow: 0 0 0 2px rgba(123, 44, 191, 0.2);
+}
+
+.moneyInputWrap {
+  display: flex;
+  align-items: center;
+  padding-inline: 0.8rem;
+  border: 1px solid transparent;
+  transition: border-color 220ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.moneyInputWrap:focus-within {
+  border-color: rgba(222, 183, 255, 0.35);
+  box-shadow: 0 0 0 2px rgba(123, 44, 191, 0.2);
+}
+
+.moneyInputWrap i {
+  font-style: normal;
+  color: rgba(207, 194, 213, 0.7);
+}
+
+.moneyInputWrap input {
+  width: 100%;
+  min-height: 2.9rem;
+  border: 0;
+  background: transparent;
+  color: var(--on-surface);
+  padding-inline: 0.35rem;
+  outline: none;
+  font-size: 15px;
+}
+
+.leadingIconInput,
+.trailingUnitInput,
+.selectWrap {
+  display: flex;
+  align-items: center;
+}
+
+.leadingIconInput {
+  padding-inline: 0.85rem;
+}
+
+.trailingUnitInput {
+  padding-left: 0.85rem;
+}
+
+.leadingIconInput input,
+.trailingUnitInput input,
+.selectWrap select {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--on-surface);
+  min-height: 2.9rem;
+  outline: none;
+  font-size: 15px;
+}
+
+.leadingInputIcon,
+.selectIcon {
+  color: rgba(207, 194, 213, 0.64);
+}
+
+.trailingUnitInput i {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(207, 194, 213, 0.62);
+  font-style: normal;
+  padding-right: 0.8rem;
+}
+
+.selectWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding-left: 0.8rem;
+  padding-right: 0.55rem;
+  border: 1px solid transparent;
+  transition: border-color 220ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.selectWrap:focus-within {
+  border-color: rgba(222, 183, 255, 0.35);
+  box-shadow: 0 0 0 2px rgba(123, 44, 191, 0.2);
+}
+
+.selectWrap select {
+  width: 100%;
+  min-height: 2.9rem;
+  border: 0;
+  background: transparent;
+  color: var(--on-surface);
+  outline: none;
+  appearance: none;
+  padding-right: 1.4rem;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.selectWrap select option {
+  color: var(--on-surface);
+  background: var(--surface-highest);
+}
+
+.selectIcon {
+  color: rgba(207, 194, 213, 0.8);
+  pointer-events: none;
+}
+
+.registerFooter {
+  padding: 1.2rem 2rem;
+  border-top: 1px solid rgba(76, 67, 83, 0.2);
+  background: var(--surface-container);
+  display: flex;
+  gap: 0.85rem;
+}
+
+.editFooter {
+  padding: 1.2rem 2rem;
+  border-top: 1px solid rgba(76, 67, 83, 0.2);
+  background: var(--surface-container);
+  display: flex;
+  gap: 0.85rem;
+}
+
+.modalCancelGhostButton {
+  border: 1px solid rgba(76, 67, 83, 0.5);
+  background: transparent;
+  color: var(--on-surface);
+  border-radius: 0.5rem;
+  min-height: 2.9rem;
+  padding: 0.7rem 1rem;
+  flex: 1;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.modalConfirmButton {
+  border: 0;
+  border-radius: 0.5rem;
+  min-height: 2.9rem;
+  padding: 0.7rem 1rem;
+  flex: 1;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: #e4c2ff;
+  background: linear-gradient(135deg, var(--primary-container), var(--primary-variant));
+  box-shadow: 0 12px 24px rgba(123, 44, 191, 0.24);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.modalCancelGhostButton:hover {
+  background: rgba(53, 53, 53, 0.85);
+}
+
+.modalConfirmButton:hover {
+  filter: brightness(1.08);
+}
+
+.editFooter .modalCancelGhostButton,
+.editFooter .modalConfirmButton {
+  flex: 1;
+}
+
 @media (max-width: 1340px) {
   .metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -487,6 +882,18 @@
   .createButton {
     flex: 1;
   }
+
+  .registerHeader,
+  .editHeader,
+  .registerBody,
+  .editBody,
+  .registerFooter {
+    padding-inline: 1.35rem;
+  }
+
+  .editFooter {
+    padding-inline: 1.35rem;
+  }
 }
 
 @media (max-width: 720px) {
@@ -502,5 +909,21 @@
   .paginationControls {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .registerForm {
+    grid-template-columns: 1fr;
+  }
+
+  .editForm {
+    grid-template-columns: 1fr;
+  }
+
+  .registerFooter {
+    flex-direction: column-reverse;
+  }
+
+  .editFooter {
+    flex-direction: column-reverse;
   }
 }

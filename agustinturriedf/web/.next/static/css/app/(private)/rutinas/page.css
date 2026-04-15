@@ -1,0 +1,1164 @@
+/*!********************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[2]!../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[3]!./app/(private)/rutinas/rutinas.module.css ***!
+  \********************************************************************************************************************************************************************************************************************************************************************************************/
+.rutinas_page__iQ3RL {
+  position: relative;
+  z-index: 1;
+}
+
+.rutinas_content__cQN4e {
+  padding: 1.5rem 2rem 2rem;
+}
+
+.rutinas_layoutGrid__389PZ {
+  display: grid;
+  grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr);
+  grid-gap: 2rem;
+  gap: 2rem;
+  align-items: start;
+}
+
+.rutinas_uploadColumn__Vnv_2 {
+  display: grid;
+  grid-gap: 1.5rem;
+  gap: 1.5rem;
+}
+
+.rutinas_uploadCard__qhd0O {
+  position: relative;
+  border-radius: 0.62rem;
+  background: var(--surface-low);
+  border: 1px solid rgba(76, 67, 83, 0.16);
+  padding: 1.5rem;
+  display: grid;
+  grid-gap: 1.25rem;
+  gap: 1.25rem;
+  overflow: hidden;
+}
+
+.rutinas_uploadCard__qhd0O::after {
+  content: "";
+  position: absolute;
+  inset: auto -3rem -5rem auto;
+  width: 10rem;
+  height: 10rem;
+  border-radius: 999px;
+  background: rgba(123, 44, 191, 0.12);
+  filter: blur(60px);
+  pointer-events: none;
+}
+
+.rutinas_uploadCard__qhd0O h2 {
+  margin: 0;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.rutinas_fieldGroup__rnRPg {
+  display: grid;
+  grid-gap: 0.55rem;
+  gap: 0.55rem;
+}
+
+.rutinas_fieldGroup__rnRPg label {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.63rem;
+  font-weight: 700;
+  color: rgba(207, 194, 213, 0.82);
+}
+
+.rutinas_fieldGroup__rnRPg input[type="text"] {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(76, 67, 83, 0.35);
+  background: var(--surface-lowest);
+  color: var(--on-surface);
+  padding: 0.72rem 0.9rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition:
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.rutinas_fieldGroup__rnRPg input[type="text"]::placeholder {
+  color: rgba(207, 194, 213, 0.38);
+}
+
+.rutinas_fieldGroup__rnRPg input[type="text"]:focus {
+  border-color: rgba(222, 183, 255, 0.48);
+  box-shadow: 0 0 0 2px rgba(123, 44, 191, 0.14);
+}
+
+.rutinas_dropzone__WHHKI {
+  border-radius: 0.75rem;
+  border: 2px dashed rgba(76, 67, 83, 0.4);
+  background: rgba(14, 14, 14, 0.46);
+  min-height: 11rem;
+  padding: 1.3rem;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  text-align: center;
+  transition:
+    border-color 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.rutinas_dropzone__WHHKI:hover {
+  border-color: rgba(222, 183, 255, 0.32);
+  background: rgba(31, 31, 31, 0.72);
+}
+
+.rutinas_dropzoneIcon__XRVhA {
+  color: rgba(207, 194, 213, 0.7);
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.rutinas_dropzone__WHHKI p {
+  margin: 0;
+  font-size: 0.86rem;
+}
+
+.rutinas_dropzone__WHHKI span {
+  margin-top: 0.38rem;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(207, 194, 213, 0.5);
+}
+
+.rutinas_hiddenInput__ZGVuH {
+  display: none;
+}
+
+.rutinas_uploadButton__3DAiw {
+  border: 0;
+  border-radius: 0.5rem;
+  min-height: 2.9rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, var(--primary-container), var(--primary-variant));
+  color: #e4c2ff;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.82rem;
+  font-weight: 700;
+  box-shadow: 0 20px 40px rgba(123, 44, 191, 0.08);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition:
+    filter 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 140ms cubic-bezier(0.4, 0, 1, 1);
+}
+
+.rutinas_uploadButton__3DAiw:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 24px 48px rgba(123, 44, 191, 0.15);
+}
+
+.rutinas_uploadButton__3DAiw:active {
+  transform: scale(0.97);
+}
+
+.rutinas_uploadIcon__Gr_m5 {
+  font-size: 1.1rem;
+}
+
+.rutinas_tipCard__dmTCi {
+  min-height: 12rem;
+  border-radius: 0.62rem;
+  overflow: hidden;
+  border: 1px solid rgba(76, 67, 83, 0.14);
+  position: relative;
+}
+
+.rutinas_tipCard__dmTCi img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 650ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.rutinas_tipCard__dmTCi:hover img {
+  transform: scale(1.08);
+}
+
+.rutinas_tipOverlay__TdSs8 {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.92), rgba(0, 0, 0, 0.1));
+}
+
+.rutinas_tipContent__cvhuh {
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 0.95rem;
+}
+
+.rutinas_tipEyebrow__dbCpm {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.68rem;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.rutinas_tipText__E5I_C {
+  margin: 0.22rem 0 0;
+  font-size: 0.74rem;
+  line-height: 1.35;
+  color: rgba(226, 226, 226, 0.9);
+  max-width: 15rem;
+}
+
+.rutinas_libraryColumn__SKgmj {
+  display: grid;
+  grid-gap: 1.25rem;
+  gap: 1.25rem;
+}
+
+.rutinas_libraryHeader___a6yQ {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.rutinas_libraryHeader___a6yQ h2 {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: clamp(1.45rem, 2.25vw, 1.85rem);
+  font-weight: 800;
+}
+
+.rutinas_filterTabs___DtVM {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(76, 67, 83, 0.2);
+  background: var(--surface-low);
+  padding: 0.22rem;
+}
+
+.rutinas_filterTab__Fnmx_ {
+  border: 0;
+  border-radius: 0.35rem;
+  background: transparent;
+  color: rgba(207, 194, 213, 0.68);
+  min-height: 1.9rem;
+  padding: 0.3rem 0.92rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.64rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 220ms cubic-bezier(0.22, 1, 0.36, 1), background-color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.rutinas_filterTab__Fnmx_:hover {
+  color: var(--on-surface);
+}
+
+.rutinas_filterTabActive__4l69w {
+  background: var(--primary-container);
+  color: #e4c2ff;
+}
+
+.rutinas_fileList__w05kS {
+  display: grid;
+  grid-gap: 0.9rem;
+  gap: 0.9rem;
+}
+
+.rutinas_templateItem__fNqkm {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--surface-low);
+  border-radius: 0.62rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(76, 67, 83, 0.14);
+  border-left-width: 4px;
+  transition:
+    background-color 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.rutinas_templateItem__fNqkm:hover {
+  background: var(--surface-container);
+  border-color: rgba(222, 183, 255, 0.12);
+  box-shadow: 0 20px 40px rgba(123, 44, 191, 0.08);
+}
+
+.rutinas_template_excel___7wJa {
+  border-left-color: rgba(16, 185, 129, 0.65);
+}
+
+.rutinas_template_pdf__TEmcy {
+  border-left-color: rgba(255, 180, 171, 0.65);
+}
+
+.rutinas_template_generic__F__Mw {
+  border-left-color: rgba(222, 183, 255, 0.58);
+}
+
+.rutinas_fileIconWrap__K6UYZ {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rutinas_fileIcon_excel__UZ0kt {
+  background: rgba(16, 185, 129, 0.12);
+  color: rgb(52, 211, 153);
+}
+
+.rutinas_fileIcon_pdf__z_3jL {
+  background: rgba(147, 0, 10, 0.16);
+  color: #ffb4ab;
+}
+
+.rutinas_fileIcon_generic__eV7x4 {
+  background: rgba(123, 44, 191, 0.16);
+  color: var(--primary);
+}
+
+.rutinas_fileIcon__Ki_vb {
+  font-size: 1.72rem;
+}
+
+.rutinas_templateMeta__B7sE6 {
+  flex: 1 1;
+  min-width: 0;
+}
+
+.rutinas_templateMeta__B7sE6 h3 {
+  margin: 0;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.14rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rutinas_templateDetails__FPwu0 {
+  margin-top: 0.3rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.rutinas_chip__QO3CF {
+  border-radius: 999px;
+  border: 1px solid rgba(76, 67, 83, 0.28);
+  background: rgba(14, 14, 14, 0.72);
+  color: rgba(207, 194, 213, 0.82);
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  padding: 0.18rem 0.5rem;
+}
+
+.rutinas_metaItem__zZtGl {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: rgba(207, 194, 213, 0.75);
+  font-size: 0.72rem;
+}
+
+.rutinas_metaIcon__wYhJA {
+  font-size: 0.94rem;
+}
+
+.rutinas_rowActions__UWzDo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  margin-left: auto;
+}
+
+.rutinas_openButton__wodhh {
+  border: 1px solid rgba(76, 67, 83, 0.24);
+  border-radius: 0.4rem;
+  background: var(--surface-high);
+  color: var(--on-surface);
+  min-height: 2rem;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.rutinas_openButton__wodhh:hover {
+  background: rgba(76, 67, 83, 0.24);
+  border-color: rgba(222, 183, 255, 0.24);
+}
+
+.rutinas_iconAction__1fblC {
+  border: 0;
+  background: transparent;
+  color: rgba(207, 194, 213, 0.78);
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 140ms cubic-bezier(0.4, 0, 1, 1);
+}
+
+.rutinas_iconAction__1fblC:hover {
+  color: var(--primary);
+  background: rgba(123, 44, 191, 0.16);
+}
+
+.rutinas_deleteAction__tR5QU:hover {
+  color: #ffb4ab;
+  background: rgba(147, 0, 10, 0.2);
+}
+
+.rutinas_iconAction__1fblC:active {
+  transform: scale(0.94);
+}
+
+.rutinas_rowActionIcon__W2voT {
+  font-size: 1.1rem;
+}
+
+.rutinas_libraryFooter__pM_7F {
+  margin-top: 0.15rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.rutinas_libraryFooter__pM_7F p {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.62rem;
+  color: rgba(207, 194, 213, 0.52);
+  font-weight: 700;
+}
+
+.rutinas_libraryFooter__pM_7F div {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rutinas_libraryFooter__pM_7F button {
+  border: 0;
+  background: transparent;
+  color: rgba(207, 194, 213, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.62rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.rutinas_libraryFooter__pM_7F button:hover {
+  color: var(--primary);
+}
+
+.rutinas_modalOverlay__Glhzk {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  -webkit-backdrop-filter: blur(6px);
+          backdrop-filter: blur(6px);
+}
+
+.rutinas_editModal__vzp0Y {
+  width: min(100%, 32rem);
+  max-height: min(88vh, 34rem);
+  border-radius: 0.72rem;
+  border: 1px solid rgba(76, 67, 83, 0.34);
+  background: var(--surface);
+  box-shadow: 0 38px 64px rgba(0, 0, 0, 0.56), 0 20px 40px rgba(123, 44, 191, 0.14);
+  overflow: auto;
+}
+
+.rutinas_modalHeader__txL_N {
+  padding: 1.2rem 1.35rem;
+  border-bottom: 1px solid rgba(76, 67, 83, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.rutinas_modalHeader__txL_N h2 {
+  margin: 0;
+  letter-spacing: -0.03em;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.34rem;
+}
+
+.rutinas_modalHeader__txL_N p {
+  margin: 0.2rem 0 0;
+  color: rgba(207, 194, 213, 0.78);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.rutinas_modalCloseButton__z3JTU {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  color: rgba(207, 194, 213, 0.86);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 200ms cubic-bezier(0.22, 1, 0.36, 1), background-color 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.rutinas_modalCloseButton__z3JTU:hover {
+  color: var(--on-surface);
+  background: rgba(53, 53, 53, 0.9);
+}
+
+.rutinas_modalCloseIcon__px1i0 {
+  font-size: 1.12rem;
+}
+
+.rutinas_modalBody__RlOo2 {
+  padding: 1rem 1.35rem;
+}
+
+.rutinas_modalField__QOxUV {
+  display: grid;
+  grid-gap: 0.4rem;
+  gap: 0.4rem;
+}
+
+.rutinas_modalField__QOxUV span {
+  color: rgba(207, 194, 213, 0.85);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.68rem;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 700;
+}
+
+.rutinas_modalField__QOxUV input {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  background: var(--surface-highest);
+  color: var(--on-surface);
+  min-height: 2.75rem;
+  padding: 0.62rem 0.82rem;
+  font-size: 14px;
+  outline: none;
+  transition:
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.rutinas_modalField__QOxUV input:focus {
+  border-color: rgba(222, 183, 255, 0.35);
+  box-shadow: 0 0 0 2px rgba(123, 44, 191, 0.2);
+}
+
+.rutinas_modalActions__WltTa {
+  padding: 0.9rem 1.35rem 1.1rem;
+  display: flex;
+  gap: 0.74rem;
+}
+
+.rutinas_modalCancelGhostButton__LcO0R,
+.rutinas_modalConfirmButton__mgePr {
+  flex: 1 1;
+  border-radius: 0.5rem;
+  min-height: 2.82rem;
+  padding: 0.64rem 0.92rem;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  transition:
+    background-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.rutinas_modalCancelGhostButton__LcO0R {
+  border: 1px solid rgba(76, 67, 83, 0.5);
+  background: transparent;
+  color: var(--on-surface);
+}
+
+.rutinas_modalConfirmButton__mgePr {
+  border: 0;
+  background: linear-gradient(135deg, var(--primary-container), var(--primary-variant));
+  color: #e4c2ff;
+  box-shadow: 0 12px 24px rgba(123, 44, 191, 0.24);
+}
+
+.rutinas_modalConfirmButton__mgePr:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.rutinas_modalCancelGhostButton__LcO0R:hover {
+  background: rgba(53, 53, 53, 0.85);
+}
+
+.rutinas_modalConfirmButton__mgePr:hover {
+  filter: brightness(1.08);
+}
+
+.rutinas_confirmIcon__onm2P {
+  font-size: 1rem;
+}
+
+.rutinas_localGlowPrimary__UhaOp,
+.rutinas_localGlowSecondary___LVT8 {
+  position: fixed;
+  pointer-events: none;
+  border-radius: 999px;
+  z-index: 0;
+}
+
+.rutinas_localGlowPrimary__UhaOp {
+  top: 24%;
+  right: -7rem;
+  width: 28rem;
+  height: 28rem;
+  background: rgba(123, 44, 191, 0.05);
+  filter: blur(110px);
+}
+
+.rutinas_localGlowSecondary___LVT8 {
+  bottom: -8rem;
+  left: 11rem;
+  width: 16rem;
+  height: 16rem;
+  background: rgba(123, 44, 191, 0.1);
+  filter: blur(95px);
+}
+
+@media (max-width: 1260px) {
+  .rutinas_layoutGrid__389PZ {
+    grid-template-columns: 1fr;
+  }
+
+  .rutinas_uploadColumn__Vnv_2 {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 1024px) {
+  .rutinas_content__cQN4e {
+    padding-inline: 1.25rem;
+  }
+
+  .rutinas_uploadColumn__Vnv_2 {
+    grid-template-columns: 1fr;
+  }
+
+  .rutinas_templateItem__fNqkm {
+    flex-wrap: wrap;
+  }
+
+  .rutinas_rowActions__UWzDo {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 680px) {
+  .rutinas_modalHeader__txL_N,
+  .rutinas_modalBody__RlOo2,
+  .rutinas_modalActions__WltTa {
+    padding-inline: 0.9rem;
+  }
+
+  .rutinas_libraryHeader___a6yQ {
+    align-items: flex-start;
+  }
+
+  .rutinas_filterTabs___DtVM {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .rutinas_filterTab__Fnmx_ {
+    flex: 1 1;
+  }
+
+  .rutinas_templateMeta__B7sE6 h3 {
+    white-space: normal;
+  }
+
+  .rutinas_modalActions__WltTa {
+    flex-direction: column;
+  }
+
+  .rutinas_modalCancelGhostButton__LcO0R,
+  .rutinas_modalConfirmButton__mgePr {
+    width: 100%;
+  }
+}
+
+/*!********************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[2]!../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[3]!./components/destructive-confirmation-modal.module.css ***!
+  \********************************************************************************************************************************************************************************************************************************************************************************************************/
+.destructive-confirmation-modal_modalOverlay__NL_H2 {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  -webkit-backdrop-filter: blur(6px);
+          backdrop-filter: blur(6px);
+}
+
+.destructive-confirmation-modal_deleteModal__j55kw {
+  position: relative;
+  width: min(100%, 34rem);
+  border-radius: 0.72rem;
+  border: 1px solid rgba(76, 67, 83, 0.34);
+  background: rgba(20, 20, 20, 0.95);
+  box-shadow: 0 40px 70px rgba(0, 0, 0, 0.56), 0 20px 40px rgba(123, 44, 191, 0.14);
+  overflow: hidden;
+  padding: 2rem;
+  display: grid;
+  grid-gap: 1.5rem;
+  gap: 1.5rem;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 {
+  width: min(100%, 31rem);
+  border-radius: 0.72rem;
+  padding: 1.72rem;
+  gap: 1.32rem;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteClose__3hHf8 {
+  right: 0.9rem;
+  top: 0.9rem;
+  width: 2.2rem;
+  height: 2.2rem;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_modalCloseIcon__xPWDR {
+  font-size: 1.08rem;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteHeader__j4vNM {
+  gap: 0.84rem;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteWarningIcon__smMKo {
+  width: 3.64rem;
+  height: 3.64rem;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteWarningSymbol__eyVc0 {
+  font-size: 1.76rem;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteHeader__j4vNM h2 {
+  font-size: 1.66rem;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteHeader__j4vNM p {
+  max-width: 24rem;
+  font-size: 0.82rem;
+  line-height: 1.52;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteTargetCard___2mEK {
+  padding: 1.02rem;
+  gap: 0.82rem;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteTargetCard___2mEK strong {
+  font-size: 1.02rem;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteTargetCard___2mEK em {
+  font-size: 0.62rem;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteActions__VFlAX {
+  gap: 0.74rem;
+}
+
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_modalDeleteCancelButton__O0akX,
+.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_modalDeleteButton__uNIjo {
+  min-height: 2.9rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+}
+
+.destructive-confirmation-modal_deleteClose__3hHf8 {
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  color: rgba(207, 194, 213, 0.75);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 200ms cubic-bezier(0.22, 1, 0.36, 1), background-color 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.destructive-confirmation-modal_deleteClose__3hHf8:hover {
+  color: var(--on-surface);
+  background: rgba(53, 53, 53, 0.9);
+}
+
+.destructive-confirmation-modal_modalCloseIcon__xPWDR {
+  font-size: 1.1rem;
+}
+
+.destructive-confirmation-modal_deleteHeader__j4vNM {
+  display: grid;
+  grid-gap: 0.84rem;
+  gap: 0.84rem;
+}
+
+.destructive-confirmation-modal_deleteHeader_center__hMyz_ {
+  justify-items: center;
+  text-align: center;
+}
+
+.destructive-confirmation-modal_deleteWarningIcon__smMKo {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 180, 171, 0.2);
+  background: rgba(147, 0, 10, 0.16);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.destructive-confirmation-modal_deleteWarningSymbol__eyVc0 {
+  color: #ffb4ab;
+  font-size: 1.95rem;
+}
+
+.destructive-confirmation-modal_deleteHeader__j4vNM h2 {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.44rem;
+}
+
+.destructive-confirmation-modal_deleteHeader__j4vNM p {
+  margin: 0;
+  max-width: 24rem;
+  color: rgba(207, 194, 213, 0.82);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.destructive-confirmation-modal_deleteTargetCard___2mEK {
+  margin: 0;
+  border: 1px solid rgba(76, 67, 83, 0.35);
+  background: var(--surface-low);
+  border-radius: 0.5rem;
+  padding: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.destructive-confirmation-modal_deleteTargetCard___2mEK small {
+  display: block;
+  color: var(--primary);
+  font-size: 0.56rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+}
+
+.destructive-confirmation-modal_deleteTargetCard___2mEK strong {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.04rem;
+}
+
+.destructive-confirmation-modal_deleteTargetCard___2mEK em {
+  margin-left: auto;
+  font-style: normal;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(207, 194, 213, 0.72);
+  border: 1px solid rgba(76, 67, 83, 0.38);
+  border-radius: 999px;
+  padding: 0.25rem 0.52rem;
+}
+
+.destructive-confirmation-modal_deleteActions__VFlAX {
+  display: flex;
+  gap: 0.85rem;
+}
+
+.destructive-confirmation-modal_modalDeleteCancelButton__O0akX {
+  border: 1px solid rgba(76, 67, 83, 0.28);
+  background: rgba(34, 34, 34, 0.9);
+  color: rgba(207, 194, 213, 0.86);
+  border-radius: 0.5rem;
+  min-height: 3rem;
+  padding: 0.7rem 1rem;
+  flex: 1 1;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.destructive-confirmation-modal_modalDeleteButton__uNIjo {
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  min-height: 3rem;
+  padding: 0.7rem 1rem;
+  flex: 1 1;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: #e4c2ff;
+  background: linear-gradient(135deg, var(--primary-container), var(--primary-variant));
+  box-shadow: 0 12px 24px rgba(123, 44, 191, 0.24);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.destructive-confirmation-modal_modalDeleteCancelButton__O0akX:hover {
+  background: rgba(53, 53, 53, 0.92);
+  border-color: rgba(222, 183, 255, 0.22);
+}
+
+.destructive-confirmation-modal_modalDeleteButton__uNIjo:hover {
+  filter: brightness(1.08);
+}
+
+@media (max-width: 680px) {
+  .destructive-confirmation-modal_deleteActions__VFlAX {
+    flex-direction: column;
+  }
+
+  .destructive-confirmation-modal_modalDeleteCancelButton__O0akX,
+  .destructive-confirmation-modal_modalDeleteButton__uNIjo {
+    width: 100%;
+  }
+}
+
+/*!********************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[2]!../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[3]!./components/private-breadcrumb.module.css ***!
+  \********************************************************************************************************************************************************************************************************************************************************************************************/
+.private-breadcrumb_breadcrumb__x0ypk {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 1.1rem 2rem 0;
+  color: rgba(207, 194, 213, 0.72);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.private-breadcrumb_item__BPBf2 {
+  line-height: 1;
+}
+
+.private-breadcrumb_current__fTzoK {
+  color: rgba(226, 226, 226, 0.86);
+}
+
+.private-breadcrumb_separator__knUEK {
+  font-size: 0.95rem;
+  color: rgba(207, 194, 213, 0.48);
+}
+
+@media (max-width: 1024px) {
+  .private-breadcrumb_breadcrumb__x0ypk {
+    padding: 0.95rem 1.25rem 0;
+    font-size: 0.64rem;
+  }
+}
+
+/*!****************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[2]!../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[3]!./components/private-topbar.module.css ***!
+  \****************************************************************************************************************************************************************************************************************************************************************************************/
+.private-topbar_topbar__w_Ljz {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.5rem 2rem;
+  -webkit-backdrop-filter: blur(40px);
+          backdrop-filter: blur(40px);
+  background: rgba(19, 19, 19, 0.72);
+  border-bottom: 1px solid rgba(76, 67, 83, 0.14);
+  box-shadow: 0 1px 0 rgba(226, 226, 226, 0.02), 0 20px 50px rgba(0, 0, 0, 0.22);
+}
+
+.private-topbar_leading__Re6Tb {
+  display: grid;
+  grid-gap: 0.36rem;
+  gap: 0.36rem;
+}
+
+.private-topbar_title__QGHYL {
+  margin: 0;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: clamp(1.95rem, 2.6vw, 2.35rem);
+  letter-spacing: -0.035em;
+  line-height: 1.04;
+  font-weight: 800;
+}
+
+.private-topbar_subtitle__iIlPB {
+  margin: 0;
+  color: rgba(207, 194, 213, 0.7);
+  max-width: 50rem;
+  line-height: 1.4;
+  font-size: 0.9rem;
+}
+
+.private-topbar_context___I7_u {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: rgba(207, 194, 213, 0.58);
+}
+
+.private-topbar_actions__9BAEJ {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.private-topbar_iconButton__NfdnZ {
+  width: 2.15rem;
+  height: 2.15rem;
+  border: 0;
+  color: var(--on-surface-variant);
+  background: transparent;
+  border-radius: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    color 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 140ms cubic-bezier(0.4, 0, 1, 1);
+}
+
+.private-topbar_iconButton__NfdnZ:hover {
+  color: var(--primary);
+  background: rgba(123, 44, 191, 0.16);
+}
+
+.private-topbar_iconButton__NfdnZ:active {
+  transform: scale(0.96);
+}
+
+.private-topbar_topbarIcon__HvuZ8 {
+  font-size: 1.12rem;
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.private-topbar_iconButton__NfdnZ:active .private-topbar_topbarIcon__HvuZ8 {
+  transform: scale(0.95);
+}
+
+@media (max-width: 1024px) {
+  .private-topbar_topbar__w_Ljz {
+    padding: 1rem 1.25rem;
+    align-items: flex-start;
+  }
+
+  .private-topbar_title__QGHYL {
+    font-size: clamp(1.6rem, 4vw, 2rem);
+  }
+
+  .private-topbar_subtitle__iIlPB {
+    font-size: 0.85rem;
+  }
+}
+
