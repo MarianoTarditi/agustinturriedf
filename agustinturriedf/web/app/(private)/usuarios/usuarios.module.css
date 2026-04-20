@@ -756,6 +756,24 @@
   font-style: italic;
 }
 
+.fieldError {
+  color: #ffb4ab;
+  font-size: 0.7rem;
+  font-style: normal;
+}
+
+.fieldInputError {
+  border: 1px solid rgba(255, 180, 171, 0.75) !important;
+  box-shadow: 0 0 0 2px rgba(147, 0, 10, 0.2) !important;
+}
+
+.modalError {
+  margin: 0;
+  color: #ffb4ab;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
 .modalActionsCreate,
 .detailFooterActions,
 .editFooter,
@@ -814,6 +832,16 @@
 .modalCancelGhostButton:hover,
 .modalDeleteCancelButton:hover {
   background: rgba(53, 53, 53, 0.85);
+}
+
+.modalCancelButton:disabled,
+.modalCancelGhostButton:disabled,
+.modalConfirmButton:disabled,
+.modalDeleteCancelButton:disabled,
+.modalDeleteButton:disabled,
+.modalCloseButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .modalConfirmButton:hover,

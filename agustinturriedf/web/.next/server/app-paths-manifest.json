@@ -1,8 +1,12 @@
 {
+  "/api/me/routines/route": "app/api/me/routines/route.js",
+  "/api/routines/folders/route": "app/api/routines/folders/route.js",
+  "/api/routines/folders/[folderId]/route": "app/api/routines/folders/[folderId]/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
   "/(private)/videoteca/page": "app/(private)/videoteca/page.js",
   "/(private)/rutinas/page": "app/(private)/rutinas/page.js",
+  "/(private)/perfil/page": "app/(private)/perfil/page.js",
   "/(private)/pagos/page": "app/(private)/pagos/page.js",
-  "/(private)/usuarios/page": "app/(private)/usuarios/page.js",
-  "/(private)/dashboard/page": "app/(private)/dashboard/page.js",
-  "/(private)/perfil/page": "app/(private)/perfil/page.js"
+  "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/(private)/rutinas/[folderId]/page": "app/(private)/rutinas/[folderId]/page.js"
 }

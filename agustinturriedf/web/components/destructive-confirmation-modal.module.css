@@ -198,6 +198,13 @@
   gap: 0.85rem;
 }
 
+.modalError {
+  margin: -0.5rem 0 0;
+  color: #ffb4ab;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
 .modalDeleteCancelButton {
   border: 1px solid rgba(76, 67, 83, 0.28);
   background: rgba(34, 34, 34, 0.9);
@@ -242,6 +249,14 @@
 
 .modalDeleteButton:hover {
   filter: brightness(1.08);
+}
+
+.deleteClose:disabled,
+.modalDeleteCancelButton:disabled,
+.modalDeleteButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 @media (max-width: 680px) {

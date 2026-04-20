@@ -18,6 +18,148 @@
   align-items: start;
 }
 
+.rutinas_layoutGridStaff__FtOUW {
+  display: grid;
+  grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr);
+  grid-gap: 1.5rem;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.rutinas_folderColumn__Ppuzm {
+  display: grid;
+  grid-gap: 1rem;
+  gap: 1rem;
+}
+
+.rutinas_folderGrid__H0pFr {
+  display: grid;
+  grid-gap: 1rem;
+  gap: 1rem;
+}
+
+.rutinas_folderCard__0H8h1 {
+  border: 1px solid rgba(76, 67, 83, 0.22);
+  background: var(--surface-low);
+  border-radius: 0.62rem;
+  padding: 0.95rem;
+  display: grid;
+  grid-gap: 0.65rem;
+  gap: 0.65rem;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.rutinas_folderCard__0H8h1:hover {
+  border-color: rgba(222, 183, 255, 0.32);
+  background: var(--surface-container);
+}
+
+.rutinas_folderCardActive__6GNpx {
+  border-color: rgba(222, 183, 255, 0.5);
+  box-shadow: 0 16px 30px rgba(123, 44, 191, 0.14);
+}
+
+.rutinas_cardHead__JzGsN {
+  display: flex;
+  align-items: center;
+}
+
+.rutinas_folderIconWrap__tJXdd {
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 0.46rem;
+  background: rgba(123, 44, 191, 0.16);
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rutinas_folderIcon__cCUYv {
+  font-size: 1.2rem;
+}
+
+.rutinas_cardBody__EUIwT h3 {
+  margin: 0;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  text-transform: uppercase;
+  font-size: 0.98rem;
+  letter-spacing: -0.01em;
+}
+
+.rutinas_cardFooter___8zMJ {
+  margin-top: 0.35rem;
+}
+
+.rutinas_filesCount__qZNIi {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.24rem;
+  color: rgba(207, 194, 213, 0.75);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+.rutinas_filesIcon__IRcoW {
+  font-size: 0.92rem;
+}
+
+.rutinas_studentFolderCard__sUDoL {
+  border-radius: 0.62rem;
+  border: 1px solid rgba(76, 67, 83, 0.2);
+  background: var(--surface-low);
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rutinas_studentFolderCard__sUDoL h3 {
+  margin: 0;
+  text-transform: uppercase;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+}
+
+.rutinas_studentFolderCard__sUDoL p {
+  margin: 0.15rem 0 0;
+  color: rgba(207, 194, 213, 0.72);
+  font-size: 0.72rem;
+}
+
+.rutinas_helperText__HkHxy {
+  color: rgba(207, 194, 213, 0.6);
+  font-size: 0.67rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.rutinas_feedbackInfo__N5m3R,
+.rutinas_feedbackError__W3v92,
+.rutinas_feedbackSuccess__AhsFf {
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.rutinas_feedbackInfo__N5m3R {
+  color: rgba(207, 194, 213, 0.84);
+}
+
+.rutinas_feedbackError__W3v92 {
+  color: #ffb4ab;
+}
+
+.rutinas_feedbackSuccess__AhsFf {
+  color: rgb(52, 211, 153);
+}
+
 .rutinas_uploadColumn__Vnv_2 {
   display: grid;
   grid-gap: 1.5rem;
@@ -611,6 +753,8 @@
 
 .rutinas_modalActions__WltTa {
   padding: 0.9rem 1.35rem 1.1rem;
+  border-top: 1px solid rgba(76, 67, 83, 0.2);
+  background: var(--surface-container);
   display: flex;
   gap: 0.74rem;
 }
@@ -698,6 +842,10 @@
     grid-template-columns: 1fr;
   }
 
+  .rutinas_layoutGridStaff__FtOUW {
+    grid-template-columns: 1fr;
+  }
+
   .rutinas_uploadColumn__Vnv_2 {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     align-items: stretch;
@@ -753,269 +901,6 @@
 
   .rutinas_modalCancelGhostButton__LcO0R,
   .rutinas_modalConfirmButton__mgePr {
-    width: 100%;
-  }
-}
-
-/*!********************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[2]!../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[3]!./components/destructive-confirmation-modal.module.css ***!
-  \********************************************************************************************************************************************************************************************************************************************************************************************************/
-.destructive-confirmation-modal_modalOverlay__NL_H2 {
-  position: fixed;
-  inset: 0;
-  z-index: 120;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  background: rgba(0, 0, 0, 0.8);
-  -webkit-backdrop-filter: blur(6px);
-          backdrop-filter: blur(6px);
-}
-
-.destructive-confirmation-modal_deleteModal__j55kw {
-  position: relative;
-  width: min(100%, 34rem);
-  border-radius: 0.72rem;
-  border: 1px solid rgba(76, 67, 83, 0.34);
-  background: rgba(20, 20, 20, 0.95);
-  box-shadow: 0 40px 70px rgba(0, 0, 0, 0.56), 0 20px 40px rgba(123, 44, 191, 0.14);
-  overflow: hidden;
-  padding: 2rem;
-  display: grid;
-  grid-gap: 1.5rem;
-  gap: 1.5rem;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 {
-  width: min(100%, 31rem);
-  border-radius: 0.72rem;
-  padding: 1.72rem;
-  gap: 1.32rem;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteClose__3hHf8 {
-  right: 0.9rem;
-  top: 0.9rem;
-  width: 2.2rem;
-  height: 2.2rem;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_modalCloseIcon__xPWDR {
-  font-size: 1.08rem;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteHeader__j4vNM {
-  gap: 0.84rem;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteWarningIcon__smMKo {
-  width: 3.64rem;
-  height: 3.64rem;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteWarningSymbol__eyVc0 {
-  font-size: 1.76rem;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteHeader__j4vNM h2 {
-  font-size: 1.66rem;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteHeader__j4vNM p {
-  max-width: 24rem;
-  font-size: 0.82rem;
-  line-height: 1.52;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteTargetCard___2mEK {
-  padding: 1.02rem;
-  gap: 0.82rem;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteTargetCard___2mEK strong {
-  font-size: 1.02rem;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteTargetCard___2mEK em {
-  font-size: 0.62rem;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteActions__VFlAX {
-  gap: 0.74rem;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_modalDeleteCancelButton__O0akX,
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_modalDeleteButton__uNIjo {
-  min-height: 2.9rem;
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
-}
-
-.destructive-confirmation-modal_deleteClose__3hHf8 {
-  position: absolute;
-  right: 1rem;
-  top: 1rem;
-  width: 2.2rem;
-  height: 2.2rem;
-  border-radius: 999px;
-  border: 0;
-  background: transparent;
-  color: rgba(207, 194, 213, 0.75);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: color 200ms cubic-bezier(0.22, 1, 0.36, 1), background-color 200ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.destructive-confirmation-modal_deleteClose__3hHf8:hover {
-  color: var(--on-surface);
-  background: rgba(53, 53, 53, 0.9);
-}
-
-.destructive-confirmation-modal_modalCloseIcon__xPWDR {
-  font-size: 1.1rem;
-}
-
-.destructive-confirmation-modal_deleteHeader__j4vNM {
-  display: grid;
-  grid-gap: 0.84rem;
-  gap: 0.84rem;
-}
-
-.destructive-confirmation-modal_deleteHeader_center__hMyz_ {
-  justify-items: center;
-  text-align: center;
-}
-
-.destructive-confirmation-modal_deleteWarningIcon__smMKo {
-  width: 4rem;
-  height: 4rem;
-  border-radius: 0.85rem;
-  border: 1px solid rgba(255, 180, 171, 0.2);
-  background: rgba(147, 0, 10, 0.16);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.destructive-confirmation-modal_deleteWarningSymbol__eyVc0 {
-  color: #ffb4ab;
-  font-size: 1.95rem;
-}
-
-.destructive-confirmation-modal_deleteHeader__j4vNM h2 {
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: -0.03em;
-  font-family: var(--font-space-grotesk), system-ui, sans-serif;
-  font-size: 1.44rem;
-}
-
-.destructive-confirmation-modal_deleteHeader__j4vNM p {
-  margin: 0;
-  max-width: 24rem;
-  color: rgba(207, 194, 213, 0.82);
-  font-size: 0.8rem;
-  line-height: 1.5;
-}
-
-.destructive-confirmation-modal_deleteTargetCard___2mEK {
-  margin: 0;
-  border: 1px solid rgba(76, 67, 83, 0.35);
-  background: var(--surface-low);
-  border-radius: 0.5rem;
-  padding: 0.9rem;
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-}
-
-.destructive-confirmation-modal_deleteTargetCard___2mEK small {
-  display: block;
-  color: var(--primary);
-  font-size: 0.56rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-weight: 700;
-}
-
-.destructive-confirmation-modal_deleteTargetCard___2mEK strong {
-  font-family: var(--font-space-grotesk), system-ui, sans-serif;
-  font-size: 1.04rem;
-}
-
-.destructive-confirmation-modal_deleteTargetCard___2mEK em {
-  margin-left: auto;
-  font-style: normal;
-  font-size: 0.62rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: rgba(207, 194, 213, 0.72);
-  border: 1px solid rgba(76, 67, 83, 0.38);
-  border-radius: 999px;
-  padding: 0.25rem 0.52rem;
-}
-
-.destructive-confirmation-modal_deleteActions__VFlAX {
-  display: flex;
-  gap: 0.85rem;
-}
-
-.destructive-confirmation-modal_modalDeleteCancelButton__O0akX {
-  border: 1px solid rgba(76, 67, 83, 0.28);
-  background: rgba(34, 34, 34, 0.9);
-  color: rgba(207, 194, 213, 0.86);
-  border-radius: 0.5rem;
-  min-height: 3rem;
-  padding: 0.7rem 1rem;
-  flex: 1 1;
-  font-family: var(--font-space-grotesk), system-ui, sans-serif;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.destructive-confirmation-modal_modalDeleteButton__uNIjo {
-  border: 1px solid transparent;
-  border-radius: 0.5rem;
-  min-height: 3rem;
-  padding: 0.7rem 1rem;
-  flex: 1 1;
-  font-family: var(--font-space-grotesk), system-ui, sans-serif;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  cursor: pointer;
-  color: #e4c2ff;
-  background: linear-gradient(135deg, var(--primary-container), var(--primary-variant));
-  box-shadow: 0 12px 24px rgba(123, 44, 191, 0.24);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-}
-
-.destructive-confirmation-modal_modalDeleteCancelButton__O0akX:hover {
-  background: rgba(53, 53, 53, 0.92);
-  border-color: rgba(222, 183, 255, 0.22);
-}
-
-.destructive-confirmation-modal_modalDeleteButton__uNIjo:hover {
-  filter: brightness(1.08);
-}
-
-@media (max-width: 680px) {
-  .destructive-confirmation-modal_deleteActions__VFlAX {
-    flex-direction: column;
-  }
-
-  .destructive-confirmation-modal_modalDeleteCancelButton__O0akX,
-  .destructive-confirmation-modal_modalDeleteButton__uNIjo {
     width: 100%;
   }
 }

@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { signOut } from "next-auth/react";
+import type { Session } from "next-auth";
 import { MaterialSymbol } from "@/components/material-symbol";
 import styles from "@/components/private-navbar.module.css";
 
@@ -10,6 +12,15 @@ type NavItem = {
   href: string;
   label: string;
   icon: string;
+  roles?: Role[];
+};
+
+type Role = "ADMIN" | "TRAINER" | "STUDENT";
+
+type CurrentUser = Session["user"] | null;
+
+type PrivateNavbarProps = {
+  currentUser: CurrentUser;
 };
 
 const navItems: NavItem[] = [
@@ -22,6 +33,7 @@ const navItems: NavItem[] = [
     href: "/usuarios",
     label: "Usuarios",
     icon: "group",
+    roles: ["ADMIN", "TRAINER"],
   },
   {
     href: "/pagos",
@@ -45,10 +57,29 @@ function isActive(pathname: string, href: string) {
   return href !== "/dashboard" && pathname.startsWith(`${href}/`);
 }
 
-export function PrivateNavbar() {
+const roleLabel: Record<Role, string> = {
+  ADMIN: "Administrador",
+  TRAINER: "Entrenador",
+  STUDENT: "Alumno",
+};
+
+const isRole = (value: unknown): value is Role =>
+  value === "ADMIN" || value === "TRAINER" || value === "STUDENT";
+
+export function PrivateNavbar({ currentUser }: PrivateNavbarProps) {
   const pathname = usePathname();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const currentRole = currentUser?.role;
+
+  const visibleNavItems = navItems.filter((item) => {
+    if (!item.roles?.length || !isRole(currentRole)) return true;
+    return item.roles.includes(currentRole);
+  });
+
+  const displayName = currentUser?.name?.trim() || "Usuario";
+  const displayRole = isRole(currentRole) ? roleLabel[currentRole] : "Sin rol";
 
   const profileActive = pathname === "/perfil" || pathname.startsWith("/perfil/");
   const profileTriggerActive = profileActive || profileMenuOpen;
@@ -91,7 +122,7 @@ export function PrivateNavbar() {
 
       <div className={styles.sidebarBody}>
         <nav className={styles.nav} aria-label="Navegación privada">
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const active = isActive(pathname, item.href);
 
             return (
@@ -131,8 +162,8 @@ export function PrivateNavbar() {
                 />
               </div>
               <div>
-                <p className={styles.profileName}>Agustín Turri</p>
-                <p className={styles.profileRole}>Entrenador</p>
+                <p className={styles.profileName}>{displayName}</p>
+                <p className={styles.profileRole}>{displayRole}</p>
               </div>
               <MaterialSymbol
                 name={profileMenuOpen ? "keyboard_arrow_up" : "keyboard_arrow_down"}
@@ -157,15 +188,22 @@ export function PrivateNavbar() {
                 <MaterialSymbol name="account_circle" className={styles.dropdownIcon} opticalSize={20} />
                 <span>Perfil</span>
               </Link>
-              <Link
-                href="/login"
+              <button
+                type="button"
                 className={`${styles.dropdownItem} ${styles.dropdownItemLogout}`}
                 role="menuitem"
                 tabIndex={profileMenuOpen ? 0 : -1}
+                disabled={loggingOut}
+                style={{ width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer" }}
+                onClick={async () => {
+                  if (loggingOut) return;
+                  setLoggingOut(true);
+                  await signOut({ callbackUrl: "/login" });
+                }}
               >
                 <MaterialSymbol name="logout" className={styles.dropdownIcon} opticalSize={20} />
-                <span>Cerrar sesión</span>
-              </Link>
+                <span>{loggingOut ? "Cerrando..." : "Cerrar sesión"}</span>
+              </button>
             </div>
           </div>
         </div>

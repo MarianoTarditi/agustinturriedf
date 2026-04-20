@@ -1146,6 +1146,13 @@
   gap: 0.85rem;
 }
 
+.destructive-confirmation-modal_modalError___5if_ {
+  margin: -0.5rem 0 0;
+  color: #ffb4ab;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
 .destructive-confirmation-modal_modalDeleteCancelButton__O0akX {
   border: 1px solid rgba(76, 67, 83, 0.28);
   background: rgba(34, 34, 34, 0.9);
@@ -1190,6 +1197,14 @@
 
 .destructive-confirmation-modal_modalDeleteButton__uNIjo:hover {
   filter: brightness(1.08);
+}
+
+.destructive-confirmation-modal_deleteClose__3hHf8:disabled,
+.destructive-confirmation-modal_modalDeleteCancelButton__O0akX:disabled,
+.destructive-confirmation-modal_modalDeleteButton__uNIjo:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 @media (max-width: 680px) {

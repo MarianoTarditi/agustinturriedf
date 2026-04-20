@@ -394,7 +394,6 @@ export default function PagosPage() {
                 <label className={styles.fieldWrap}>
                   <span>Teléfono</span>
                   <div className={styles.leadingIconInput}>
-                    <MaterialSymbol name="phone_android" className={styles.leadingInputIcon} weight={500} opticalSize={18} />
                     <input type="tel" value={editPaymentForm.phone} onChange={(event) => handleEditPaymentField("phone", event.target.value)} />
                   </div>
                 </label>

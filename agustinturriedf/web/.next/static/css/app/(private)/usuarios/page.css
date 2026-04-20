@@ -770,6 +770,24 @@
   font-style: italic;
 }
 
+.usuarios_fieldError__aiSeQ {
+  color: #ffb4ab;
+  font-size: 0.7rem;
+  font-style: normal;
+}
+
+.usuarios_fieldInputError__ApfcZ {
+  border: 1px solid rgba(255, 180, 171, 0.75) !important;
+  box-shadow: 0 0 0 2px rgba(147, 0, 10, 0.2) !important;
+}
+
+.usuarios_modalError__xqcdv {
+  margin: 0;
+  color: #ffb4ab;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
 .usuarios_modalActionsCreate__sBQNh,
 .usuarios_detailFooterActions__MhU4n,
 .usuarios_editFooter__3cVLo,
@@ -828,6 +846,16 @@
 .usuarios_modalCancelGhostButton__v_tI6:hover,
 .usuarios_modalDeleteCancelButton__Il2PV:hover {
   background: rgba(53, 53, 53, 0.85);
+}
+
+.usuarios_modalCancelButton__A6Tiu:disabled,
+.usuarios_modalCancelGhostButton__v_tI6:disabled,
+.usuarios_modalConfirmButton__j4Q5j:disabled,
+.usuarios_modalDeleteCancelButton__Il2PV:disabled,
+.usuarios_modalDeleteButton__h4Idm:disabled,
+.usuarios_modalCloseButton__Z8VLK:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .usuarios_modalConfirmButton__j4Q5j:hover,
@@ -1680,6 +1708,13 @@
   gap: 0.85rem;
 }
 
+.destructive-confirmation-modal_modalError___5if_ {
+  margin: -0.5rem 0 0;
+  color: #ffb4ab;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
 .destructive-confirmation-modal_modalDeleteCancelButton__O0akX {
   border: 1px solid rgba(76, 67, 83, 0.28);
   background: rgba(34, 34, 34, 0.9);
@@ -1724,6 +1759,14 @@
 
 .destructive-confirmation-modal_modalDeleteButton__uNIjo:hover {
   filter: brightness(1.08);
+}
+
+.destructive-confirmation-modal_deleteClose__3hHf8:disabled,
+.destructive-confirmation-modal_modalDeleteCancelButton__O0akX:disabled,
+.destructive-confirmation-modal_modalDeleteButton__uNIjo:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 @media (max-width: 680px) {

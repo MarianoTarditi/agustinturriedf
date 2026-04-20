@@ -21,6 +21,11 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(auth)/login/page.js"
     ],
+    "/api/auth/[...nextauth]/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/auth/[...nextauth]/route.js"
+    ],
     "/(private)/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -39,12 +44,6 @@
       "static/css/app/(private)/videoteca/page.css",
       "static/chunks/app/(private)/videoteca/page.js"
     ],
-    "/(private)/rutinas/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/(private)/rutinas/page.css",
-      "static/chunks/app/(private)/rutinas/page.js"
-    ],
     "/(private)/pagos/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -57,11 +56,63 @@
       "static/css/app/(private)/usuarios/page.css",
       "static/chunks/app/(private)/usuarios/page.js"
     ],
+    "/api/users/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/users/route.js"
+    ],
+    "/(private)/rutinas/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(private)/rutinas/page.css",
+      "static/chunks/app/(private)/rutinas/page.js"
+    ],
+    "/api/me/routines/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/me/routines/route.js"
+    ],
+    "/api/routines/folders/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/routines/folders/route.js"
+    ],
+    "/api/routines/folders/[folderId]/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/routines/folders/[folderId]/route.js"
+    ],
     "/(private)/perfil/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/css/app/(private)/perfil/page.css",
       "static/chunks/app/(private)/perfil/page.js"
+    ],
+    "/api/me/profile/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/me/profile/route.js"
+    ],
+    "/api/routines/folders/[folderId]/files/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/routines/folders/[folderId]/files/route.js"
+    ],
+    "/api/routines/files/[fileId]/download/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/routines/files/[fileId]/download/route.js"
+    ],
+    "/(private)/rutinas/[folderId]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(private)/rutinas/[folderId]/page.css",
+      "static/chunks/app/(private)/rutinas/[folderId]/page.js"
+    ],
+    "/_not-found/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/_not-found/page.js"
     ]
   }
 }

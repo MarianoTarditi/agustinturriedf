@@ -6,6 +6,7 @@ import { DestructiveConfirmationModal } from "@/components/destructive-confirmat
 import { MaterialSymbol } from "@/components/material-symbol";
 import { PrivateBreadcrumb } from "@/components/private-breadcrumb";
 import { PrivateTopbar } from "@/components/private-topbar";
+import { buildFolderDraft, normalizeFolderName } from "@/app/(private)/videoteca/videoteca.service";
 
 type FolderCard = {
   id: string;
@@ -65,7 +66,9 @@ export default function VideotecaPage() {
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [activeDeleteFolder, setActiveDeleteFolder] =
     useState<FolderCard | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [draftFolderName, setDraftFolderName] = useState("");
+  const [newFolderName, setNewFolderName] = useState("");
 
   const editingFolder = editingFolderId
     ? (folders.find((folder) => folder.id === editingFolderId) ?? null)
@@ -109,6 +112,25 @@ export default function VideotecaPage() {
       currentFolders.filter((folder) => folder.id !== activeDeleteFolder.id),
     );
     closeDeleteModal();
+  };
+
+  const openCreateModal = () => {
+    setIsCreateModalOpen(true);
+    setNewFolderName("");
+  };
+
+  const closeCreateModal = () => {
+    setIsCreateModalOpen(false);
+    setNewFolderName("");
+  };
+
+  const handleConfirmCreate = () => {
+    const folderDraft = buildFolderDraft({ name: newFolderName });
+
+    if (!folderDraft) return;
+
+    setFolders((currentFolders) => [folderDraft, ...currentFolders]);
+    closeCreateModal();
   };
 
   return (
@@ -180,7 +202,11 @@ export default function VideotecaPage() {
             </div>
           </div>
 
-          <button type="button" className={styles.createFolderButton}>
+          <button
+            type="button"
+            className={styles.createFolderButton}
+            onClick={openCreateModal}
+          >
             <MaterialSymbol
               name="create_new_folder"
               className={styles.createFolderIcon}
@@ -264,7 +290,12 @@ export default function VideotecaPage() {
             </article>
           ))}
 
-          <article className={styles.addCard}>
+          <button
+            type="button"
+            className={styles.addCard}
+            onClick={openCreateModal}
+            aria-label="Crear carpeta"
+          >
             <span className={styles.addCardIconWrap}>
               <MaterialSymbol
                 name="create_new_folder"
@@ -274,7 +305,7 @@ export default function VideotecaPage() {
               />
             </span>
             <p>Crear carpeta</p>
-          </article>
+          </button>
         </section>
 
         <section className={styles.featuredSection}>
@@ -420,6 +451,82 @@ export default function VideotecaPage() {
                   opticalSize={18}
                 />
                 Guardar cambios
+              </button>
+            </footer>
+          </div>
+        </div>
+      ) : null}
+
+      {isCreateModalOpen ? (
+        <div
+          className={styles.modalOverlay}
+          role="presentation"
+          onClick={closeCreateModal}
+        >
+          <div
+            className={styles.editModal}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Crear carpeta"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className={styles.modalHeader}>
+              <div>
+                <h2>Crear carpeta</h2>
+                <p>Prepará una nueva carpeta para organizar contenido de la videoteca.</p>
+              </div>
+
+              <button
+                type="button"
+                className={styles.modalCloseButton}
+                aria-label="Cerrar modal"
+                onClick={closeCreateModal}
+              >
+                <MaterialSymbol
+                  name="close"
+                  className={styles.modalCloseIcon}
+                  weight={500}
+                  opticalSize={22}
+                />
+              </button>
+            </header>
+
+            <div className={styles.modalBody}>
+              <label className={styles.modalField}>
+                <span>Nombre de la carpeta</span>
+                <input
+                  type="text"
+                  value={newFolderName}
+                  onChange={(event) => setNewFolderName(event.target.value)}
+                  placeholder="Ej: Movilidad avanzada"
+                  autoFocus
+                />
+              </label>
+            </div>
+
+            <footer className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.modalCancelGhostButton}
+                onClick={closeCreateModal}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                className={styles.modalConfirmButton}
+                onClick={handleConfirmCreate}
+                disabled={!normalizeFolderName(newFolderName)}
+              >
+                <MaterialSymbol
+                  name="create_new_folder"
+                  className={styles.confirmIcon}
+                  fill={1}
+                  weight={500}
+                  opticalSize={18}
+                />
+                Crear carpeta
               </button>
             </footer>
           </div>

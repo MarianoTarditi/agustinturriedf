@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  TRAINER
+  STUDENT
+}
+
+enum StudentStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+enum ProfileGender {
+  MALE
+  FEMALE
+  NON_BINARY
+  OTHER
+}
+
+model User {
+  id           String           @id @default(cuid())
+  firstName    String
+  lastName     String
+  email        String           @unique
+  phone        String?
+  photoUrl     String?
+  birthDate    DateTime?
+  gender       ProfileGender?
+  heightCm     Int?
+  weightKg     Int?
+  passwordHash String
+  role         Role
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  studentProfile StudentProfile? @relation("StudentUserProfile")
+  trainerStudents StudentProfile[] @relation("TrainerToStudents")
+
+  @@index([role])
+}
+
+model StudentProfile {
+  id        String        @id @default(cuid())
+  userId    String        @unique
+  trainerId String
+  status    StudentStatus @default(ACTIVE)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  user         User          @relation("StudentUserProfile", fields: [userId], references: [id], onDelete: Cascade)
+  trainer      User          @relation("TrainerToStudents", fields: [trainerId], references: [id], onDelete: Restrict)
+  routineFolder RoutineFolder?
+
+  @@index([trainerId])
+  @@index([status])
+}
+
+model RoutineFolder {
+  id               String   @id @default(cuid())
+  studentProfileId String   @unique
+  displayName      String
+  storageKey       String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  files          RoutineFile[]
+
+  @@index([studentProfileId])
+}
+
+model RoutineFile {
+  id             String   @id @default(cuid())
+  folderId       String
+  originalName   String
+  normalizedName String
+  extension      String
+  relativePath   String
+  sizeBytes      Int
+  observations   String?
+  uploadedAt     DateTime @default(now())
+
+  folder RoutineFolder @relation(fields: [folderId], references: [id], onDelete: Cascade)
+
+  @@unique([folderId, normalizedName])
+  @@index([folderId])
+  @@index([uploadedAt])
+}

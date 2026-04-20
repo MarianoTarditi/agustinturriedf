@@ -372,8 +372,12 @@
 }
 
 .addCard {
+  width: 100%;
   border: 2px dashed rgba(76, 67, 83, 0.44);
   background: transparent;
+  padding: 0;
+  text-align: inherit;
+  font: inherit;
   display: flex;
   flex-direction: column;
   align-items: center;
