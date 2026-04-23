@@ -6,8 +6,6 @@ import {
   deleteRoutineFile,
   getRoutineUiPermissions,
   loadRoutinesViewData,
-  uploadRoutineFile,
-  validateRoutineUpload,
 } from "@/app/(private)/rutinas/runtime";
 
 describe("rutinas runtime", () => {
@@ -74,7 +72,10 @@ describe("rutinas runtime", () => {
               studentUserId: "student-2",
               displayName: "Rutinas de Pedro",
               storageKey: "student:pedro@example.com",
-              files: [],
+              fileCount: 0,
+              firstName: "Pedro",
+              lastName: "Gómez",
+              email: "pedro@example.com",
             },
           ],
         }),
@@ -95,16 +96,24 @@ describe("rutinas runtime", () => {
     expect(result).toEqual({
       role: "STAFF",
       folders: [
-        {
-          id: "folder-2",
-          studentProfileId: "sp-2",
-          studentUserId: "student-2",
-          displayName: "Rutinas de Pedro",
-          storageKey: "student:pedro@example.com",
-          files: [],
-        },
-      ],
-    });
+          {
+            id: "folder-2",
+            studentProfileId: "sp-2",
+            studentUserId: "student-2",
+            displayName: "Rutinas de Pedro",
+            storageKey: "student:pedro@example.com",
+            fileCount: 0,
+            firstName: "Pedro",
+            lastName: "Gómez",
+            email: "pedro@example.com",
+          },
+        ],
+      });
+    expect(result.role).toBe("STAFF");
+    if (result.role !== "STAFF") {
+      throw new Error("Expected STAFF routines view");
+    }
+    expect(result.folders[0]).not.toHaveProperty("files");
   });
 
   it("resolves STUDENT view with null folder when /api/me/routines returns 404", async () => {
@@ -159,16 +168,19 @@ describe("rutinas runtime", () => {
       json: async () => ({
         success: true,
         data: [
-          {
-            id: "folder-2",
-            studentProfileId: "sp-2",
-            studentUserId: "student-2",
-            displayName: "Rutinas de Pedro",
-            storageKey: "student:pedro@example.com",
-            files: [],
-          },
-        ],
-      }),
+            {
+              id: "folder-2",
+              studentProfileId: "sp-2",
+              studentUserId: "student-2",
+              displayName: "Rutinas de Pedro",
+              storageKey: "student:pedro@example.com",
+              fileCount: 0,
+              firstName: "Pedro",
+              lastName: "Gómez",
+              email: "pedro@example.com",
+            },
+          ],
+        }),
     });
 
     const folders = await fetchRoutineFolders(fetchMock as unknown as typeof fetch);
@@ -179,89 +191,27 @@ describe("rutinas runtime", () => {
     );
     expect(folders).toHaveLength(1);
     expect(folders[0]?.id).toBe("folder-2");
+    expect(folders[0]).not.toHaveProperty("files");
   });
 
-  it("validates file extension and max size before upload", () => {
-    const invalidType = new File(["abc"], "rutina.doc", { type: "application/msword" });
-    const tooLarge = new File([new Uint8Array(8)], "rutina.pdf", { type: "application/pdf" });
-
-    expect(validateRoutineUpload(invalidType, 10 * 1024)).toMatch(/no soportado/i);
-    expect(validateRoutineUpload(tooLarge, 4)).toMatch(/supera el máximo/i);
-  });
-
-  it("uploads and deletes using routines endpoints", async () => {
-    const file = new File(["pdf-content"], "plan.pdf", { type: "application/pdf" });
-
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 201,
-        json: async () => ({
-          success: true,
-          data: {
-            id: "file-1",
-            name: "plan.pdf",
-            type: "pdf",
-            path: "sp-1/plan--file-1.pdf",
-            uploadedAt: "2026-04-19T12:00:00.000Z",
-            sizeBytes: 10,
-            observations: null,
-          },
-        }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => ({
-          success: true,
-          data: {
-            id: "file-1",
-          },
-        }),
-      });
-
-    const uploaded = await uploadRoutineFile(fetchMock as unknown as typeof fetch, {
-      folderId: "folder-1",
-      file,
-      observations: "Semana 4",
-    });
-
-    await deleteRoutineFile(fetchMock as unknown as typeof fetch, uploaded.id);
-
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      1,
-      "/api/routines/folders/folder-1/files",
-      expect.objectContaining({ method: "POST", body: expect.any(FormData) })
-    );
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      2,
-      "/api/routines/files/file-1",
-      expect.objectContaining({ method: "DELETE" })
-    );
-  });
-
-  it("surfaces API errors on upload", async () => {
-    const file = new File(["pdf-content"], "plan.pdf", { type: "application/pdf" });
-
+  it("deletes files using routines endpoint", async () => {
     const fetchMock = vi.fn().mockResolvedValueOnce({
-      ok: false,
-      status: 409,
+      ok: true,
+      status: 200,
       json: async () => ({
-        success: false,
-        error: {
-          message: "Ya existe un archivo con ese nombre en la carpeta del estudiante",
-          code: "CONFLICT",
+        success: true,
+        data: {
+          id: "file-1",
         },
       }),
     });
 
-    await expect(
-      uploadRoutineFile(fetchMock as unknown as typeof fetch, {
-        folderId: "folder-1",
-        file,
-      })
-    ).rejects.toThrow(/ya existe un archivo/i);
+    await deleteRoutineFile(fetchMock as unknown as typeof fetch, "file-1");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/routines/files/file-1",
+      expect.objectContaining({ method: "DELETE" })
+    );
   });
 
   it("hides upload/delete/create-folder controls for student view", () => {

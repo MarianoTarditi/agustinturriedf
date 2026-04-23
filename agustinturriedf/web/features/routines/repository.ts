@@ -37,6 +37,16 @@ type UpdateRoutineFileStorageRepositoryInput = {
   normalizedName?: string;
 };
 
+type UpdateRoutineFileMetadataRepositoryInput = {
+  originalName: string;
+  normalizedName: string;
+  extension: string;
+  relativePath: string;
+  sizeBytes: number;
+  observations?: string | null;
+  uploadedAt: Date;
+};
+
 const folderOwnershipInclude = {
   studentProfile: {
     select: {
@@ -55,6 +65,30 @@ const folderOwnershipInclude = {
   files: {
     orderBy: {
       uploadedAt: "desc",
+    },
+  },
+} as const;
+
+const folderSummaryWithOwnershipSelect = {
+  id: true,
+  studentProfileId: true,
+  displayName: true,
+  storageKey: true,
+  studentProfile: {
+    select: {
+      userId: true,
+      user: {
+        select: {
+          firstName: true,
+          lastName: true,
+          email: true,
+        },
+      },
+    },
+  },
+  _count: {
+    select: {
+      files: true,
     },
   },
 } as const;
@@ -89,6 +123,15 @@ export class RoutinesRepository {
         },
       },
       include: folderOwnershipInclude,
+    });
+  }
+
+  async listFolderSummariesWithOwnership() {
+    return prismaRoutines.routineFolder.findMany({
+      select: folderSummaryWithOwnershipSelect,
+      orderBy: {
+        createdAt: "desc",
+      },
     });
   }
 
@@ -157,6 +200,21 @@ export class RoutinesRepository {
               normalizedName: input.normalizedName,
             }
           : {}),
+      },
+    });
+  }
+
+  async updateFileMetadata(fileId: string, input: UpdateRoutineFileMetadataRepositoryInput) {
+    return prismaRoutines.routineFile.update({
+      where: { id: fileId },
+      data: {
+        originalName: input.originalName,
+        normalizedName: input.normalizedName,
+        extension: input.extension,
+        relativePath: input.relativePath,
+        sizeBytes: input.sizeBytes,
+        observations: input.observations,
+        uploadedAt: input.uploadedAt,
       },
     });
   }

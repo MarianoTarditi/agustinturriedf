@@ -232,6 +232,7 @@ describe("UserService.createUser", () => {
         email: "juan@example.com",
         role: "STUDENT",
         trainerId: "ck7m7x3k50000abcd1234efgh",
+        initialPaymentStartDate: "2026-02-10",
       }
     );
 
@@ -249,6 +250,57 @@ describe("UserService.createUser", () => {
         id: "sp-1",
       },
     });
+
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        studentProfile: expect.objectContaining({
+          initialPaymentStartDate: new Date("2026-02-10T00:00:00.000Z"),
+        }),
+      })
+    );
+  });
+
+  it("passes optional initialPaymentStartDate to repository as UTC date", async () => {
+    findByEmailMock.mockResolvedValue(null);
+    findByIdMock.mockResolvedValue({
+      id: "ck7m7x3k50000abcd1234efgh",
+      role: "TRAINER",
+    });
+
+    createMock.mockResolvedValue({
+      id: "student-2",
+      firstName: "Luz",
+      lastName: "Alumno",
+      email: "luz@example.com",
+      role: "STUDENT",
+      createdAt: new Date("2026-02-01T00:00:00.000Z"),
+      updatedAt: new Date("2026-02-01T00:00:00.000Z"),
+      studentProfile: {
+        id: "sp-2",
+        trainerId: "trainer-1",
+        status: "ACTIVE",
+      },
+    });
+
+    await userService.createUser(
+      { id: "admin-1", role: "ADMIN" },
+      {
+        firstName: "Luz",
+        lastName: "Alumno",
+        email: "luz@example.com",
+        role: "STUDENT",
+        trainerId: "ck7m7x3k50000abcd1234efgh",
+        initialPaymentStartDate: "2026-03-15",
+      }
+    );
+
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        studentProfile: expect.objectContaining({
+          initialPaymentStartDate: new Date("2026-03-15T00:00:00.000Z"),
+        }),
+      })
+    );
   });
 });
 

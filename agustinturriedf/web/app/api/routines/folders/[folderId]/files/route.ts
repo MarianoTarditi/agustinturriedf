@@ -1,7 +1,7 @@
 import { requireSession } from "@/features/auth/session";
 import { routinesService } from "@/features/routines/service";
 import { ApiError, apiSuccess, handleApiError } from "@/lib/http/api-response";
-import { routineFolderIdParamSchema, routineObservationsSchema } from "@/lib/validation/routines";
+import { routineFolderIdParamSchema, routineObservationsSchema, routineReplaceFileIdSchema } from "@/lib/validation/routines";
 
 type RoutineFolderFilesRouteContext = {
   params: Promise<{
@@ -46,10 +46,27 @@ const resolveUploadPayload = async (request: Request) => {
     throw new ApiError("Validation failed", 400, "VALIDATION_ERROR", parsedObservations.error.flatten());
   }
 
+  const replaceFileIdInput = formData.get("replaceFileId");
+
+  if (replaceFileIdInput !== null && typeof replaceFileIdInput !== "string") {
+    throw new ApiError("Validation failed", 400, "VALIDATION_ERROR", {
+      fieldErrors: {
+        replaceFileId: ["El identificador de reemplazo debe ser texto"],
+      },
+    });
+  }
+
+  const parsedReplaceFileId = routineReplaceFileIdSchema.safeParse(replaceFileIdInput ?? null);
+
+  if (!parsedReplaceFileId.success) {
+    throw new ApiError("Validation failed", 400, "VALIDATION_ERROR", parsedReplaceFileId.error.flatten());
+  }
+
   return {
     originalName: file.name,
     sizeBytes: file.size,
     observations: parsedObservations.data ?? null,
+    replaceFileId: parsedReplaceFileId.data,
     content: Buffer.from(await file.arrayBuffer()),
   };
 };
@@ -65,6 +82,7 @@ export const POST = async (request: Request, context: RoutineFolderFilesRouteCon
       originalName: payload.originalName,
       sizeBytes: payload.sizeBytes,
       observations: payload.observations,
+      replaceFileId: payload.replaceFileId,
       content: payload.content,
     });
 

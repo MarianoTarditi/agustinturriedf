@@ -4,6 +4,8 @@
 }
 
 .content {
+  width: min(100%, 82rem);
+  margin: 0 auto;
   padding: 1.5rem 2rem 2rem;
 }
 
@@ -14,11 +16,25 @@
   align-items: start;
 }
 
-.layoutGridStaff {
-  display: grid;
-  grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr);
-  gap: 1.5rem;
-  align-items: start;
+.backToRoutinesLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+  color: rgba(207, 194, 213, 0.88);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.backToRoutinesLink:hover {
+  color: var(--on-surface);
+}
+
+.backToRoutinesIcon {
+  font-size: 1rem;
 }
 
 .folderColumn {
@@ -26,9 +42,176 @@
   gap: 1rem;
 }
 
+.folderColumn > .libraryHeader {
+  display: none;
+}
+
+.controlsRow {
+  border-bottom: 1px solid rgba(76, 67, 83, 0.22);
+  padding: 1rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.controlsMain {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1 1 20rem;
+  flex-wrap: wrap;
+}
+
+.searchWrap {
+  width: min(100%, 24rem);
+  min-width: min(100%, 16rem);
+  position: relative;
+  align-self: flex-end;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(207, 194, 213, 0.55);
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.searchWrap input {
+  width: 100%;
+  min-height: 2.4rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(76, 67, 83, 0.18);
+  background: var(--surface-low);
+  color: var(--on-surface);
+  padding: 0.66rem 0.9rem 0.66rem 2.35rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition:
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.searchWrap input::placeholder {
+  color: rgba(207, 194, 213, 0.4);
+}
+
+.searchWrap input:focus {
+  border-color: rgba(222, 183, 255, 0.5);
+  box-shadow: 0 0 0 2px rgba(123, 44, 191, 0.16);
+}
+
+.controlLabel {
+  display: block;
+  margin-bottom: 0.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-size: 0.62rem;
+  color: rgba(207, 194, 213, 0.65);
+  font-weight: 700;
+}
+
+.sortWrap {
+  position: relative;
+}
+
+.sortWrap select {
+  appearance: none;
+  min-height: 2.4rem;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(76, 67, 83, 0.22);
+  background: var(--surface-container);
+  color: var(--on-surface);
+  padding: 0.45rem 2rem 0.45rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  transition:
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sortWrap select:focus {
+  border-color: rgba(222, 183, 255, 0.45);
+  box-shadow: 0 0 0 2px rgba(123, 44, 191, 0.12);
+}
+
+.selectIcon {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.68rem;
+  color: rgba(207, 194, 213, 0.62);
+  pointer-events: none;
+  font-size: 1rem;
+}
+
+.viewToggle {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 0.45rem;
+  background: var(--surface-low);
+  border: 1px solid rgba(76, 67, 83, 0.2);
+  padding: 0.2rem;
+}
+
+.viewButton {
+  border: 0;
+  background: transparent;
+  color: rgba(207, 194, 213, 0.52);
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: 0.36rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.viewButton:hover {
+  color: var(--on-surface);
+}
+
+.viewButtonActive {
+  background: var(--surface-highest);
+  color: var(--primary);
+}
+
+.viewIcon {
+  font-size: 1.15rem;
+}
+
 .folderGrid {
   display: grid;
   gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+}
+
+.folderGridList {
+  grid-template-columns: 1fr;
+}
+
+.folderCardList {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.folderCardList .cardBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.folderCardList .cardFooter {
+  margin-top: 0.2rem;
 }
 
 .folderCard {
@@ -155,156 +338,6 @@
 .uploadColumn {
   display: grid;
   gap: 1.5rem;
-}
-
-.uploadCard {
-  position: relative;
-  border-radius: 0.62rem;
-  background: var(--surface-low);
-  border: 1px solid rgba(76, 67, 83, 0.16);
-  padding: 1.5rem;
-  display: grid;
-  gap: 1.25rem;
-  overflow: hidden;
-}
-
-.uploadCard::after {
-  content: "";
-  position: absolute;
-  inset: auto -3rem -5rem auto;
-  width: 10rem;
-  height: 10rem;
-  border-radius: 999px;
-  background: rgba(123, 44, 191, 0.12);
-  filter: blur(60px);
-  pointer-events: none;
-}
-
-.uploadCard h2 {
-  margin: 0;
-  color: var(--primary);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-family: var(--font-space-grotesk), system-ui, sans-serif;
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-
-.fieldGroup {
-  display: grid;
-  gap: 0.55rem;
-}
-
-.fieldGroup label {
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-size: 0.63rem;
-  font-weight: 700;
-  color: rgba(207, 194, 213, 0.82);
-}
-
-.fieldGroup input[type="text"] {
-  width: 100%;
-  border-radius: 0.5rem;
-  border: 1px solid rgba(76, 67, 83, 0.35);
-  background: var(--surface-lowest);
-  color: var(--on-surface);
-  padding: 0.72rem 0.9rem;
-  font-size: 0.875rem;
-  outline: none;
-  transition:
-    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.fieldGroup input[type="text"]::placeholder {
-  color: rgba(207, 194, 213, 0.38);
-}
-
-.fieldGroup input[type="text"]:focus {
-  border-color: rgba(222, 183, 255, 0.48);
-  box-shadow: 0 0 0 2px rgba(123, 44, 191, 0.14);
-}
-
-.dropzone {
-  border-radius: 0.75rem;
-  border: 2px dashed rgba(76, 67, 83, 0.4);
-  background: rgba(14, 14, 14, 0.46);
-  min-height: 11rem;
-  padding: 1.3rem;
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  text-align: center;
-  transition:
-    border-color 260ms cubic-bezier(0.22, 1, 0.36, 1),
-    background-color 260ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.dropzone:hover {
-  border-color: rgba(222, 183, 255, 0.32);
-  background: rgba(31, 31, 31, 0.72);
-}
-
-.dropzoneIcon {
-  color: rgba(207, 194, 213, 0.7);
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
-}
-
-.dropzone p {
-  margin: 0;
-  font-size: 0.86rem;
-}
-
-.dropzone span {
-  margin-top: 0.38rem;
-  text-transform: uppercase;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: rgba(207, 194, 213, 0.5);
-}
-
-.hiddenInput {
-  display: none;
-}
-
-.uploadButton {
-  border: 0;
-  border-radius: 0.5rem;
-  min-height: 2.9rem;
-  padding: 0.75rem 1rem;
-  background: linear-gradient(135deg, var(--primary-container), var(--primary-variant));
-  color: #e4c2ff;
-  font-family: var(--font-space-grotesk), system-ui, sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-size: 0.82rem;
-  font-weight: 700;
-  box-shadow: 0 20px 40px rgba(123, 44, 191, 0.08);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  transition:
-    filter 260ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 280ms cubic-bezier(0.22, 1, 0.36, 1),
-    transform 140ms cubic-bezier(0.4, 0, 1, 1);
-}
-
-.uploadButton:hover {
-  filter: brightness(1.1);
-  box-shadow: 0 24px 48px rgba(123, 44, 191, 0.15);
-}
-
-.uploadButton:active {
-  transform: scale(0.97);
-}
-
-.uploadIcon {
-  font-size: 1.1rem;
 }
 
 .tipCard {
@@ -827,10 +860,6 @@
     grid-template-columns: 1fr;
   }
 
-  .layoutGridStaff {
-    grid-template-columns: 1fr;
-  }
-
   .uploadColumn {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     align-items: stretch;
@@ -840,6 +869,15 @@
 @media (max-width: 1024px) {
   .content {
     padding-inline: 1.25rem;
+  }
+
+  .controlsMain {
+    width: 100%;
+  }
+
+  .searchWrap {
+    width: 100%;
+    min-width: 0;
   }
 
   .uploadColumn {
@@ -865,6 +903,19 @@
 
   .libraryHeader {
     align-items: flex-start;
+  }
+
+  .controlsRow {
+    align-items: flex-start;
+  }
+
+  .viewToggle {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .viewButton {
+    flex: 1;
   }
 
   .filterTabs {

@@ -10,6 +10,7 @@ import { PrivateTopbar } from "@/components/private-topbar";
 import {
   createStudentRuntime,
   deleteUserRuntime,
+  fetchPaymentConfigRuntime,
   fetchUsersRuntime,
   type UserRow,
 } from "@/app/(private)/usuarios/runtime";
@@ -22,11 +23,10 @@ type CreateStudentFieldKey =
   | "email"
   | "phone"
   | "birthDate"
+  | "initialPaymentStartDate"
   | "gender"
   | "heightCm"
-  | "weightKg"
-  | "initialPaymentAmount"
-  | "billingCycleDays";
+  | "weightKg";
 
 type ProfileGender = "MALE" | "FEMALE" | "NON_BINARY" | "OTHER";
 
@@ -42,11 +42,33 @@ const emptyCreateStudentForm: CreateStudentFormState = {
   email: "",
   phone: "",
   birthDate: "",
+  initialPaymentStartDate: "",
   gender: "",
   heightCm: "",
   weightKg: "",
-  initialPaymentAmount: "",
-  billingCycleDays: "30",
+};
+
+const toIsoLocalDate = (value: Date) => {
+  const year = value.getFullYear();
+  const month = `${value.getMonth() + 1}`.padStart(2, "0");
+  const day = `${value.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const createDefaultCreateStudentForm = (): CreateStudentFormState => ({
+  ...emptyCreateStudentForm,
+  initialPaymentStartDate: toIsoLocalDate(new Date()),
+});
+
+const formatAmountPesos = (amountInCents: number | null) => {
+  if (amountInCents === null) {
+    return "";
+  }
+
+  return new Intl.NumberFormat("es-AR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amountInCents / 100);
 };
 
 const parseBirthDateInput = (value: string) => {
@@ -133,6 +155,14 @@ const createStudentValidationSchema = z
         );
         return parsedDate <= todayUtc;
       }, "La fecha de nacimiento no puede ser futura."),
+    initialPaymentStartDate: z
+      .string()
+      .trim()
+      .min(1, "La fecha de inicio inicial es obligatoria.")
+      .refine(
+        (value) => parseBirthDateInput(value) !== null,
+        "Ingresá una fecha válida (DD/MM/AAAA).",
+      ),
     gender: z.string().trim().optional(),
     heightCm: z
       .string()
@@ -160,27 +190,6 @@ const createStudentValidationSchema = z
         const parsed = Number.parseInt(value, 10);
         return parsed >= 30 && parsed <= 350;
       }, "El peso debe estar entre 30 y 350 kg."),
-    initialPaymentAmount: z
-      .string()
-      .trim()
-      .min(1, "El monto inicial es obligatorio.")
-      .refine(
-        (value) => !Number.isNaN(Number(value.replace(",", "."))),
-        "Ingresá un monto inicial válido.",
-      )
-      .refine(
-        (value) => Number(value.replace(",", ".")) > 0,
-        "El monto inicial debe ser mayor a 0.",
-      ),
-    billingCycleDays: z
-      .string()
-      .trim()
-      .min(1, "El ciclo de cobro es obligatorio.")
-      .regex(/^\d+$/, "El ciclo de cobro debe ser un número entero.")
-      .refine((value) => {
-        const parsed = Number.parseInt(value, 10);
-        return parsed >= 1 && parsed <= 365;
-      }, "El ciclo de cobro debe estar entre 1 y 365 días."),
   })
   .superRefine((value, context) => {
     const hasGender = value.gender && value.gender.length > 0;
@@ -229,7 +238,7 @@ export default function UsuariosPage() {
     null,
   );
   const [createStudentForm, setCreateStudentForm] =
-    useState<CreateStudentFormState>(emptyCreateStudentForm);
+    useState<CreateStudentFormState>(createDefaultCreateStudentForm);
   const [createStudentErrors, setCreateStudentErrors] =
     useState<CreateStudentValidationErrors>({});
   const [createStudentSubmitError, setCreateStudentSubmitError] = useState<
@@ -238,9 +247,11 @@ export default function UsuariosPage() {
   const [isCreatingStudent, setIsCreatingStudent] = useState(false);
   const [isDeletingUser, setIsDeletingUser] = useState(false);
   const [deleteUserError, setDeleteUserError] = useState<string | null>(null);
+  const [defaultMonthlyAmountInCents, setDefaultMonthlyAmountInCents] = useState<number | null>(null);
+  const [paymentConfigError, setPaymentConfigError] = useState<string | null>(null);
 
   const resetCreateStudentModalState = () => {
-    setCreateStudentForm(emptyCreateStudentForm);
+    setCreateStudentForm(createDefaultCreateStudentForm());
     setCreateStudentErrors({});
     setCreateStudentSubmitError(null);
     setIsCreatingStudent(false);
@@ -368,6 +379,9 @@ export default function UsuariosPage() {
         weightKg: validation.data.weightKg
           ? Number.parseInt(validation.data.weightKg, 10)
           : null,
+        initialPaymentStartDate: validation.data.initialPaymentStartDate
+          ? toApiBirthDate(validation.data.initialPaymentStartDate)
+          : null,
         role: "STUDENT",
         trainerId: trainerCandidate.id,
         studentStatus: "ACTIVE",
@@ -395,18 +409,26 @@ export default function UsuariosPage() {
       try {
         setLoadingUsers(true);
         setUsersError(null);
+        setPaymentConfigError(null);
 
         if (!cancelled) {
-          const usersRows = await fetchUsersRuntime(fetch);
+          const [usersRows, paymentConfig] = await Promise.all([
+            fetchUsersRuntime(fetch),
+            fetchPaymentConfigRuntime(fetch),
+          ]);
+
           setUsers(usersRows);
+          setDefaultMonthlyAmountInCents(paymentConfig.defaultMonthlyAmountInCents);
         }
       } catch (error) {
         if (!cancelled) {
-          setUsersError(
+          const resolvedMessage =
             error instanceof Error
               ? error.message
-              : "No se pudo cargar la lista de usuarios.",
-          );
+              : "No se pudo cargar la lista de usuarios.";
+
+          setUsersError(resolvedMessage);
+          setPaymentConfigError(resolvedMessage);
           setUsers([]);
         }
       } finally {
@@ -1022,64 +1044,58 @@ export default function UsuariosPage() {
                         weight={500}
                         opticalSize={18}
                       />
-                      <h4>Primer pago</h4>
+                      <h4>Configuración inicial de pago</h4>
                     </div>
-                    <div
-                      className={`${styles.formGroupGrid2} ${styles.paymentFieldsGrid}`}
-                    >
-                      <label
-                        className={`${styles.fieldWrap} ${styles.moneyField}`}
-                      >
-                        <span>Monto inicial *</span>
-                        <div
-                          className={`${styles.moneyInputWrap} ${createStudentErrors.initialPaymentAmount ? styles.fieldInputError : ""}`}
-                        >
-                          <i>$</i>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={createStudentForm.initialPaymentAmount}
-                            onChange={(event) =>
-                              handleCreateStudentFieldChange(
-                                "initialPaymentAmount",
-                                event.target.value,
-                              )
-                            }
-                            placeholder="0.00"
-                            disabled={isCreatingStudent}
-                          />
-                        </div>
-                        {createStudentErrors.initialPaymentAmount ? (
-                          <small className={styles.fieldError}>
-                            {createStudentErrors.initialPaymentAmount}
-                          </small>
-                        ) : null}
-                      </label>
+                    <div className={`${styles.formGroupGrid2} ${styles.paymentFieldsGrid}`}>
                       <label className={styles.fieldWrap}>
-                        <span>Ciclo de cobro (dias) *</span>
+                        <span>Fecha de inicio inicial *</span>
                         <input
-                          type="number"
-                          min="1"
-                          value={createStudentForm.billingCycleDays}
+                          type="date"
+                          value={createStudentForm.initialPaymentStartDate}
                           className={
-                            createStudentErrors.billingCycleDays
+                            createStudentErrors.initialPaymentStartDate
                               ? styles.fieldInputError
                               : undefined
                           }
                           onChange={(event) =>
                             handleCreateStudentFieldChange(
-                              "billingCycleDays",
+                              "initialPaymentStartDate",
                               event.target.value,
                             )
                           }
+                          required
                           disabled={isCreatingStudent}
                         />
-                        {createStudentErrors.billingCycleDays ? (
+                        {createStudentErrors.initialPaymentStartDate ? (
                           <small className={styles.fieldError}>
-                            {createStudentErrors.billingCycleDays}
+                            {createStudentErrors.initialPaymentStartDate}
                           </small>
-                        ) : null}
+                        ) : (
+                          <small>
+                            Se usa para crear el primer ciclo de pago del alumno.
+                          </small>
+                        )}
+                      </label>
+
+                      <label className={`${styles.fieldWrap} ${styles.moneyField}`}>
+                        <span>Monto</span>
+                        <div className={styles.moneyInputWrap}>
+                          <i>$</i>
+                          <input
+                            type="text"
+                            value={formatAmountPesos(defaultMonthlyAmountInCents)}
+                            readOnly
+                            aria-readonly="true"
+                            disabled={isCreatingStudent}
+                          />
+                        </div>
+                        {paymentConfigError ? (
+                          <small className={styles.fieldError}>{paymentConfigError}</small>
+                        ) : (
+                          <small>
+                            Monto mensual global actual. Se actualiza desde "Pagos".
+                          </small>
+                        )}
                       </label>
                     </div>
                   </div>

@@ -1,8 +1,11 @@
 import { prisma } from "@/lib/prisma";
 
+import { addDays, normalizeToBuenosAiresDay } from "@/features/payments/timezone";
+
 type Role = "ADMIN" | "TRAINER" | "STUDENT";
 type StudentStatus = "ACTIVE" | "INACTIVE" | "BLOCKED";
 type ProfileGender = "MALE" | "FEMALE" | "NON_BINARY" | "OTHER";
+const DEFAULT_MONTHLY_AMOUNT_IN_CENTS = 3_000_000;
 
 const userWithProfileInclude = {
   studentProfile: true,
@@ -23,6 +26,7 @@ export type CreateUserRepositoryInput = {
   studentProfile?: {
     trainerId: string;
     status?: StudentStatus;
+    initialPaymentStartDate?: Date | null;
   };
 };
 
@@ -89,33 +93,65 @@ export class UserRepository {
   }
 
   async create(input: CreateUserRepositoryInput) {
-    return prisma.user.create({
-      data: {
-        firstName: input.firstName,
-        lastName: input.lastName,
-        email: input.email,
-        role: input.role,
-        passwordHash: input.passwordHash,
-        ...removeUndefined({
-          phone: input.phone,
-          photoUrl: input.photoUrl,
-          birthDate: input.birthDate,
-          gender: input.gender,
-          heightCm: input.heightCm,
-          weightKg: input.weightKg,
-        }),
-        ...(input.studentProfile
-          ? {
-              studentProfile: {
-                create: {
-                  trainerId: input.studentProfile.trainerId,
-                  status: input.studentProfile.status ?? "ACTIVE",
+    const prismaUsers = prisma as any;
+
+    return prismaUsers.$transaction(async (transaction: any) => {
+      const createdUser = await transaction.user.create({
+        data: {
+          firstName: input.firstName,
+          lastName: input.lastName,
+          email: input.email,
+          role: input.role,
+          passwordHash: input.passwordHash,
+          ...removeUndefined({
+            phone: input.phone,
+            photoUrl: input.photoUrl,
+            birthDate: input.birthDate,
+            gender: input.gender,
+            heightCm: input.heightCm,
+            weightKg: input.weightKg,
+          }),
+          ...(input.studentProfile
+            ? {
+                studentProfile: {
+                  create: {
+                    trainerId: input.studentProfile.trainerId,
+                    status: input.studentProfile.status ?? "ACTIVE",
+                  },
                 },
-              },
-            }
-          : {}),
-      },
-      include: userWithProfileInclude,
+              }
+            : {}),
+        },
+        include: userWithProfileInclude,
+      });
+
+      if (createdUser.role === "STUDENT" && createdUser.studentProfile) {
+        const trainerConfig = await transaction.trainerConfig.upsert({
+          where: {
+            trainerId: createdUser.studentProfile.trainerId,
+          },
+          update: {},
+          create: {
+            trainerId: createdUser.studentProfile.trainerId,
+            defaultMonthlyAmountInCents: DEFAULT_MONTHLY_AMOUNT_IN_CENTS,
+          },
+        });
+
+        const startDate = normalizeToBuenosAiresDay(
+          input.studentProfile?.initialPaymentStartDate ?? createdUser.createdAt
+        );
+
+        await transaction.currentPayment.create({
+          data: {
+            studentProfileId: createdUser.studentProfile.id,
+            amountInCents: trainerConfig.defaultMonthlyAmountInCents,
+            startDate,
+            dueDate: addDays(startDate, 30),
+          },
+        });
+      }
+
+      return createdUser;
     });
   }
 

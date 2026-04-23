@@ -31,6 +31,16 @@ type UserApiErrorResponse = {
   };
 };
 
+type PaymentConfigApiResponse =
+  | {
+      success: true;
+      data: {
+        trainerId: string;
+        defaultMonthlyAmountInCents: number;
+      };
+    }
+  | UserApiErrorResponse;
+
 export type ApiUser = {
   id: string;
   firstName: string;
@@ -70,6 +80,7 @@ export type CreateStudentPayload = {
   role: "STUDENT";
   trainerId: string;
   studentStatus: "ACTIVE";
+  initialPaymentStartDate?: string | null;
 };
 
 export type CreateUserApiResponse =
@@ -112,7 +123,7 @@ const mapStatus = (role: ApiUser["role"], studentProfile: ApiUser["studentProfil
 };
 
 const mapStudentStatusLabel = (role: ApiUser["role"], studentProfile: ApiUser["studentProfile"]) => {
-  if (role !== "STUDENT" || !studentProfile) return "—";
+  if (role !== "STUDENT" || !studentProfile) return "";
 
   if (studentProfile.status === "ACTIVE") return "Activo";
   if (studentProfile.status === "INACTIVE") return "Inactivo";
@@ -124,20 +135,20 @@ const mapGenderLabel = (gender: ApiUser["gender"]) => {
   if (gender === "FEMALE") return "Femenino";
   if (gender === "NON_BINARY") return "No binario";
   if (gender === "OTHER") return "Otro";
-  return "—";
+  return "";
 };
 
 const formatCreatedAt = (value: string) => {
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "";
   return date.toLocaleDateString("es-AR");
 };
 
 const formatBirthDate = (value: string | null) => {
-  if (!value) return "—";
+  if (!value) return "";
 
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "";
 
   return date.toLocaleDateString("es-AR");
 };
@@ -155,7 +166,7 @@ export const mapApiUserToRow = (user: ApiUser): UserRow => {
     name: `${user.firstName} ${user.lastName}`.trim(),
     fullName: `${user.firstName} ${user.lastName}`.trim(),
     email: user.email,
-    phone: user.phone && user.phone.trim().length > 0 ? user.phone : "—",
+    phone: user.phone && user.phone.trim().length > 0 ? user.phone : "",
     roleLabel: mapRoleLabel(user.role),
     role: mapRole(user.role),
     status: mapStatus(user.role, user.studentProfile),
@@ -164,8 +175,8 @@ export const mapApiUserToRow = (user: ApiUser): UserRow => {
     trainerId: user.studentProfile?.trainerId ?? null,
     birthDate: formatBirthDate(user.birthDate),
     gender: mapGenderLabel(user.gender),
-    heightCm: user.heightCm === null ? "—" : String(user.heightCm),
-    weightKg: user.weightKg === null ? "—" : String(user.weightKg),
+    heightCm: user.heightCm === null ? "" : String(user.heightCm),
+    weightKg: user.weightKg === null ? "" : String(user.weightKg),
     initials,
     createdAt: formatCreatedAt(user.createdAt),
     updatedAt: formatCreatedAt(user.updatedAt),
@@ -213,6 +224,27 @@ export const createStudentRuntime = async (
   }
 
   return mapApiUserToRow(responsePayload.data);
+};
+
+export const fetchPaymentConfigRuntime = async (fetchImpl: typeof fetch) => {
+  const response = await fetchImpl("/api/payments/config", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    cache: "no-store",
+  });
+
+  const payload = (await response.json()) as PaymentConfigApiResponse;
+
+  if (!response.ok || !payload.success) {
+    const message = payload.success
+      ? "No se pudo cargar la configuración de pagos."
+      : payload.error.message;
+    throw new Error(message);
+  }
+
+  return payload.data;
 };
 
 export const deleteUserRuntime = async (

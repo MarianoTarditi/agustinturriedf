@@ -2,7 +2,14 @@ import Link from "next/link";
 
 import styles from "@/app/(private)/rutinas/rutinas.module.css";
 import { MaterialSymbol } from "@/components/material-symbol";
-import { buildRoutineDownloadUrl, type RoutineFile, type RoutineFolder } from "@/app/(private)/rutinas/runtime";
+import {
+  buildRoutineDownloadUrl,
+  type RoutineFile,
+  type RoutineFolder,
+  type RoutineFolderSummary,
+} from "@/app/(private)/rutinas/runtime";
+
+export type RoutineFolderViewMode = "grid" | "list";
 
 export const formatRoutineDate = (value: string) => {
   const date = new Date(value);
@@ -46,17 +53,21 @@ const getTypeChip = (type: RoutineFile["type"]) => {
 export const RoutineFolderGrid = ({
   folders,
   activeFolderId,
+  viewMode = "grid",
 }: {
-  folders: RoutineFolder[];
+  folders: RoutineFolderSummary[];
   activeFolderId?: string | null;
+  viewMode?: RoutineFolderViewMode;
 }) => {
+  const isListView = viewMode === "list";
+
   return (
-    <div className={styles.folderGrid}>
+    <div className={`${styles.folderGrid} ${isListView ? styles.folderGridList : ""}`}>
       {folders.map((folder) => (
         <Link
           key={folder.id}
           href={`/rutinas/${folder.id}`}
-          className={`${styles.folderCard} ${activeFolderId === folder.id ? styles.folderCardActive : ""}`}
+          className={`${styles.folderCard} ${isListView ? styles.folderCardList : ""} ${activeFolderId === folder.id ? styles.folderCardActive : ""}`}
           aria-label={`Abrir carpeta ${folder.displayName}`}
         >
           <div className={styles.cardHead}>
@@ -70,7 +81,7 @@ export const RoutineFolderGrid = ({
             <div className={styles.cardFooter}>
               <span className={styles.filesCount}>
                 <MaterialSymbol name="description" className={styles.filesIcon} weight={500} opticalSize={16} />
-                {folder.files.length} archivo{folder.files.length === 1 ? "" : "s"}
+                {folder.fileCount} archivo{folder.fileCount === 1 ? "" : "s"}
               </span>
             </div>
           </div>

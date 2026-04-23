@@ -138,6 +138,44 @@
   gap: 1.5rem;
 }
 
+.pagos_configSection__A6FNP {
+  display: grid;
+  width: min(100%, 26.25rem);
+  grid-gap: 0.85rem;
+  gap: 0.85rem;
+  padding: 1.1rem 1.2rem;
+  border-radius: 0.62rem;
+  background: var(--surface-low);
+  border: 1px solid rgba(76, 67, 83, 0.22);
+}
+
+.pagos_configHeaderRow__mG_At h3 {
+  margin: 0;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 0.88rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(207, 194, 213, 0.92);
+}
+
+.pagos_configHeaderRow__mG_At p {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  color: rgba(207, 194, 213, 0.76);
+}
+
+.pagos_configControls__RYZYl {
+  display: grid;
+  grid-template-columns: minmax(14rem, 20rem) auto;
+  align-items: end;
+  grid-gap: 0.9rem;
+  gap: 0.9rem;
+}
+
+.pagos_configSaveButton__7o7GH {
+  min-height: 2.9rem;
+}
+
 .pagos_tableToolbar__UhoVE {
   display: flex;
   align-items: center;
@@ -187,6 +225,10 @@
 .pagos_tableActions__YixqN {
   display: flex;
   gap: 1rem;
+}
+
+.pagos_paymentFilterWrap__bG_L1 {
+  width: min(100%, 26.25rem);
 }
 
 .pagos_sortButton__R8iiJ,
@@ -890,6 +932,10 @@
     width: 100%;
   }
 
+  .pagos_configControls__RYZYl {
+    grid-template-columns: 1fr;
+  }
+
   .pagos_sortButton__R8iiJ,
   .pagos_createButton__lKPLw {
     flex: 1 1;
@@ -911,6 +957,25 @@
 @media (max-width: 720px) {
   .pagos_metrics__kAIqZ {
     grid-template-columns: 1fr;
+  }
+
+  .pagos_tableToolbar__UhoVE {
+    align-items: flex-start;
+  }
+
+  .pagos_tableActions__YixqN {
+    width: min(100%, 26.25rem);
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pagos_paymentFilterWrap__bG_L1 {
+    width: 100%;
+  }
+
+  .pagos_tableActions__YixqN .pagos_createButton__lKPLw {
+    width: 100%;
+    flex: none;
   }
 
   .pagos_pagination__DGbj6 {
@@ -937,284 +1002,6 @@
 
   .pagos_editFooter__h5k3f {
     flex-direction: column-reverse;
-  }
-}
-
-/*!********************************************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** css ../../node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[2]!../../node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[5].use[3]!./components/destructive-confirmation-modal.module.css ***!
-  \********************************************************************************************************************************************************************************************************************************************************************************************************/
-.destructive-confirmation-modal_modalOverlay__NL_H2 {
-  position: fixed;
-  inset: 0;
-  z-index: 120;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  background: rgba(0, 0, 0, 0.8);
-  -webkit-backdrop-filter: blur(6px);
-          backdrop-filter: blur(6px);
-}
-
-.destructive-confirmation-modal_deleteModal__j55kw {
-  position: relative;
-  width: min(100%, 34rem);
-  border-radius: 0.72rem;
-  border: 1px solid rgba(76, 67, 83, 0.34);
-  background: rgba(20, 20, 20, 0.95);
-  box-shadow: 0 40px 70px rgba(0, 0, 0, 0.56), 0 20px 40px rgba(123, 44, 191, 0.14);
-  overflow: hidden;
-  padding: 2rem;
-  display: grid;
-  grid-gap: 1.5rem;
-  gap: 1.5rem;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 {
-  width: min(100%, 31rem);
-  border-radius: 0.72rem;
-  padding: 1.72rem;
-  gap: 1.32rem;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteClose__3hHf8 {
-  right: 0.9rem;
-  top: 0.9rem;
-  width: 2.2rem;
-  height: 2.2rem;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_modalCloseIcon__xPWDR {
-  font-size: 1.08rem;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteHeader__j4vNM {
-  gap: 0.84rem;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteWarningIcon__smMKo {
-  width: 3.64rem;
-  height: 3.64rem;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteWarningSymbol__eyVc0 {
-  font-size: 1.76rem;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteHeader__j4vNM h2 {
-  font-size: 1.66rem;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteHeader__j4vNM p {
-  max-width: 24rem;
-  font-size: 0.82rem;
-  line-height: 1.52;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteTargetCard___2mEK {
-  padding: 1.02rem;
-  gap: 0.82rem;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteTargetCard___2mEK strong {
-  font-size: 1.02rem;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteTargetCard___2mEK em {
-  font-size: 0.62rem;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_deleteActions__VFlAX {
-  gap: 0.74rem;
-}
-
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_modalDeleteCancelButton__O0akX,
-.destructive-confirmation-modal_deleteModal_compact__RvsP1 .destructive-confirmation-modal_modalDeleteButton__uNIjo {
-  min-height: 2.9rem;
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
-}
-
-.destructive-confirmation-modal_deleteClose__3hHf8 {
-  position: absolute;
-  right: 1rem;
-  top: 1rem;
-  width: 2.2rem;
-  height: 2.2rem;
-  border-radius: 999px;
-  border: 0;
-  background: transparent;
-  color: rgba(207, 194, 213, 0.75);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: color 200ms cubic-bezier(0.22, 1, 0.36, 1), background-color 200ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.destructive-confirmation-modal_deleteClose__3hHf8:hover {
-  color: var(--on-surface);
-  background: rgba(53, 53, 53, 0.9);
-}
-
-.destructive-confirmation-modal_modalCloseIcon__xPWDR {
-  font-size: 1.1rem;
-}
-
-.destructive-confirmation-modal_deleteHeader__j4vNM {
-  display: grid;
-  grid-gap: 0.84rem;
-  gap: 0.84rem;
-}
-
-.destructive-confirmation-modal_deleteHeader_center__hMyz_ {
-  justify-items: center;
-  text-align: center;
-}
-
-.destructive-confirmation-modal_deleteWarningIcon__smMKo {
-  width: 4rem;
-  height: 4rem;
-  border-radius: 0.85rem;
-  border: 1px solid rgba(255, 180, 171, 0.2);
-  background: rgba(147, 0, 10, 0.16);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.destructive-confirmation-modal_deleteWarningSymbol__eyVc0 {
-  color: #ffb4ab;
-  font-size: 1.95rem;
-}
-
-.destructive-confirmation-modal_deleteHeader__j4vNM h2 {
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: -0.03em;
-  font-family: var(--font-space-grotesk), system-ui, sans-serif;
-  font-size: 1.44rem;
-}
-
-.destructive-confirmation-modal_deleteHeader__j4vNM p {
-  margin: 0;
-  max-width: 24rem;
-  color: rgba(207, 194, 213, 0.82);
-  font-size: 0.8rem;
-  line-height: 1.5;
-}
-
-.destructive-confirmation-modal_deleteTargetCard___2mEK {
-  margin: 0;
-  border: 1px solid rgba(76, 67, 83, 0.35);
-  background: var(--surface-low);
-  border-radius: 0.5rem;
-  padding: 0.9rem;
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-}
-
-.destructive-confirmation-modal_deleteTargetCard___2mEK small {
-  display: block;
-  color: var(--primary);
-  font-size: 0.56rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-weight: 700;
-}
-
-.destructive-confirmation-modal_deleteTargetCard___2mEK strong {
-  font-family: var(--font-space-grotesk), system-ui, sans-serif;
-  font-size: 1.04rem;
-}
-
-.destructive-confirmation-modal_deleteTargetCard___2mEK em {
-  margin-left: auto;
-  font-style: normal;
-  font-size: 0.62rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: rgba(207, 194, 213, 0.72);
-  border: 1px solid rgba(76, 67, 83, 0.38);
-  border-radius: 999px;
-  padding: 0.25rem 0.52rem;
-}
-
-.destructive-confirmation-modal_deleteActions__VFlAX {
-  display: flex;
-  gap: 0.85rem;
-}
-
-.destructive-confirmation-modal_modalError___5if_ {
-  margin: -0.5rem 0 0;
-  color: #ffb4ab;
-  font-size: 0.78rem;
-  line-height: 1.4;
-}
-
-.destructive-confirmation-modal_modalDeleteCancelButton__O0akX {
-  border: 1px solid rgba(76, 67, 83, 0.28);
-  background: rgba(34, 34, 34, 0.9);
-  color: rgba(207, 194, 213, 0.86);
-  border-radius: 0.5rem;
-  min-height: 3rem;
-  padding: 0.7rem 1rem;
-  flex: 1 1;
-  font-family: var(--font-space-grotesk), system-ui, sans-serif;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.destructive-confirmation-modal_modalDeleteButton__uNIjo {
-  border: 1px solid transparent;
-  border-radius: 0.5rem;
-  min-height: 3rem;
-  padding: 0.7rem 1rem;
-  flex: 1 1;
-  font-family: var(--font-space-grotesk), system-ui, sans-serif;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  cursor: pointer;
-  color: #e4c2ff;
-  background: linear-gradient(135deg, var(--primary-container), var(--primary-variant));
-  box-shadow: 0 12px 24px rgba(123, 44, 191, 0.24);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-}
-
-.destructive-confirmation-modal_modalDeleteCancelButton__O0akX:hover {
-  background: rgba(53, 53, 53, 0.92);
-  border-color: rgba(222, 183, 255, 0.22);
-}
-
-.destructive-confirmation-modal_modalDeleteButton__uNIjo:hover {
-  filter: brightness(1.08);
-}
-
-.destructive-confirmation-modal_deleteClose__3hHf8:disabled,
-.destructive-confirmation-modal_modalDeleteCancelButton__O0akX:disabled,
-.destructive-confirmation-modal_modalDeleteButton__uNIjo:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-@media (max-width: 680px) {
-  .destructive-confirmation-modal_deleteActions__VFlAX {
-    flex-direction: column;
-  }
-
-  .destructive-confirmation-modal_modalDeleteCancelButton__O0akX,
-  .destructive-confirmation-modal_modalDeleteButton__uNIjo {
-    width: 100%;
   }
 }
 

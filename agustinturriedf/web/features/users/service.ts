@@ -111,6 +111,15 @@ const normalizeBirthDateToUtcMidnight = (dateValue: string) => {
   return new Date(Date.UTC(year, month - 1, day));
 };
 
+const normalizeIsoDateToUtcMidnight = (dateValue: string) => {
+  const [yearRaw, monthRaw, dayRaw] = dateValue.split("-");
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+  const day = Number(dayRaw);
+
+  return new Date(Date.UTC(year, month - 1, day));
+};
+
 const mapUpdateSelfProfileInputToRepository = (
   input: UpdateSelfProfileInput
 ): UpdateSelfProfileRepositoryInput => ({
@@ -248,6 +257,12 @@ export class UserService {
       repositoryInput.studentProfile = {
         trainerId,
         status: parsedInput.studentStatus ?? "ACTIVE",
+        initialPaymentStartDate:
+          parsedInput.initialPaymentStartDate === undefined
+            ? undefined
+            : parsedInput.initialPaymentStartDate === null
+              ? null
+              : normalizeIsoDateToUtcMidnight(parsedInput.initialPaymentStartDate),
       };
     }
 

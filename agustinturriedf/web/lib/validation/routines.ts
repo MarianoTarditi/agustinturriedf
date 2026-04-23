@@ -34,6 +34,8 @@ export const routineObservationsSchema = z.preprocess(
   z.string().max(1000, "Las observaciones no pueden superar 1000 caracteres").nullable()
 );
 
+export const routineReplaceFileIdSchema = z.preprocess(normalizeNullableString, cuidSchema.nullable());
+
 export const routineUploadPayloadSchema = z.object({
   originalName: requiredStringSchema.max(255, "El nombre del archivo no puede superar 255 caracteres"),
   extension: routineFileTypeSchema,

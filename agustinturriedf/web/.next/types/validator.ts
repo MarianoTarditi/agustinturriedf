@@ -128,6 +128,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../app/(private)/videoteca/[folderId]/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/videoteca/[folderId]">> = Specific
+  const handler = {} as typeof import("../../app/(private)/videoteca/[folderId]/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../app/(private)/videoteca/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/videoteca">> = Specific
@@ -177,6 +186,42 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/me/routines">> = Specific
   const handler = {} as typeof import("../../app/api/me/routines/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/api/payments/[studentProfileId]/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/payments/[studentProfileId]">> = Specific
+  const handler = {} as typeof import("../../app/api/payments/[studentProfileId]/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/api/payments/config/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/payments/config">> = Specific
+  const handler = {} as typeof import("../../app/api/payments/config/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/api/payments/register/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/payments/register">> = Specific
+  const handler = {} as typeof import("../../app/api/payments/register/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/api/payments/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/payments">> = Specific
+  const handler = {} as typeof import("../../app/api/payments/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check
@@ -240,6 +285,24 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/users">> = Specific
   const handler = {} as typeof import("../../app/api/users/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/api/videoteca/folders/[folderId]/files/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/videoteca/folders/[folderId]/files">> = Specific
+  const handler = {} as typeof import("../../app/api/videoteca/folders/[folderId]/files/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/api/videoteca/folders/[folderId]/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/videoteca/folders/[folderId]">> = Specific
+  const handler = {} as typeof import("../../app/api/videoteca/folders/[folderId]/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check

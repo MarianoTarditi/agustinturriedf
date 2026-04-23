@@ -1,17 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { authMock, findByIdMock } = vi.hoisted(() => ({
+const { authMock, findUniqueMock } = vi.hoisted(() => ({
   authMock: vi.fn(),
-  findByIdMock: vi.fn(),
+  findUniqueMock: vi.fn(),
 }));
 
 vi.mock("@/auth", () => ({
   auth: authMock,
 }));
 
-vi.mock("@/features/users/repository", () => ({
-  userRepository: {
-    findById: findByIdMock,
+vi.mock("@/lib/prisma", () => ({
+  prisma: {
+    user: {
+      findUnique: findUniqueMock,
+    },
   },
 }));
 
@@ -31,7 +33,7 @@ describe("requireSession", () => {
     });
   });
 
-  it("rejects blocked students using DB-backed status with 403", async () => {
+  it("rejects overdue students with PAYMENT_REQUIRED", async () => {
     authMock.mockResolvedValue({
       user: {
         id: "student-1",
@@ -40,20 +42,57 @@ describe("requireSession", () => {
       },
     });
 
-    findByIdMock.mockResolvedValue({
+    findUniqueMock.mockResolvedValue({
       id: "student-1",
       role: "STUDENT",
       studentProfile: {
         id: "profile-1",
         trainerId: "trainer-1",
-        status: "BLOCKED",
+        status: "ACTIVE",
+        currentPayment: {
+          dueDate: new Date("2020-01-01T00:00:00.000Z"),
+        },
       },
     });
 
     await expect(requireSession()).rejects.toMatchObject({
       status: 403,
-      code: "FORBIDDEN",
+      code: "PAYMENT_REQUIRED",
     });
-    expect(findByIdMock).toHaveBeenCalledWith("student-1");
+    expect(findUniqueMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "student-1" },
+      })
+    );
+  });
+
+  it("allows due-today students and includes derived access fields", async () => {
+    authMock.mockResolvedValue({
+      user: {
+        id: "student-2",
+        role: "STUDENT",
+      },
+    });
+
+    findUniqueMock.mockResolvedValue({
+      id: "student-2",
+      role: "STUDENT",
+      studentProfile: {
+        id: "profile-2",
+        trainerId: "trainer-1",
+        status: "ACTIVE",
+        currentPayment: {
+          dueDate: new Date(),
+        },
+      },
+    });
+
+    const result = await requireSession();
+
+    expect(result).toMatchObject({
+      id: "student-2",
+      paymentStatus: "CURRENT",
+      accessBlockReason: undefined,
+    });
   });
 });

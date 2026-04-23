@@ -2,6 +2,8 @@ import { DefaultSession } from "next-auth";
 
 type Role = "ADMIN" | "TRAINER" | "STUDENT";
 type StudentStatus = "ACTIVE" | "INACTIVE" | "BLOCKED";
+type PaymentStatus = "CURRENT" | "OVERDUE" | "NO_CYCLE";
+type AccessBlockReason = "ADMIN_INACTIVE" | "ADMIN_BLOCKED" | "PAYMENT_OVERDUE";
 
 declare module "next-auth" {
   interface Session {
@@ -11,6 +13,8 @@ declare module "next-auth" {
       studentStatus?: StudentStatus;
       studentProfileId?: string;
       trainerId?: string;
+      paymentStatus?: PaymentStatus;
+      accessBlockReason?: AccessBlockReason;
     };
   }
 
@@ -19,6 +23,8 @@ declare module "next-auth" {
     studentStatus?: StudentStatus;
     studentProfileId?: string;
     trainerId?: string;
+    paymentStatus?: PaymentStatus;
+    accessBlockReason?: AccessBlockReason;
   }
 }
 
@@ -28,5 +34,7 @@ declare module "next-auth/jwt" {
     studentStatus?: StudentStatus;
     studentProfileId?: string;
     trainerId?: string;
+    paymentStatus?: PaymentStatus;
+    accessBlockReason?: AccessBlockReason;
   }
 }

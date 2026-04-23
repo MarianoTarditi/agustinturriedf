@@ -32,7 +32,20 @@ type RoutineFolderDTO = {
   studentUserId: string;
   displayName: string;
   storageKey: string;
+  fileCount: number;
   files: RoutineFileDTO[];
+};
+
+type RoutineFolderSummaryDTO = {
+  id: string;
+  studentProfileId: string;
+  studentUserId: string;
+  displayName: string;
+  storageKey: string;
+  fileCount: number;
+  firstName: string;
+  lastName: string;
+  email: string;
 };
 
 type UploadRoutineFileInput = {
@@ -41,6 +54,18 @@ type UploadRoutineFileInput = {
   sizeBytes: number;
   content: Buffer;
   observations?: string | null;
+  replaceFileId?: string | null;
+};
+
+type ExistingRoutineFile = {
+  id: string;
+  originalName: string;
+  normalizedName: string;
+  extension: string;
+  relativePath: string;
+  sizeBytes: number;
+  observations?: string | null;
+  uploadedAt: Date;
 };
 
 const mapRoutineFile = (file: {
@@ -84,7 +109,36 @@ const mapRoutineFolder = (folder: {
   studentUserId: folder.studentProfile.userId,
   displayName: folder.displayName,
   storageKey: folder.storageKey,
+  fileCount: folder.files.length,
   files: folder.files.map(mapRoutineFile),
+});
+
+const mapRoutineFolderSummary = (folder: {
+  id: string;
+  studentProfileId: string;
+  displayName: string;
+  storageKey: string;
+  studentProfile: {
+    userId: string;
+    user: {
+      firstName: string;
+      lastName: string;
+      email: string;
+    };
+  };
+  _count: {
+    files: number;
+  };
+}): RoutineFolderSummaryDTO => ({
+  id: folder.id,
+  studentProfileId: folder.studentProfileId,
+  studentUserId: folder.studentProfile.userId,
+  displayName: folder.displayName,
+  storageKey: folder.storageKey,
+  fileCount: folder._count.files,
+  firstName: folder.studentProfile.user.firstName,
+  lastName: folder.studentProfile.user.lastName,
+  email: folder.studentProfile.user.email,
 });
 
 const ensureStudentReadAccess = (actor: AuthenticatedUser, ownerUserId: string) => {
@@ -135,6 +189,36 @@ const isDuplicateNameConstraintError = (error: unknown) => {
   return target.includes("folderId") && target.includes("normalizedName");
 };
 
+const mapAmbiguousCandidate = (file: {
+  id: string;
+  originalName: string;
+  extension: string;
+  uploadedAt: Date;
+}) => ({
+  id: file.id,
+  name: file.originalName,
+  type: file.extension as RoutineFileType,
+  uploadedAt: file.uploadedAt,
+});
+
+const throwAmbiguousReplacement = (
+  candidates: Array<{
+    id: string;
+    originalName: string;
+    extension: string;
+    uploadedAt: Date;
+  }>
+) => {
+  throw new ApiError(
+    "Se encontraron múltiples archivos candidatos para reemplazar. Seleccioná uno explícitamente.",
+    409,
+    "AMBIGUOUS_REPLACEMENT",
+    {
+      candidates: candidates.map(mapAmbiguousCandidate),
+    }
+  );
+};
+
 export class RoutinesService {
   async listFolders(actor: AuthenticatedUser) {
     if (hasRole(actor, ["STUDENT"])) {
@@ -144,13 +228,25 @@ export class RoutinesService {
         return [];
       }
 
-      return [mapRoutineFolder(ownFolder)];
+      return [
+        {
+          id: ownFolder.id,
+          studentProfileId: ownFolder.studentProfileId,
+          studentUserId: ownFolder.studentProfile.userId,
+          displayName: ownFolder.displayName,
+          storageKey: ownFolder.storageKey,
+          fileCount: ownFolder.files.length,
+          firstName: ownFolder.studentProfile.user.firstName,
+          lastName: ownFolder.studentProfile.user.lastName,
+          email: ownFolder.studentProfile.user.email,
+        },
+      ];
     }
 
     requireRole(actor, ["ADMIN", "TRAINER"], "Solo ADMIN y TRAINER pueden gestionar rutinas");
 
-    const folders = await routinesRepository.listFoldersWithOwnership();
-    return folders.map(mapRoutineFolder);
+    const folders = await routinesRepository.listFolderSummariesWithOwnership();
+    return folders.map(mapRoutineFolderSummary);
   }
 
   async listFolderFiles(actor: AuthenticatedUser, folderId: string) {
@@ -197,6 +293,77 @@ export class RoutinesService {
     const extension = parseAllowedExtension(input.originalName);
     const observations = normalizeObservations(input.observations);
     const normalizedName = normalizeFileNameForDuplicateCheck(input.originalName);
+    const existingFiles = folder.files as ExistingRoutineFile[];
+
+    const selectedReplacementTarget =
+      input.replaceFileId !== undefined && input.replaceFileId !== null
+        ? existingFiles.find((file) => file.id === input.replaceFileId) ?? null
+        : null;
+
+    if (input.replaceFileId && !selectedReplacementTarget) {
+      throw new ApiError("Archivo de reemplazo inválido para esta carpeta", 400, "VALIDATION_ERROR");
+    }
+
+    const replacementTarget = (() => {
+      if (selectedReplacementTarget) {
+        return selectedReplacementTarget;
+      }
+
+      const normalizedNameMatches = existingFiles.filter(
+        (file) => normalizeFileNameForDuplicateCheck(file.originalName) === normalizedName
+      );
+
+      if (normalizedNameMatches.length > 1) {
+        throwAmbiguousReplacement(normalizedNameMatches);
+      }
+
+      if (normalizedNameMatches.length === 1) {
+        return normalizedNameMatches[0];
+      }
+
+      const sameTypeMatches = existingFiles.filter((file) => file.extension.toLowerCase() === extension);
+
+      if (sameTypeMatches.length > 1) {
+        throwAmbiguousReplacement(sameTypeMatches);
+      }
+
+      if (sameTypeMatches.length === 1) {
+        return sameTypeMatches[0];
+      }
+
+      return null;
+    })();
+
+    if (replacementTarget) {
+      const storageFileName = buildRoutineStorageFileName({
+        originalName: input.originalName,
+        fileId: replacementTarget.id,
+        type: extension,
+      });
+
+      const relativePath = buildRoutineRelativePath(folder.studentProfileId, storageFileName);
+      const absolutePath = getRoutineAbsolutePath(relativePath);
+      const previousAbsolutePath = getRoutineAbsolutePath(replacementTarget.relativePath);
+
+      await ensureStudentRoutineDirectory(folder.studentProfileId);
+      await writeRoutineFileToDisk(absolutePath, input.content);
+
+      if (previousAbsolutePath !== absolutePath) {
+        await removeRoutineFileFromDisk(previousAbsolutePath).catch(() => null);
+      }
+
+      const replacedFile = await routinesRepository.updateFileMetadata(replacementTarget.id, {
+        originalName: input.originalName,
+        normalizedName,
+        extension,
+        relativePath,
+        sizeBytes: detectedSizeBytes,
+        observations,
+        uploadedAt: new Date(),
+      });
+
+      return mapRoutineFile(replacedFile);
+    }
 
     const createdFile = await routinesRepository
       .createFile({

@@ -1,7 +1,8 @@
 import { auth } from "@/auth";
+import { evaluatePaymentAccess } from "@/features/auth/payment-access";
 import { type AuthenticatedUser } from "@/features/auth/authorization";
-import { userRepository } from "@/features/users/repository";
 import { ApiError } from "@/lib/http/api-response";
+import { prisma } from "@/lib/prisma";
 
 export const requireSession = async (): Promise<AuthenticatedUser> => {
   const session = await auth();
@@ -10,13 +11,49 @@ export const requireSession = async (): Promise<AuthenticatedUser> => {
     throw new ApiError("No autenticado", 401, "UNAUTHORIZED");
   }
 
-  const currentUser = await userRepository.findById(session.user.id);
+  const prismaAuth = prisma as any;
+
+  const currentUser = (await prismaAuth.user.findUnique({
+    where: {
+      id: session.user.id,
+    },
+    include: {
+      studentProfile: {
+        include: {
+          currentPayment: true,
+        },
+      },
+    },
+  })) as
+    | {
+        id: string;
+        role: "ADMIN" | "TRAINER" | "STUDENT";
+        studentProfile?: {
+          id: string;
+          trainerId: string;
+          status: "ACTIVE" | "INACTIVE" | "BLOCKED";
+          currentPayment?: {
+            dueDate: Date;
+          } | null;
+        } | null;
+      }
+    | null;
 
   if (!currentUser) {
     throw new ApiError("Sesión inválida", 401, "UNAUTHORIZED");
   }
 
-  if (currentUser.role === "STUDENT" && currentUser.studentProfile?.status === "BLOCKED") {
+  const paymentAccess = evaluatePaymentAccess({
+    role: currentUser.role,
+    studentStatus: currentUser.studentProfile?.status,
+    currentPaymentDueDate: currentUser.studentProfile?.currentPayment?.dueDate,
+  });
+
+  if (!paymentAccess.canAccess) {
+    if (paymentAccess.accessBlockReason === "PAYMENT_OVERDUE") {
+      throw new ApiError("Pago vencido. Regularizá tu cuota para continuar", 403, "PAYMENT_REQUIRED");
+    }
+
     throw new ApiError("Cuenta bloqueada", 403, "FORBIDDEN");
   }
 
@@ -27,5 +64,7 @@ export const requireSession = async (): Promise<AuthenticatedUser> => {
     studentStatus: currentUser.studentProfile?.status,
     studentProfileId: currentUser.studentProfile?.id,
     trainerId: currentUser.studentProfile?.trainerId,
+    paymentStatus: paymentAccess.paymentStatus,
+    accessBlockReason: paymentAccess.accessBlockReason,
   } satisfies AuthenticatedUser;
 };

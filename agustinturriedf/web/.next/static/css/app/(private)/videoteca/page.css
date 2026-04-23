@@ -274,16 +274,16 @@
 .videoteca_cardActions__ibk1W {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.25rem;
 }
 
-.videoteca_cardActionButton__m2fgC {
+.videoteca_cardMenuTriggerButton___fthO {
   border: 0;
   width: 2rem;
   height: 2rem;
   border-radius: 999px;
-  background: rgba(76, 67, 83, 0.12);
-  color: rgba(207, 194, 213, 0.72);
+  background: rgba(76, 67, 83, 0.08);
+  color: rgba(207, 194, 213, 0.62);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -294,28 +294,75 @@
     transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.videoteca_cardActionButton__m2fgC:hover {
+.videoteca_cardMenuTriggerButton___fthO:hover {
   color: var(--on-surface);
-  background: rgba(76, 67, 83, 0.34);
+  background: rgba(76, 67, 83, 0.24);
   transform: translateY(-1px);
 }
 
-.videoteca_cardActionButton__m2fgC:focus-visible {
+.videoteca_cardMenuTriggerButton___fthO:focus-visible {
   outline: 2px solid rgba(222, 183, 255, 0.45);
   outline-offset: 2px;
 }
 
-.videoteca_cardActionDelete__xUeGo {
-  color: rgba(255, 180, 171, 0.82);
-  background: rgba(147, 0, 10, 0.2);
+.videoteca_cardMenuTriggerIcon__jdn24 {
+  font-size: 1rem;
 }
 
-.videoteca_cardActionDelete__xUeGo:hover {
+.videoteca_folderContextMenu__2BAxN {
+  position: fixed;
+  z-index: 110;
+  min-width: 10.5rem;
+  border-radius: 0.62rem;
+  border: 1px solid rgba(76, 67, 83, 0.35);
+  background: var(--surface-high);
+  box-shadow: 0 24px 44px rgba(0, 0, 0, 0.38), 0 12px 24px rgba(123, 44, 191, 0.18);
+  padding: 0.35rem;
+  display: grid;
+  grid-gap: 0.2rem;
+  gap: 0.2rem;
+}
+
+.videoteca_folderContextMenuItem__EWJwT {
+  border: 0;
+  border-radius: 0.45rem;
+  background: transparent;
+  color: rgba(207, 194, 213, 0.86);
+  width: 100%;
+  min-height: 2.2rem;
+  padding: 0.45rem 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.videoteca_folderContextMenuItem__EWJwT:hover {
+  background: rgba(76, 67, 83, 0.28);
+  color: var(--on-surface);
+}
+
+.videoteca_folderContextMenuItem__EWJwT:focus-visible {
+  outline: 2px solid rgba(222, 183, 255, 0.45);
+  outline-offset: 1px;
+}
+
+.videoteca_folderContextMenuItemDelete__s314s {
+  color: rgba(255, 180, 171, 0.88);
+}
+
+.videoteca_folderContextMenuItemDelete__s314s:hover {
   color: #ffb4ab;
-  background: rgba(147, 0, 10, 0.35);
+  background: rgba(147, 0, 10, 0.24);
 }
 
-.videoteca_cardActionIcon__ZCvUl {
+.videoteca_folderContextMenuItemIcon__IHwQY {
   font-size: 1rem;
 }
 
@@ -328,7 +375,26 @@
   transition: color 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.videoteca_folderCard__jacfX:hover .videoteca_cardBody__U5J7E h3 {
+.videoteca_folderNameButton__wbPV9 {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.videoteca_folderNameButton__wbPV9:focus-visible {
+  outline: 2px solid rgba(222, 183, 255, 0.45);
+  outline-offset: 2px;
+  border-radius: 0.2rem;
+}
+
+.videoteca_folderCard__jacfX:hover .videoteca_folderNameButton__wbPV9 {
   color: var(--primary);
 }
 

@@ -1,12 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import styles from "@/app/(private)/videoteca/videoteca.module.css";
 import { DestructiveConfirmationModal } from "@/components/destructive-confirmation-modal";
 import { MaterialSymbol } from "@/components/material-symbol";
 import { PrivateBreadcrumb } from "@/components/private-breadcrumb";
 import { PrivateTopbar } from "@/components/private-topbar";
-import { buildFolderDraft, normalizeFolderName } from "@/app/(private)/videoteca/videoteca.service";
+import {
+  buildFolderDraft,
+  MOCK_VIDEOTECA_FOLDERS,
+  normalizeFolderName,
+} from "@/app/(private)/videoteca/videoteca.service";
 
 type FolderCard = {
   id: string;
@@ -16,53 +21,17 @@ type FolderCard = {
   tags: string[];
 };
 
-const initialFolders: FolderCard[] = [
-  {
-    id: "folder-1",
-    name: "RODILLA",
-    updatedAt: "12 Oct 2023",
-    fileCount: 14,
-    tags: ["rodilla", "movilidad"],
-  },
-  {
-    id: "folder-2",
-    name: "May correa",
-    updatedAt: "08 Oct 2023",
-    fileCount: 2,
-    tags: ["aad"],
-  },
-  {
-    id: "folder-3",
-    name: "Cadera",
-    updatedAt: "25 Sep 2023",
-    fileCount: 8,
-    tags: ["cadera", "atleta"],
-  },
-  {
-    id: "folder-4",
-    name: "CORE & ESTABILIDAD",
-    updatedAt: "14 Sep 2023",
-    fileCount: 21,
-    tags: ["core"],
-  },
-  {
-    id: "folder-5",
-    name: "Hombro",
-    updatedAt: "02 Sep 2023",
-    fileCount: 6,
-    tags: ["articulación"],
-  },
-  {
-    id: "folder-6",
-    name: "Técnicas de Fuerza",
-    updatedAt: "28 Ago 2023",
-    fileCount: 32,
-    tags: ["élite", "fuerza"],
-  },
-];
+type FolderContextMenuState = {
+  folderId: string;
+  x: number;
+  y: number;
+};
 
 export default function VideotecaPage() {
-  const [folders, setFolders] = useState<FolderCard[]>(initialFolders);
+  const router = useRouter();
+  const [folders, setFolders] = useState<FolderCard[]>(MOCK_VIDEOTECA_FOLDERS);
+  const [folderContextMenu, setFolderContextMenu] =
+    useState<FolderContextMenuState | null>(null);
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [activeDeleteFolder, setActiveDeleteFolder] =
     useState<FolderCard | null>(null);
@@ -74,7 +43,109 @@ export default function VideotecaPage() {
     ? (folders.find((folder) => folder.id === editingFolderId) ?? null)
     : null;
 
+  const activeContextMenuFolder = folderContextMenu
+    ? (folders.find((folder) => folder.id === folderContextMenu.folderId) ?? null)
+    : null;
+
+  const closeFolderContextMenu = () => {
+    setFolderContextMenu(null);
+  };
+
+  const getSafeMenuPosition = (x: number, y: number) => {
+    const MENU_WIDTH = 176;
+    const MENU_HEIGHT = 108;
+    const EDGE_OFFSET = 12;
+
+    const maxX = Math.max(
+      EDGE_OFFSET,
+      window.innerWidth - MENU_WIDTH - EDGE_OFFSET,
+    );
+    const maxY = Math.max(
+      EDGE_OFFSET,
+      window.innerHeight - MENU_HEIGHT - EDGE_OFFSET,
+    );
+
+    return {
+      x: Math.min(Math.max(EDGE_OFFSET, x), maxX),
+      y: Math.min(Math.max(EDGE_OFFSET, y), maxY),
+    };
+  };
+
+  const openFolderContextMenu = (folderId: string, x: number, y: number) => {
+    const safePosition = getSafeMenuPosition(x, y);
+
+    setFolderContextMenu({
+      folderId,
+      x: safePosition.x,
+      y: safePosition.y,
+    });
+  };
+
+  const handleFolderMenuButtonClick = (
+    event: React.MouseEvent<HTMLButtonElement>,
+    folder: FolderCard,
+  ) => {
+    event.stopPropagation();
+
+    if (folderContextMenu?.folderId === folder.id) {
+      closeFolderContextMenu();
+      return;
+    }
+
+    const triggerRect = event.currentTarget.getBoundingClientRect();
+
+    openFolderContextMenu(folder.id, triggerRect.right - 6, triggerRect.bottom + 8);
+  };
+
+  useEffect(() => {
+    if (!folderContextMenu) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+
+      if (target.closest('[data-folder-context-menu="true"]')) return;
+      if (target.closest('[data-folder-menu-trigger="true"]')) return;
+
+      closeFolderContextMenu();
+    };
+
+    const handleContextMenu = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+      if (target.closest('[data-folder-card="true"]')) return;
+
+      closeFolderContextMenu();
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeFolderContextMenu();
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [folderContextMenu]);
+
+  useEffect(() => {
+    if (!folderContextMenu) return;
+
+    const exists = folders.some((folder) => folder.id === folderContextMenu.folderId);
+    if (!exists) {
+      closeFolderContextMenu();
+    }
+  }, [folders, folderContextMenu]);
+
   const openEditModal = (folder: FolderCard) => {
+    closeFolderContextMenu();
     setEditingFolderId(folder.id);
     setDraftFolderName(folder.name);
   };
@@ -98,6 +169,7 @@ export default function VideotecaPage() {
   };
 
   const openDeleteModal = (folder: FolderCard) => {
+    closeFolderContextMenu();
     setActiveDeleteFolder(folder);
   };
 
@@ -131,6 +203,10 @@ export default function VideotecaPage() {
 
     setFolders((currentFolders) => [folderDraft, ...currentFolders]);
     closeCreateModal();
+  };
+
+  const openFolder = (folderId: string) => {
+    router.push(`/videoteca/${folderId}`);
   };
 
   return (
@@ -220,7 +296,16 @@ export default function VideotecaPage() {
 
         <section className={styles.folderGrid}>
           {folders.map((folder) => (
-            <article key={folder.id} className={styles.folderCard}>
+            <article
+              key={folder.id}
+              className={styles.folderCard}
+              data-folder-card="true"
+              onContextMenu={(event) => {
+                event.preventDefault();
+                openFolderContextMenu(folder.id, event.clientX, event.clientY);
+              }}
+              onDoubleClick={() => openFolder(folder.id)}
+            >
               <div className={styles.cardHead}>
                 <span className={styles.folderIconWrap}>
                   <MaterialSymbol
@@ -235,27 +320,17 @@ export default function VideotecaPage() {
                 <div className={styles.cardActions}>
                   <button
                     type="button"
-                    className={styles.cardActionButton}
-                    aria-label={`Editar carpeta ${folder.name}`}
-                    onClick={() => openEditModal(folder)}
+                    className={styles.cardMenuTriggerButton}
+                    data-folder-menu-trigger="true"
+                    aria-label={`Abrir menú de opciones de ${folder.name}`}
+                    aria-haspopup="menu"
+                    aria-expanded={folderContextMenu?.folderId === folder.id}
+                    onDoubleClick={(event) => event.stopPropagation()}
+                    onClick={(event) => handleFolderMenuButtonClick(event, folder)}
                   >
                     <MaterialSymbol
-                      name="edit"
-                      className={styles.cardActionIcon}
-                      weight={500}
-                      opticalSize={18}
-                    />
-                  </button>
-
-                  <button
-                    type="button"
-                    className={`${styles.cardActionButton} ${styles.cardActionDelete}`}
-                    aria-label={`Eliminar carpeta ${folder.name}`}
-                    onClick={() => openDeleteModal(folder)}
-                  >
-                    <MaterialSymbol
-                      name="delete"
-                      className={styles.cardActionIcon}
+                      name="more_vert"
+                      className={styles.cardMenuTriggerIcon}
                       weight={500}
                       opticalSize={18}
                     />
@@ -264,7 +339,16 @@ export default function VideotecaPage() {
               </div>
 
               <div className={styles.cardBody}>
-                <h3>{folder.name}</h3>
+                <h3>
+                  <button
+                    type="button"
+                    className={styles.folderNameButton}
+                    onClick={() => openFolder(folder.id)}
+                    aria-label={`Abrir carpeta ${folder.name}`}
+                  >
+                    {folder.name}
+                  </button>
+                </h3>
              
 
                 <div className={styles.cardFooter}>
@@ -381,6 +465,49 @@ export default function VideotecaPage() {
 
       <div className={styles.localGlowPrimary} aria-hidden="true" />
       <div className={styles.localGlowSecondary} aria-hidden="true" />
+
+      {activeContextMenuFolder && folderContextMenu ? (
+        <div
+          className={styles.folderContextMenu}
+          role="menu"
+          aria-label={`Opciones para ${activeContextMenuFolder.name}`}
+          data-folder-context-menu="true"
+          style={{
+            left: `${folderContextMenu.x}px`,
+            top: `${folderContextMenu.y}px`,
+          }}
+        >
+          <button
+            type="button"
+            className={styles.folderContextMenuItem}
+            role="menuitem"
+            onClick={() => openEditModal(activeContextMenuFolder)}
+          >
+            <MaterialSymbol
+              name="edit"
+              className={styles.folderContextMenuItemIcon}
+              weight={500}
+              opticalSize={18}
+            />
+            Editar
+          </button>
+
+          <button
+            type="button"
+            className={`${styles.folderContextMenuItem} ${styles.folderContextMenuItemDelete}`}
+            role="menuitem"
+            onClick={() => openDeleteModal(activeContextMenuFolder)}
+          >
+            <MaterialSymbol
+              name="delete"
+              className={styles.folderContextMenuItemIcon}
+              weight={500}
+              opticalSize={18}
+            />
+            Eliminar
+          </button>
+        </div>
+      ) : null}
 
       {editingFolder ? (
         <div

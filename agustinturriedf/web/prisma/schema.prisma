@@ -44,6 +44,8 @@ model User {
 
   studentProfile StudentProfile? @relation("StudentUserProfile")
   trainerStudents StudentProfile[] @relation("TrainerToStudents")
+  trainerConfig   TrainerConfig?   @relation("TrainerConfigOwner")
+  recordedPayments PaymentHistory[] @relation("PaymentRecordedByUser")
 
   @@index([role])
 }
@@ -59,9 +61,57 @@ model StudentProfile {
   user         User          @relation("StudentUserProfile", fields: [userId], references: [id], onDelete: Cascade)
   trainer      User          @relation("TrainerToStudents", fields: [trainerId], references: [id], onDelete: Restrict)
   routineFolder RoutineFolder?
+  currentPayment CurrentPayment?
+  paymentHistory PaymentHistory[]
 
   @@index([trainerId])
   @@index([status])
+}
+
+model TrainerConfig {
+  id                          String   @id @default(cuid())
+  trainerId                   String   @unique
+  defaultMonthlyAmountInCents Int      @default(3000000)
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+
+  trainer User @relation("TrainerConfigOwner", fields: [trainerId], references: [id], onDelete: Cascade)
+}
+
+model CurrentPayment {
+  id               String   @id @default(cuid())
+  studentProfileId String   @unique
+  amountInCents    Int
+  startDate        DateTime
+  dueDate          DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  paymentHistory PaymentHistory[]
+
+  @@index([studentProfileId])
+  @@index([dueDate])
+  @@index([startDate])
+}
+
+model PaymentHistory {
+  id               String   @id @default(cuid())
+  studentProfileId String
+  currentPaymentId String
+  amountInCents    Int
+  paymentDate      DateTime
+  recordedByUserId String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  currentPayment CurrentPayment @relation(fields: [currentPaymentId], references: [id], onDelete: Cascade)
+  recordedByUser User           @relation("PaymentRecordedByUser", fields: [recordedByUserId], references: [id], onDelete: Restrict)
+
+  @@index([studentProfileId])
+  @@index([paymentDate])
+  @@index([recordedByUserId])
 }
 
 model RoutineFolder {
@@ -94,4 +144,36 @@ model RoutineFile {
   @@unique([folderId, normalizedName])
   @@index([folderId])
   @@index([uploadedAt])
+}
+
+model VideotecaFolder {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  files VideotecaFile[]
+
+  @@index([updatedAt])
+}
+
+model VideotecaFile {
+  id           String   @id @default(cuid())
+  folderId     String
+  originalName String
+  normalizedName String
+  extension    String
+  mediaType    String
+  relativePath String
+  sizeBytes    Int
+  orderIndex   Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  folder VideotecaFolder @relation(fields: [folderId], references: [id], onDelete: Cascade)
+
+  @@index([folderId])
+  @@index([orderIndex])
+  @@unique([folderId, normalizedName])
+  @@unique([folderId, orderIndex])
 }

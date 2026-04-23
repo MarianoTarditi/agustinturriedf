@@ -1,0 +1,897 @@
+.page {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+.content {
+  width: min(100%, 82rem);
+  margin: 0 auto;
+  padding: 1.5rem 2rem 2rem;
+  display: grid;
+  gap: 1.6rem;
+}
+
+.controlsRow {
+  border-bottom: 1px solid rgba(76, 67, 83, 0.24);
+  padding: 0.4rem 0 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.controlsMain {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.controlsActions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.uploadButton {
+  border: 0;
+  border-radius: 0.45rem;
+  min-height: 2.45rem;
+  height: 2.45rem;
+  padding: 0 1.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  background: linear-gradient(135deg, var(--primary-container), var(--primary-variant));
+  color: #e4c2ff;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 20px 40px rgba(123, 44, 191, 0.15);
+  cursor: pointer;
+  transition:
+    filter 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 140ms cubic-bezier(0.4, 0, 1, 1),
+    box-shadow 300ms cubic-bezier(0.22, 1, 0.36, 1);
+  white-space: nowrap;
+}
+
+.uploadButton:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 24px 44px rgba(123, 44, 191, 0.2);
+}
+
+.uploadButton:active {
+  transform: scale(0.95);
+}
+
+.uploadButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  filter: grayscale(0.15);
+}
+
+.uploadButtonIcon {
+  font-size: 1.15rem;
+}
+
+.uploadInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.futureFeatureWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.futureFeatureChip {
+  border-radius: 999px;
+  border: 1px solid rgba(76, 67, 83, 0.28);
+  background: rgba(19, 17, 22, 0.75);
+  color: rgba(207, 194, 213, 0.7);
+  padding: 0.2rem 0.52rem;
+  font-size: 0.64rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.filterButton {
+  min-height: 2.35rem;
+  border: 1px solid rgba(76, 67, 83, 0.24);
+  border-radius: 0.52rem;
+  background: var(--surface-container);
+  color: rgba(207, 194, 213, 0.86);
+  padding: 0.46rem 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 200ms ease, color 200ms ease;
+}
+
+.filterButton:hover {
+  color: var(--primary);
+  border-color: rgba(222, 183, 255, 0.3);
+}
+
+.filterIcon {
+  font-size: 1rem;
+}
+
+.folderCard {
+  background: linear-gradient(165deg, #18151d 0%, #121015 100%);
+  border: 1px solid rgba(76, 67, 83, 0.36);
+  border-radius: 0.9rem;
+  position: relative;
+}
+
+.folderSummaryCard {
+  padding: 1rem 1.15rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.folderIconWrap {
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 0.62rem;
+  background: rgba(123, 44, 191, 0.16);
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.folderIcon {
+  font-size: 1.22rem;
+}
+
+.cardBody h3 {
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+}
+
+.cardMeta {
+  margin: 0.24rem 0 0;
+  color: rgba(207, 194, 213, 0.66);
+  font-size: 0.72rem;
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.filesCount {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: rgba(207, 194, 213, 0.86);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.filesIcon {
+  font-size: 0.96rem;
+}
+
+.tags {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.tag {
+  border-radius: 999px;
+  border: 1px solid rgba(76, 67, 83, 0.4);
+  background: rgba(41, 36, 47, 0.72);
+  color: rgba(220, 183, 253, 0.95);
+  padding: 0.15rem 0.48rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.featuredSection {
+  display: grid;
+  gap: 1rem;
+}
+
+.featuredSection h2 {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  font-size: clamp(1.2rem, 1.9vw, 1.6rem);
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+}
+
+.feedbackError,
+.feedbackSuccess {
+  margin: 0;
+  border-radius: 0.62rem;
+  padding: 0.68rem 0.8rem;
+  font-size: 0.78rem;
+  border: 1px solid transparent;
+}
+
+.feedbackError {
+  color: rgba(255, 196, 194, 0.95);
+  border-color: rgba(255, 180, 171, 0.35);
+  background: rgba(147, 0, 10, 0.16);
+}
+
+.feedbackSuccess {
+  color: rgba(187, 250, 204, 0.95);
+  border-color: rgba(116, 209, 141, 0.35);
+  background: rgba(13, 97, 51, 0.2);
+}
+
+.uploadQueueCard {
+  padding: 0.9rem 1rem;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.uploadQueueHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.uploadQueueHeader h3 {
+  margin: 0;
+  font-size: 0.96rem;
+}
+
+.uploadQueueHeader p {
+  margin: 0.16rem 0 0;
+  color: rgba(207, 194, 213, 0.7);
+  font-size: 0.72rem;
+}
+
+.overallProgressTrack {
+  height: 0.42rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.overallProgressFill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #d2a6ff, #7b2cbf);
+  transition: width 160ms ease;
+}
+
+.uploadQueueList {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.uploadQueueItem {
+  border: 1px solid rgba(76, 67, 83, 0.32);
+  border-radius: 0.62rem;
+  background: rgba(19, 17, 22, 0.88);
+  padding: 0.5rem 0.58rem;
+  display: grid;
+  grid-template-columns: 3rem 1fr auto;
+  align-items: center;
+  gap: 0.62rem;
+}
+
+.uploadQueuePreview {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(155deg, #26222c 0%, #18151d 70%, #121015 100%);
+}
+
+.uploadQueueImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.uploadQueuePlaceholderIcon {
+  font-size: 1.3rem;
+  color: rgba(207, 194, 213, 0.7);
+}
+
+.uploadQueueMeta {
+  min-width: 0;
+  display: grid;
+  gap: 0.22rem;
+}
+
+.uploadQueueMeta strong {
+  font-size: 0.78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.uploadQueueMeta p {
+  margin: 0;
+  color: rgba(207, 194, 213, 0.72);
+  font-size: 0.68rem;
+}
+
+.itemProgressTrack {
+  height: 0.28rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.itemProgressFill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #ddb7ff, #9d4edd);
+  transition: width 150ms ease;
+}
+
+.uploadQueueActions {
+  display: grid;
+  justify-items: end;
+  gap: 0.4rem;
+}
+
+.uploadQueueStatus {
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(207, 194, 213, 0.78);
+}
+
+.uploadQueueError {
+  margin: 0;
+  font-size: 0.66rem;
+  color: rgba(255, 180, 171, 0.9);
+}
+
+.selectionToolbar {
+  border: 1px solid rgba(93, 80, 104, 0.5);
+  background: rgba(24, 21, 29, 0.86);
+  border-radius: 0.72rem;
+  padding: 0.65rem 0.72rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.selectionToolbarInfo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+}
+
+.selectionToolbarInfo p {
+  margin: 0;
+  color: rgba(207, 194, 213, 0.88);
+  font-size: 0.8rem;
+}
+
+.selectionToolbarIcon {
+  color: var(--primary);
+  font-size: 1rem;
+}
+
+.selectionToolbarActions {
+  display: inline-flex;
+  gap: 0.52rem;
+  flex-wrap: wrap;
+}
+
+.folderFilesGrid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.folderFileCard {
+  padding: 0.42rem;
+  overflow: hidden;
+  transition: border-color 220ms ease, box-shadow 260ms ease, transform 220ms ease;
+}
+
+.folderFileCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(123, 44, 191, 0.42);
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(123, 44, 191, 0.15) inset;
+}
+
+.folderFileCardSelected {
+  border-color: rgba(222, 183, 255, 0.5);
+  box-shadow: 0 0 0 1px rgba(222, 183, 255, 0.28), 0 14px 26px rgba(0, 0, 0, 0.3);
+}
+
+.fileMedia {
+  position: relative;
+}
+
+.fileMediaSurface {
+  min-height: 13.2rem;
+  border-radius: 0.68rem;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.fileMediaToneVideo {
+  background: radial-gradient(circle at 15% 10%, rgba(153, 84, 204, 0.28), transparent 45%),
+    linear-gradient(155deg, #26222c 0%, #18151d 70%, #121015 100%);
+}
+
+.fileMediaToneImage {
+  background: radial-gradient(circle at 80% 0%, rgba(79, 161, 226, 0.22), transparent 50%),
+    linear-gradient(150deg, #1c2228 0%, #141a1f 58%, #111417 100%);
+}
+
+.fileMediaPreview {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.4rem;
+  color: rgba(207, 194, 213, 0.4);
+}
+
+.fileMediaIcon {
+  font-size: 2rem;
+}
+
+.fileMediaType {
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.fileMediaOverlay {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 2.6rem 0.62rem 0.64rem;
+  background: linear-gradient(to top, rgba(11, 10, 14, 0.94), rgba(11, 10, 14, 0.64), transparent);
+}
+
+.fileCardBody {
+  position: relative;
+  z-index: 2;
+}
+
+.fileCardBody h3 {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.26;
+  max-height: 2.15em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.fileCardBody .cardMeta {
+  margin-top: 0.22rem;
+  font-size: 0.66rem;
+}
+
+.fileSelectionButton,
+.fileCardActions {
+  position: absolute;
+  top: 0.5rem;
+  z-index: 3;
+}
+
+.fileSelectionButton {
+  left: 0.5rem;
+  width: 1.95rem;
+  height: 1.95rem;
+  border-radius: 999px;
+  background: rgba(11, 10, 14, 0.58);
+  color: rgba(207, 194, 213, 0.75);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.fileSelectionButtonSelected {
+  color: #dbc2ff;
+  border-color: rgba(222, 183, 255, 0.5);
+  background: rgba(47, 26, 65, 0.72);
+}
+
+.fileSelectionInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.fileCardActions {
+  right: 0.5rem;
+}
+
+.cardActionButton {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 1.95rem;
+  height: 1.95rem;
+  border-radius: 999px;
+  background: rgba(11, 10, 14, 0.58);
+  color: rgba(207, 194, 213, 0.82);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 200ms ease, color 200ms ease;
+}
+
+.cardActionButton:hover,
+.fileSelectionButton:hover {
+  color: #f0dfff;
+  border-color: rgba(222, 183, 255, 0.45);
+}
+
+.cardActionIcon {
+  font-size: 1rem;
+}
+
+.fileMenuButton {
+  backdrop-filter: blur(4px);
+}
+
+.fileContextMenu {
+  position: fixed;
+  z-index: 110;
+  min-width: 10.5rem;
+  border-radius: 0.62rem;
+  border: 1px solid rgba(76, 67, 83, 0.35);
+  background: var(--surface-high);
+  box-shadow: 0 24px 44px rgba(0, 0, 0, 0.38), 0 12px 24px rgba(123, 44, 191, 0.18);
+  padding: 0.35rem;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.fileContextMenuItem {
+  border: 0;
+  background: transparent;
+  color: rgba(207, 194, 213, 0.86);
+  width: 100%;
+  min-height: 2.2rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fileContextMenuItem:hover {
+  background: rgba(76, 67, 83, 0.28);
+  color: var(--on-surface);
+}
+
+.fileContextMenuItem:focus-visible {
+  outline: 2px solid rgba(222, 183, 255, 0.45);
+  outline-offset: 1px;
+}
+
+.fileContextMenuIcon {
+  font-size: 1rem;
+}
+
+.fileContextMenuItemDanger {
+  color: rgba(255, 180, 171, 0.88);
+}
+
+.fileContextMenuItemDanger:hover {
+  color: #ffb4ab;
+  background: rgba(147, 0, 10, 0.24);
+}
+
+.folderFileCard > .cardFooter {
+  padding: 0.62rem 0.25rem 0.26rem;
+}
+
+.folderEntryLink {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  color: rgba(220, 183, 253, 0.94);
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.folderEntryLinkIcon {
+  font-size: 1rem;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(6px);
+}
+
+.editModal {
+  width: min(100%, 32rem);
+  max-height: min(88vh, 34rem);
+  border-radius: 0.72rem;
+  border: 1px solid rgba(76, 67, 83, 0.34);
+  background: var(--surface);
+  box-shadow: 0 38px 64px rgba(0, 0, 0, 0.56), 0 20px 40px rgba(123, 44, 191, 0.14);
+  overflow: auto;
+}
+
+.modalHeader {
+  padding: 1.2rem 1.35rem;
+  border-bottom: 1px solid rgba(76, 67, 83, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.modalHeader h2 {
+  margin: 0;
+  letter-spacing: -0.03em;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 1.34rem;
+}
+
+.modalHeader p {
+  margin: 0.2rem 0 0;
+  color: rgba(207, 194, 213, 0.78);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.modalCloseButton {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  color: rgba(207, 194, 213, 0.86);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.modalCloseButton:hover {
+  color: var(--on-surface);
+  background: rgba(53, 53, 53, 0.9);
+}
+
+.modalCloseIcon {
+  font-size: 1.12rem;
+}
+
+.modalBody {
+  padding: 1rem 1.35rem;
+}
+
+.modalField {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.modalField span {
+  color: rgba(207, 194, 213, 0.85);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.68rem;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-weight: 700;
+}
+
+.modalField input {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  background: var(--surface-highest);
+  color: var(--on-surface);
+  min-height: 2.75rem;
+  padding: 0.62rem 0.82rem;
+  font-size: 14px;
+  outline: none;
+}
+
+.modalField input:focus {
+  border-color: rgba(222, 183, 255, 0.35);
+  box-shadow: 0 0 0 2px rgba(123, 44, 191, 0.2);
+}
+
+.modalActions {
+  padding: 0.9rem 1.35rem 1.1rem;
+  display: flex;
+  gap: 0.74rem;
+}
+
+.modalCancelGhostButton,
+.modalConfirmButton {
+  flex: 1;
+  border-radius: 0.5rem;
+  min-height: 2.82rem;
+  padding: 0.64rem 0.92rem;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.modalCancelGhostButton {
+  border: 1px solid rgba(76, 67, 83, 0.5);
+  background: transparent;
+  color: var(--on-surface);
+}
+
+.modalCancelGhostButton:hover {
+  background: rgba(53, 53, 53, 0.85);
+}
+
+.modalConfirmButton {
+  border: 0;
+  background: linear-gradient(135deg, var(--primary-container), var(--primary-variant));
+  color: #e4c2ff;
+  box-shadow: 0 12px 24px rgba(123, 44, 191, 0.24);
+}
+
+.modalConfirmButton:hover {
+  filter: brightness(1.08);
+}
+
+.modalConfirmButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.confirmIcon {
+  font-size: 1rem;
+}
+
+.localGlowPrimary,
+.localGlowSecondary {
+  position: fixed;
+  pointer-events: none;
+  border-radius: 999px;
+  z-index: 0;
+}
+
+.localGlowPrimary {
+  right: 10%;
+  top: 24%;
+  width: 20rem;
+  height: 20rem;
+  background: rgba(123, 44, 191, 0.08);
+  filter: blur(96px);
+}
+
+.localGlowSecondary {
+  left: 12%;
+  bottom: -8rem;
+  width: 16rem;
+  height: 16rem;
+  background: rgba(77, 134, 220, 0.12);
+  filter: blur(90px);
+}
+
+@media (max-width: 1180px) {
+  .folderFilesGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 960px) {
+  .content {
+    padding-inline: 1rem;
+  }
+
+  .folderFilesGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .controlsRow {
+    align-items: stretch;
+  }
+
+  .controlsActions {
+    justify-content: flex-start;
+  }
+
+  .uploadQueueHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .uploadQueueItem {
+    grid-template-columns: 1fr;
+    justify-items: stretch;
+  }
+
+  .uploadQueueActions {
+    justify-items: start;
+  }
+
+  .folderFilesGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .modalHeader,
+  .modalBody,
+  .modalActions {
+    padding-inline: 0.9rem;
+  }
+
+  .modalActions {
+    flex-direction: column;
+  }
+}

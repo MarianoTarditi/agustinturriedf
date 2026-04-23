@@ -16,6 +16,7 @@
     "prisma:migrate:dev": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
     "routines:backfill": "tsx scripts/backfill-routine-folders.ts",
+    "payments:backfill": "tsx scripts/backfill-current-payments.ts",
     "prisma:studio": "prisma studio",
     "prisma:seed": "prisma db seed"
   },

@@ -60,6 +60,15 @@ const nullableBirthDateSchema = z.preprocess(
     .nullable()
 );
 
+const nullableInitialPaymentStartDateSchema = z.preprocess(
+  normalizeNullableString,
+  z
+    .string()
+    .regex(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/, "initialPaymentStartDate debe usar formato YYYY-MM-DD")
+    .refine(isValidIsoDate, "initialPaymentStartDate debe ser una fecha válida")
+    .nullable()
+);
+
 const nullableHeightSchema = z
   .number()
   .int("heightCm debe ser un entero")
@@ -105,6 +114,7 @@ export const createUserSchema = z
     weightKg: nullableWeightSchema.optional(),
     trainerId: cuidSchema.optional(),
     studentStatus: studentStatusSchema.optional(),
+    initialPaymentStartDate: nullableInitialPaymentStartDateSchema.optional(),
   })
   .superRefine((value, context) => {
     if (value.role === "STUDENT" && !value.trainerId) {
@@ -112,6 +122,14 @@ export const createUserSchema = z
         code: z.ZodIssueCode.custom,
         path: ["trainerId"],
         message: "trainerId es obligatorio para usuarios STUDENT",
+      });
+    }
+
+    if (value.role === "STUDENT" && !value.initialPaymentStartDate) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["initialPaymentStartDate"],
+        message: "initialPaymentStartDate es obligatorio para usuarios STUDENT",
       });
     }
 
@@ -128,6 +146,14 @@ export const createUserSchema = z
         code: z.ZodIssueCode.custom,
         path: ["studentStatus"],
         message: "studentStatus solo aplica para usuarios STUDENT",
+      });
+    }
+
+    if (value.role !== "STUDENT" && value.initialPaymentStartDate) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["initialPaymentStartDate"],
+        message: "initialPaymentStartDate solo aplica para usuarios STUDENT",
       });
     }
   });

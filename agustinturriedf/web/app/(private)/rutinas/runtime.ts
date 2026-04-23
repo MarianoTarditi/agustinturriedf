@@ -26,12 +26,19 @@ export type RoutineFile = {
   observations: string | null;
 };
 
-export type RoutineFolder = {
+export type RoutineFolderSummary = {
   id: string;
   studentProfileId: string;
   studentUserId: string;
   displayName: string;
   storageKey: string;
+  fileCount: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+};
+
+export type RoutineFolder = RoutineFolderSummary & {
   files: RoutineFile[];
 };
 
@@ -42,7 +49,7 @@ export type RoutinesViewData =
     }
   | {
       role: "STAFF";
-      folders: RoutineFolder[];
+      folders: RoutineFolderSummary[];
     };
 
 export type RoutineUiPermissions = {
@@ -51,10 +58,6 @@ export type RoutineUiPermissions = {
   canCreateFolders: boolean;
   canDeleteFolders: boolean;
 };
-
-const ALLOWED_EXTENSIONS = new Set<RoutineFileType>(["pdf", "xls", "xlsx"]);
-
-export const DEFAULT_MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
 
 export const getRoutineUiPermissions = (viewData: RoutinesViewData | null): RoutineUiPermissions => {
   if (!viewData) {
@@ -105,31 +108,6 @@ const assertApiSuccess = <T>(payload: ApiPayload<T>, fallbackMessage: string): T
   throw new Error(payload.error.message || fallbackMessage);
 };
 
-const getFileExtension = (fileName: string) => {
-  const trimmed = fileName.trim();
-  const extension = trimmed.includes(".") ? trimmed.split(".").pop()?.toLowerCase() : null;
-
-  return extension ?? null;
-};
-
-export const validateRoutineUpload = (file: File, maxSizeBytes = DEFAULT_MAX_UPLOAD_BYTES): string | null => {
-  const extension = getFileExtension(file.name);
-
-  if (!extension || !ALLOWED_EXTENSIONS.has(extension as RoutineFileType)) {
-    return "Tipo de archivo no soportado. Solo se permiten PDF, XLS y XLSX.";
-  }
-
-  if (file.size <= 0) {
-    return "El archivo no puede estar vacío.";
-  }
-
-  if (file.size > maxSizeBytes) {
-    return `El archivo supera el máximo permitido (${Math.round(maxSizeBytes / 1024 / 1024)} MB).`;
-  }
-
-  return null;
-};
-
 export const loadRoutinesViewData = async (fetchImpl: typeof fetch): Promise<RoutinesViewData> => {
   const ownFolderResponse = await fetchImpl("/api/me/routines", {
     method: "GET",
@@ -167,7 +145,7 @@ export const loadRoutinesViewData = async (fetchImpl: typeof fetch): Promise<Rou
     cache: "no-store",
   });
 
-  const foldersPayload = await parseApiPayload<RoutineFolder[]>(foldersResponse);
+  const foldersPayload = await parseApiPayload<RoutineFolderSummary[]>(foldersResponse);
 
   if (!foldersResponse.ok) {
     throw new Error(foldersPayload.success ? "No se pudieron cargar las carpetas de rutinas." : foldersPayload.error.message);
@@ -197,7 +175,7 @@ export const fetchRoutineFolderDetail = async (fetchImpl: typeof fetch, folderId
   return assertApiSuccess(payload, "No se pudo cargar la carpeta seleccionada.");
 };
 
-export const fetchRoutineFolders = async (fetchImpl: typeof fetch): Promise<RoutineFolder[]> => {
+export const fetchRoutineFolders = async (fetchImpl: typeof fetch): Promise<RoutineFolderSummary[]> => {
   const response = await fetchImpl("/api/routines/folders", {
     method: "GET",
     headers: {
@@ -206,43 +184,13 @@ export const fetchRoutineFolders = async (fetchImpl: typeof fetch): Promise<Rout
     cache: "no-store",
   });
 
-  const payload = await parseApiPayload<RoutineFolder[]>(response);
+  const payload = await parseApiPayload<RoutineFolderSummary[]>(response);
 
   if (!response.ok) {
     throw new Error(payload.success ? "No se pudieron cargar las carpetas de rutinas." : payload.error.message);
   }
 
   return assertApiSuccess(payload, "No se pudieron cargar las carpetas de rutinas.");
-};
-
-export const uploadRoutineFile = async (
-  fetchImpl: typeof fetch,
-  input: {
-    folderId: string;
-    file: File;
-    observations?: string;
-  }
-): Promise<RoutineFile> => {
-  const formData = new FormData();
-  formData.append("file", input.file);
-
-  const normalizedObservations = input.observations?.trim();
-  if (normalizedObservations) {
-    formData.append("observations", normalizedObservations);
-  }
-
-  const response = await fetchImpl(`/api/routines/folders/${encodeURIComponent(input.folderId)}/files`, {
-    method: "POST",
-    body: formData,
-  });
-
-  const payload = await parseApiPayload<RoutineFile>(response);
-
-  if (!response.ok) {
-    throw new Error(payload.success ? "No se pudo subir el archivo." : payload.error.message);
-  }
-
-  return assertApiSuccess(payload, "No se pudo subir el archivo.");
 };
 
 export const deleteRoutineFile = async (fetchImpl: typeof fetch, fileId: string): Promise<void> => {

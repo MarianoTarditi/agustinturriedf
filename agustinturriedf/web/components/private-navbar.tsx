@@ -66,10 +66,29 @@ const roleLabel: Record<Role, string> = {
 const isRole = (value: unknown): value is Role =>
   value === "ADMIN" || value === "TRAINER" || value === "STUDENT";
 
+function getUserInitials(name: string): string {
+  const normalizedName = name.trim();
+  if (!normalizedName) return "U";
+
+  const words = normalizedName
+    .split(/\s+/)
+    .map((word) => word.replace(/[^\p{L}\p{N}]/gu, ""))
+    .filter(Boolean);
+
+  if (!words.length) return "U";
+
+  const firstInitial = words[0]?.charAt(0) ?? "";
+  const secondInitial = words.length > 1 ? words[words.length - 1]?.charAt(0) ?? "" : "";
+  const initials = `${firstInitial}${secondInitial}`.toLocaleUpperCase("es-AR");
+
+  return initials || "U";
+}
+
 export function PrivateNavbar({ currentUser }: PrivateNavbarProps) {
   const pathname = usePathname();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [profileImageError, setProfileImageError] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const currentRole = currentUser?.role;
 
@@ -80,6 +99,9 @@ export function PrivateNavbar({ currentUser }: PrivateNavbarProps) {
 
   const displayName = currentUser?.name?.trim() || "Usuario";
   const displayRole = isRole(currentRole) ? roleLabel[currentRole] : "Sin rol";
+  const avatarInitials = getUserInitials(displayName);
+  const profileImage = currentUser?.image?.trim() || "";
+  const hasProfileImage = Boolean(profileImage) && !profileImageError;
 
   const profileActive = pathname === "/perfil" || pathname.startsWith("/perfil/");
   const profileTriggerActive = profileActive || profileMenuOpen;
@@ -87,6 +109,10 @@ export function PrivateNavbar({ currentUser }: PrivateNavbarProps) {
   useEffect(() => {
     setProfileMenuOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    setProfileImageError(false);
+  }, [profileImage]);
 
   useEffect(() => {
     function handleDocumentClick(event: MouseEvent) {
@@ -153,13 +179,18 @@ export function PrivateNavbar({ currentUser }: PrivateNavbarProps) {
               onClick={() => setProfileMenuOpen((prev) => !prev)}
             >
               <div className={styles.avatar}>
-                <MaterialSymbol
-                  name={profileTriggerActive ? "account_circle" : "person"}
-                  className={styles.avatarIcon}
-                  fill={profileTriggerActive ? 1 : 0}
-                  weight={profileTriggerActive ? 500 : 450}
-                  opticalSize={20}
-                />
+                {hasProfileImage ? (
+                  <img
+                    src={profileImage}
+                    alt={`Foto de perfil de ${displayName}`}
+                    className={styles.avatarImage}
+                    onError={() => setProfileImageError(true)}
+                  />
+                ) : (
+                  <span className={styles.avatarInitials} aria-hidden="true">
+                    {avatarInitials}
+                  </span>
+                )}
               </div>
               <div>
                 <p className={styles.profileName}>{displayName}</p>

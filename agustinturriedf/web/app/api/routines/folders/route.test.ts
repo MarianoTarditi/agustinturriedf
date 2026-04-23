@@ -30,14 +30,39 @@ describe("GET /api/routines/folders", () => {
   it("returns folders for authorized actor", async () => {
     const actor = { id: "user-1", role: "ADMIN" as const };
     requireSessionMock.mockResolvedValue(actor);
-    listFoldersMock.mockResolvedValue([{ id: "folder-1" }]);
+    listFoldersMock.mockResolvedValue([
+      {
+        id: "folder-1",
+        studentProfileId: "sp-1",
+        studentUserId: "student-1",
+        displayName: "Rutinas de Ana",
+        storageKey: "student:ana@example.com",
+        fileCount: 2,
+        firstName: "Ana",
+        lastName: "Pérez",
+        email: "ana@example.com",
+      },
+    ]);
 
     const { GET } = await import("./route");
     const response = await GET();
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.data).toEqual([{ id: "folder-1" }]);
+    expect(body.data).toEqual([
+      {
+        id: "folder-1",
+        studentProfileId: "sp-1",
+        studentUserId: "student-1",
+        displayName: "Rutinas de Ana",
+        storageKey: "student:ana@example.com",
+        fileCount: 2,
+        firstName: "Ana",
+        lastName: "Pérez",
+        email: "ana@example.com",
+      },
+    ]);
+    expect(body.data[0]).not.toHaveProperty("files");
     expect(listFoldersMock).toHaveBeenCalledWith(actor);
   });
 

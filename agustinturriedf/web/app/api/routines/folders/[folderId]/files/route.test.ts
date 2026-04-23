@@ -85,6 +85,7 @@ describe("POST /api/routines/folders/[folderId]/files", () => {
     const formData = new FormData();
     formData.set("file", new File(["abc"], "plan.pdf", { type: "application/pdf" }));
     formData.set("observations", "  ok  ");
+    formData.set("replaceFileId", "ck7m7x3k50000abcd1234efgh");
 
     const response = await POST(new Request(`http://localhost/api/routines/folders/${folderId}/files`, { method: "POST", body: formData }), {
       params: Promise.resolve({ folderId }),
@@ -111,11 +112,68 @@ describe("POST /api/routines/folders/[folderId]/files", () => {
         originalName: "plan.pdf",
         sizeBytes: 3,
         observations: "ok",
+        replaceFileId: "ck7m7x3k50000abcd1234efgh",
       })
     );
 
     const uploadPayload = uploadFileMock.mock.calls[0][1] as { content: unknown };
     expect(Buffer.isBuffer(uploadPayload.content)).toBe(true);
+  });
+
+  it("returns 400 when replaceFileId is not a valid cuid", async () => {
+    requireSessionMock.mockResolvedValue({ id: "trainer-1", role: "TRAINER" });
+
+    const folderId = "ck7m7x3k50000abcd1234efgh";
+    const formData = new FormData();
+    formData.set("file", new File(["abc"], "plan.pdf", { type: "application/pdf" }));
+    formData.set("replaceFileId", "invalid-id");
+
+    const response = await POST(new Request(`http://localhost/api/routines/folders/${folderId}/files`, { method: "POST", body: formData }), {
+      params: Promise.resolve({ folderId }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body).toMatchObject({
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Validation failed",
+      },
+    });
+    expect(uploadFileMock).not.toHaveBeenCalled();
+  });
+
+  it("propagates ambiguity contract from service", async () => {
+    requireSessionMock.mockResolvedValue({ id: "trainer-1", role: "TRAINER" });
+    uploadFileMock.mockRejectedValue(
+      new ApiError("Hay más de un candidato", 409, "AMBIGUOUS_REPLACEMENT", {
+        candidates: [
+          { id: "file-1", name: "rutina-1.pdf", type: "pdf", uploadedAt: "2026-04-20T10:00:00.000Z" },
+          { id: "file-2", name: "rutina-2.pdf", type: "pdf", uploadedAt: "2026-04-20T09:00:00.000Z" },
+        ],
+      })
+    );
+
+    const folderId = "ck7m7x3k50000abcd1234efgh";
+    const formData = new FormData();
+    formData.set("file", new File(["abc"], "plan.pdf", { type: "application/pdf" }));
+
+    const response = await POST(new Request(`http://localhost/api/routines/folders/${folderId}/files`, { method: "POST", body: formData }), {
+      params: Promise.resolve({ folderId }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(body).toMatchObject({
+      success: false,
+      error: {
+        code: "AMBIGUOUS_REPLACEMENT",
+        details: {
+          candidates: expect.any(Array),
+        },
+      },
+    });
   });
 
   it("maps service permission/ownership errors", async () => {

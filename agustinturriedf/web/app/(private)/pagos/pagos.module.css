@@ -132,6 +132,42 @@
   gap: 1.5rem;
 }
 
+.configSection {
+  display: grid;
+  width: min(100%, 26.25rem);
+  gap: 0.85rem;
+  padding: 1.1rem 1.2rem;
+  border-radius: 0.62rem;
+  background: var(--surface-low);
+  border: 1px solid rgba(76, 67, 83, 0.22);
+}
+
+.configHeaderRow h3 {
+  margin: 0;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 0.88rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(207, 194, 213, 0.92);
+}
+
+.configHeaderRow p {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  color: rgba(207, 194, 213, 0.76);
+}
+
+.configControls {
+  display: grid;
+  grid-template-columns: minmax(14rem, 20rem) auto;
+  align-items: end;
+  gap: 0.9rem;
+}
+
+.configSaveButton {
+  min-height: 2.9rem;
+}
+
 .tableToolbar {
   display: flex;
   align-items: center;
@@ -181,6 +217,10 @@
 .tableActions {
   display: flex;
   gap: 1rem;
+}
+
+.paymentFilterWrap {
+  width: min(100%, 26.25rem);
 }
 
 .sortButton,
@@ -878,6 +918,10 @@
     width: 100%;
   }
 
+  .configControls {
+    grid-template-columns: 1fr;
+  }
+
   .sortButton,
   .createButton {
     flex: 1;
@@ -899,6 +943,25 @@
 @media (max-width: 720px) {
   .metrics {
     grid-template-columns: 1fr;
+  }
+
+  .tableToolbar {
+    align-items: flex-start;
+  }
+
+  .tableActions {
+    width: min(100%, 26.25rem);
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .paymentFilterWrap {
+    width: 100%;
+  }
+
+  .tableActions .createButton {
+    width: 100%;
+    flex: none;
   }
 
   .pagination {

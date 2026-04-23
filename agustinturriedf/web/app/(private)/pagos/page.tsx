@@ -1,188 +1,329 @@
 "use client";
 
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
+
 import styles from "@/app/(private)/pagos/pagos.module.css";
-import { DestructiveConfirmationModal } from "@/components/destructive-confirmation-modal";
+import {
+  buildInitials,
+  editPaymentRuntime,
+  fetchPaymentConfigRuntime,
+  fetchPaymentsDashboard,
+  formatCurrencyARS,
+  formatDateEsAr,
+  mapDaysToExpireLabel,
+  mapRowStatusLabel,
+  registerPaymentRuntime,
+  updatePaymentConfigRuntime,
+  type PaymentView,
+} from "@/app/(private)/pagos/runtime";
 import { MaterialSymbol } from "@/components/material-symbol";
 import { PrivateBreadcrumb } from "@/components/private-breadcrumb";
 import { PrivateTopbar } from "@/components/private-topbar";
 
-type PaymentMetric = {
-  icon: string;
-  label: string;
-  value: string;
-  detail: string;
-  tone: "primary" | "warning" | "error" | "monitor";
-};
-
-type PaymentRow = {
-  id: string;
-  initials: string;
-  name: string;
+type DashboardRow = {
+  studentProfileId: string;
+  fullName: string;
   email: string;
   phone: string;
-  amount: string;
+  amountInCents: number;
+  startDate: string;
   dueDate: string;
-  daysToExpire: string;
-  status: "Activo" | "Inactivo";
+  daysToExpire: number;
+  statusLabel: string;
+  initials: string;
 };
 
-type EditablePaymentFields = Pick<PaymentRow, "name" | "email" | "phone" | "amount" | "dueDate" | "daysToExpire" | "status">;
-
-const metrics: PaymentMetric[] = [
-  {
-    icon: "payments",
-    label: "Pagos Cobrados",
-    value: "0",
-    detail: "$ 0,00",
-    tone: "primary",
-  },
-  {
-    icon: "warning",
-    label: "Vence Pronto",
-    value: "0",
-    detail: "Próximos 3 días",
-    tone: "warning",
-  },
-  {
-    icon: "error",
-    label: "Vencidos",
-    value: "0",
-    detail: "Pendiente: $ 0,00",
-    tone: "error",
-  },
-  {
-    icon: "monitoring",
-    label: "Total Estimado",
-    value: "$ 0,00",
-    detail: "Alumnos: 1",
-    tone: "monitor",
-  },
+const PAYMENT_VIEWS: Array<{ value: PaymentView; label: string }> = [
+  { value: "ALL", label: "Todos" },
+  { value: "DUE_TODAY", label: "Vence hoy" },
+  { value: "DUE_THIS_WEEK", label: "Vence esta semana" },
+  { value: "OVERDUE", label: "Vencidos" },
 ];
 
-const initialPayments: PaymentRow[] = [
-  {
-    id: "payment-1",
-    initials: "MT",
-    name: "Mariano Tarditi",
-    email: "student@gmail.com",
-    phone: "+54 9 11 1234 5678",
-    amount: "$ 45.000",
-    dueDate: "15/10/2023",
-    daysToExpire: "3 días",
-    status: "Activo",
-  },
-];
+const toIsoLocalDate = (value: Date) => {
+  const year = value.getFullYear();
+  const month = `${value.getMonth() + 1}`.padStart(2, "0");
+  const day = `${value.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const formatAmountInput = (value: string) => value.replace(/[^0-9]/g, "");
+
+const amountInputToCents = (value: string) => {
+  const normalized = Number.parseInt(value, 10);
+
+  if (!Number.isFinite(normalized) || normalized <= 0) {
+    return null;
+  }
+
+  return normalized * 100;
+};
+
+const centsToAmountInput = (valueInCents: number) => String(Math.round(valueInCents / 100));
 
 export default function PagosPage() {
-  const [payments, setPayments] = useState<PaymentRow[]>(initialPayments);
-  const [paymentToDelete, setPaymentToDelete] = useState<PaymentRow | null>(null);
-  const [editingPaymentId, setEditingPaymentId] = useState<string | null>(null);
-  const [editPaymentForm, setEditPaymentForm] = useState<EditablePaymentFields | null>(null);
+  const [rows, setRows] = useState<DashboardRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [view, setView] = useState<PaymentView>("ALL");
+  const [query, setQuery] = useState("");
+
+  const [cards, setCards] = useState({
+    collectedCount: 0,
+    collectedAmountInCents: 0,
+    dueSoonCount: 0,
+    overdueCount: 0,
+    overdueAmountInCents: 0,
+    estimatedTotalInCents: 0,
+    studentsInEstimatedTotal: 0,
+  });
+
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [registerStudentProfileId, setRegisterStudentProfileId] = useState("");
+  const [registerAmount, setRegisterAmount] = useState("");
+  const [registerPaymentDate, setRegisterPaymentDate] = useState(toIsoLocalDate(new Date()));
+  const [registerError, setRegisterError] = useState<string | null>(null);
+  const [isRegistering, setIsRegistering] = useState(false);
 
-  const editingPayment = editingPaymentId ? payments.find((payment) => payment.id === editingPaymentId) ?? null : null;
+  const [editingPayment, setEditingPayment] = useState<DashboardRow | null>(null);
+  const [editStartDate, setEditStartDate] = useState("");
+  const [editAmount, setEditAmount] = useState("");
+  const [editError, setEditError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
 
-  const getInitialsFromName = (name: string) => {
-    const initials = name
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase() ?? "")
-      .join("");
+  const [globalAmountDraft, setGlobalAmountDraft] = useState("");
+  const [globalAmountError, setGlobalAmountError] = useState<string | null>(null);
+  const [isSavingGlobalAmount, setIsSavingGlobalAmount] = useState(false);
 
-    return initials || "--";
-  };
+  const loadDashboard = async (selectedView: PaymentView, selectedQuery: string) => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  const openDeleteModal = (payment: PaymentRow) => {
-    setPaymentToDelete(payment);
-  };
+      const payload = await fetchPaymentsDashboard(fetch, {
+        view: selectedView,
+        query: selectedQuery,
+      });
 
-  const closeDeleteModal = () => {
-    setPaymentToDelete(null);
-  };
+      setCards(payload.cards);
+      setRows(
+        payload.rows.map((row) => ({
+          studentProfileId: row.studentProfileId,
+          fullName: row.fullName,
+          email: row.email,
+          phone: row.phone ?? "",
+          amountInCents: row.amountInCents,
+          startDate: row.startDate,
+          dueDate: row.dueDate,
+          daysToExpire: row.daysToExpire,
+          statusLabel: mapRowStatusLabel(row.studentStatus, row.paymentStatus),
+          initials: buildInitials(row.fullName),
+        }))
+      );
 
-  const openEditModal = (payment: PaymentRow) => {
-    setEditingPaymentId(payment.id);
-    setEditPaymentForm({
-      name: payment.name,
-      email: payment.email,
-      phone: payment.phone,
-      amount: payment.amount,
-      dueDate: payment.dueDate,
-      daysToExpire: payment.daysToExpire,
-      status: payment.status,
-    });
-  };
-
-  const closeEditModal = () => {
-    setEditingPaymentId(null);
-    setEditPaymentForm(null);
-  };
-
-  const handleConfirmDelete = () => {
-    if (!paymentToDelete) return;
-
-    setPayments((currentPayments) => currentPayments.filter((payment) => payment.id !== paymentToDelete.id));
-    closeDeleteModal();
-  };
-
-  const handleEditPaymentField = <K extends keyof EditablePaymentFields>(field: K, value: EditablePaymentFields[K]) => {
-    setEditPaymentForm((currentForm) => {
-      if (!currentForm) return currentForm;
-
-      return {
-        ...currentForm,
-        [field]: value,
-      };
-    });
-  };
-
-  const handleEditPaymentSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (!editingPaymentId || !editPaymentForm) {
-      closeEditModal();
-      return;
+      setGlobalAmountDraft((current) =>
+        current.length > 0
+          ? current
+          : centsToAmountInput(payload.config.defaultMonthlyAmountInCents)
+      );
+    } catch (fetchError) {
+      setError(fetchError instanceof Error ? fetchError.message : "No se pudo cargar la vista de pagos.");
+      setRows([]);
+    } finally {
+      setLoading(false);
     }
-
-    setPayments((currentPayments) =>
-      currentPayments.map((payment) => {
-        if (payment.id !== editingPaymentId) return payment;
-
-        return {
-          ...payment,
-          ...editPaymentForm,
-          initials: getInitialsFromName(editPaymentForm.name),
-        };
-      }),
-    );
-
-    closeEditModal();
-  };
-
-  const openRegisterModal = () => {
-    setIsRegisterModalOpen(true);
-  };
-
-  const closeRegisterModal = () => {
-    setIsRegisterModalOpen(false);
   };
 
   useEffect(() => {
-    if (!isRegisterModalOpen && !editingPayment) return;
+    const timeoutId = setTimeout(() => {
+      void loadDashboard(view, query);
+    }, 250);
 
-    const onEsc = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        if (isRegisterModalOpen) closeRegisterModal();
-        if (editingPayment) closeEditModal();
+    return () => clearTimeout(timeoutId);
+  }, [view, query]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadGlobalConfig = async () => {
+      try {
+        const config = await fetchPaymentConfigRuntime(fetch);
+
+        if (cancelled) {
+          return;
+        }
+
+        setGlobalAmountDraft(centsToAmountInput(config.defaultMonthlyAmountInCents));
+        setGlobalAmountError(null);
+      } catch (configError) {
+        if (cancelled) {
+          return;
+        }
+
+        setGlobalAmountError(
+          configError instanceof Error
+            ? configError.message
+            : "No se pudo cargar la configuración general de pagos."
+        );
       }
     };
 
-    window.addEventListener("keydown", onEsc);
-    return () => window.removeEventListener("keydown", onEsc);
-  }, [isRegisterModalOpen, editingPayment]);
+    void loadGlobalConfig();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleSaveGlobalAmount = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const nextAmountInCents = amountInputToCents(globalAmountDraft);
+
+    if (!nextAmountInCents) {
+      setGlobalAmountError("Ingresá un monto mensual global válido mayor a 0.");
+      return;
+    }
+
+    try {
+      setIsSavingGlobalAmount(true);
+      setGlobalAmountError(null);
+
+      const updatedConfig = await updatePaymentConfigRuntime(fetch, {
+        defaultMonthlyAmountInCents: nextAmountInCents,
+      });
+
+      setGlobalAmountDraft(centsToAmountInput(updatedConfig.defaultMonthlyAmountInCents));
+    } catch (configError) {
+      setGlobalAmountError(
+        configError instanceof Error
+          ? configError.message
+          : "No se pudo guardar la configuración general de pagos."
+      );
+    } finally {
+      setIsSavingGlobalAmount(false);
+    }
+  };
+
+  const selectedRegisterRow = useMemo(
+    () => rows.find((row) => row.studentProfileId === registerStudentProfileId) ?? null,
+    [registerStudentProfileId, rows]
+  );
+
+  const closeRegisterModal = () => {
+    if (isRegistering) {
+      return;
+    }
+
+    setIsRegisterModalOpen(false);
+    setRegisterStudentProfileId("");
+    setRegisterAmount("");
+    setRegisterPaymentDate(toIsoLocalDate(new Date()));
+    setRegisterError(null);
+  };
+
+  const openRegisterModal = (row?: DashboardRow) => {
+    setRegisterStudentProfileId(row?.studentProfileId ?? "");
+    setRegisterAmount(row ? String(Math.round(row.amountInCents / 100)) : "");
+    setRegisterPaymentDate(toIsoLocalDate(new Date()));
+    setRegisterError(null);
+    setIsRegisterModalOpen(true);
+  };
+
+  const handleRegisterSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!registerStudentProfileId) {
+      setRegisterError("Seleccioná un alumno para registrar el pago.");
+      return;
+    }
+
+    const amountInCents = amountInputToCents(registerAmount);
+
+    if (!amountInCents) {
+      setRegisterError("Ingresá un monto válido mayor a 0.");
+      return;
+    }
+
+    if (!registerPaymentDate) {
+      setRegisterError("Ingresá una fecha de pago válida.");
+      return;
+    }
+
+    try {
+      setIsRegistering(true);
+      setRegisterError(null);
+
+      await registerPaymentRuntime(fetch, {
+        studentProfileId: registerStudentProfileId,
+        amountInCents,
+        paymentDate: registerPaymentDate,
+      });
+
+      closeRegisterModal();
+      await loadDashboard(view, query);
+    } catch (submitError) {
+      setRegisterError(submitError instanceof Error ? submitError.message : "No se pudo registrar el pago.");
+    } finally {
+      setIsRegistering(false);
+    }
+  };
+
+  const openEditModal = (row: DashboardRow) => {
+    setEditingPayment(row);
+    setEditStartDate(toIsoLocalDate(new Date(row.startDate)));
+    setEditAmount(String(Math.round(row.amountInCents / 100)));
+    setEditError(null);
+  };
+
+  const closeEditModal = () => {
+    if (isEditing) {
+      return;
+    }
+
+    setEditingPayment(null);
+    setEditStartDate("");
+    setEditAmount("");
+    setEditError(null);
+  };
+
+  const handleEditSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!editingPayment) {
+      return;
+    }
+
+    const amountInCents = amountInputToCents(editAmount);
+
+    if (!amountInCents) {
+      setEditError("Ingresá un monto válido mayor a 0.");
+      return;
+    }
+
+    if (!editStartDate) {
+      setEditError("Ingresá una fecha de inicio válida.");
+      return;
+    }
+
+    try {
+      setIsEditing(true);
+      setEditError(null);
+
+      await editPaymentRuntime(fetch, {
+        studentProfileId: editingPayment.studentProfileId,
+        amountInCents,
+        startDate: editStartDate,
+      });
+
+      closeEditModal();
+      await loadDashboard(view, query);
+    } catch (submitError) {
+      setEditError(submitError instanceof Error ? submitError.message : "No se pudo editar el pago.");
+    } finally {
+      setIsEditing(false);
+    }
+  };
 
   return (
     <section className={styles.page}>
@@ -194,40 +335,125 @@ export default function PagosPage() {
 
       <div className={styles.content}>
         <section className={styles.metrics}>
-          {metrics.map((metric) => (
-            <article key={metric.label} className={styles.metricCard}>
-              <div className={styles.metricGlow} aria-hidden="true" />
-              <div className={styles.metricTop}>
-                <span className={`${styles.metricIcon} ${styles[`metricIcon_${metric.tone}`]}`}>
-                  <MaterialSymbol name={metric.icon} className={styles.metricSymbol} weight={500} opticalSize={20} />
-                </span>
-              </div>
+          <article className={styles.metricCard}>
+            <div className={styles.metricGlow} aria-hidden="true" />
+            <div className={styles.metricTop}>
+              <span className={`${styles.metricIcon} ${styles.metricIcon_primary}`}>
+                <MaterialSymbol name="payments" className={styles.metricSymbol} weight={500} opticalSize={20} />
+              </span>
+            </div>
+            <h3 className={styles.metricLabel}>Pagos Cobrados</h3>
+            <p className={styles.metricValue}>
+              {cards.collectedCount} <span className={styles.metricDetail_primary}>{formatCurrencyARS(cards.collectedAmountInCents)}</span>
+            </p>
+          </article>
 
-              <h3 className={styles.metricLabel}>{metric.label}</h3>
-              <p className={styles.metricValue}>
-                {metric.value} <span className={styles[`metricDetail_${metric.tone}`]}>{metric.detail}</span>
-              </p>
-            </article>
-          ))}
+          <article className={styles.metricCard}>
+            <div className={styles.metricGlow} aria-hidden="true" />
+            <div className={styles.metricTop}>
+              <span className={`${styles.metricIcon} ${styles.metricIcon_warning}`}>
+                <MaterialSymbol name="warning" className={styles.metricSymbol} weight={500} opticalSize={20} />
+              </span>
+            </div>
+            <h3 className={styles.metricLabel}>Vence Pronto</h3>
+            <p className={styles.metricValue}>
+              {cards.dueSoonCount} <span className={styles.metricDetail_warning}>Próximos 3 días</span>
+            </p>
+          </article>
+
+          <article className={styles.metricCard}>
+            <div className={styles.metricGlow} aria-hidden="true" />
+            <div className={styles.metricTop}>
+              <span className={`${styles.metricIcon} ${styles.metricIcon_error}`}>
+                <MaterialSymbol name="error" className={styles.metricSymbol} weight={500} opticalSize={20} />
+              </span>
+            </div>
+            <h3 className={styles.metricLabel}>Vencidos</h3>
+            <p className={styles.metricValue}>
+              {cards.overdueCount} <span className={styles.metricDetail_error}>Pendiente: {formatCurrencyARS(cards.overdueAmountInCents)}</span>
+            </p>
+          </article>
+
+          <article className={styles.metricCard}>
+            <div className={styles.metricGlow} aria-hidden="true" />
+            <div className={styles.metricTop}>
+              <span className={`${styles.metricIcon} ${styles.metricIcon_monitor}`}>
+                <MaterialSymbol name="monitoring" className={styles.metricSymbol} weight={500} opticalSize={20} />
+              </span>
+            </div>
+            <h3 className={styles.metricLabel}>Total Estimado</h3>
+            <p className={styles.metricValue}>
+              {formatCurrencyARS(cards.estimatedTotalInCents)} <span className={styles.metricDetail_monitor}>Alumnos: {cards.studentsInEstimatedTotal}</span>
+            </p>
+          </article>
         </section>
 
         <section className={styles.tableSection}>
+          <form className={styles.configSection} onSubmit={handleSaveGlobalAmount}>
+            <div className={styles.configHeaderRow}>
+              <h3>Configuración general</h3>
+              <p>Este monto se usa por defecto para nuevos ciclos de pago y nuevos alumnos.</p>
+            </div>
+            <div className={styles.configControls}>
+              <label className={styles.fieldWrap}>
+                <span>Monto mensual global</span>
+                <div className={styles.moneyInputWrap}>
+                  <i>$</i>
+                  <input
+                    type="text"
+                    value={globalAmountDraft}
+                    onChange={(event) => {
+                      setGlobalAmountDraft(formatAmountInput(event.target.value));
+                      if (globalAmountError) {
+                        setGlobalAmountError(null);
+                      }
+                    }}
+                    placeholder="30000"
+                    disabled={isSavingGlobalAmount}
+                  />
+                </div>
+              </label>
+
+              <button
+                type="submit"
+                className={`${styles.createButton} ${styles.configSaveButton}`}
+                disabled={isSavingGlobalAmount}
+              >
+                {isSavingGlobalAmount ? "Guardando..." : "Guardar"}
+              </button>
+            </div>
+            {globalAmountError ? <p className={styles.subtleText}>{globalAmountError}</p> : null}
+          </form>
+
           <div className={styles.tableToolbar}>
             <label className={styles.searchWrap}>
               <MaterialSymbol name="search" className={styles.searchIcon} weight={420} opticalSize={18} />
-              <input type="search" placeholder="Filtrar por nombre, email o teléfono..." />
+              <input
+                type="search"
+                placeholder="Filtrar por nombre o email..."
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
             </label>
 
             <div className={styles.tableActions}>
-              <button type="button" className={styles.sortButton}>
-                <MaterialSymbol name="sort" className={styles.actionIcon} weight={450} opticalSize={20} />
-                Ordenar vista
-              </button>
-              <button type="button" className={styles.createButton} onClick={openRegisterModal}>
-                Registrar Pago
+              <div className={`${styles.selectWrap} ${styles.paymentFilterWrap}`}>
+                <select value={view} onChange={(event) => setView(event.target.value as PaymentView)} aria-label="Filtro de pagos">
+                  {PAYMENT_VIEWS.map((paymentView) => (
+                    <option key={paymentView.value} value={paymentView.value}>
+                      {paymentView.label}
+                    </option>
+                  ))}
+                </select>
+                <MaterialSymbol name="expand_more" className={styles.selectIcon} weight={500} opticalSize={18} />
+              </div>
+              <button type="button" className={styles.createButton} onClick={() => openRegisterModal()}>
+                Registrar pago
               </button>
             </div>
           </div>
+
+          {error ? <p className={styles.subtleText}>{error}</p> : null}
 
           <div className={styles.tableWrap}>
             <div className={styles.tableScroll}>
@@ -245,309 +471,220 @@ export default function PagosPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {payments.map((payment) => (
-                    <tr key={payment.id}>
-                      <td>
-                        <div className={styles.studentWrap}>
-                          <span className={styles.initials}>{payment.initials}</span>
-                          <span className={styles.studentName}>{payment.name}</span>
-                        </div>
-                      </td>
-                      <td>
-                        <span className={styles.subtleText}>{payment.email}</span>
-                      </td>
-                      <td>
-                        <span className={styles.subtleText}>{payment.phone}</span>
-                      </td>
-                      <td>
-                        <span className={styles.amount}>{payment.amount}</span>
-                      </td>
-                      <td>
-                        <span className={styles.subtleText}>{payment.dueDate}</span>
-                      </td>
-                      <td>
-                        <span className={styles.subtleText}>{payment.daysToExpire}</span>
-                      </td>
-                      <td>
-                        <span className={styles.statusWrap}>
-                          <span className={styles.statusDot} aria-hidden="true" />
-                          <span className={styles.statusText}>{payment.status}</span>
-                        </span>
-                      </td>
-                      <td className={styles.alignRight}>
-                        <div className={styles.rowActions}>
-                          <button type="button" className={styles.rowButton} aria-label={`Editar ${payment.name}`} onClick={() => openEditModal(payment)}>
-                            <MaterialSymbol name="edit" className={styles.rowActionIcon} weight={500} opticalSize={20} />
-                          </button>
-                          <button
-                            type="button"
-                            className={`${styles.rowButton} ${styles.rowButtonDanger}`}
-                            aria-label={`Eliminar pago de ${payment.name}`}
-                            onClick={() => openDeleteModal(payment)}
-                          >
-                            <MaterialSymbol name="delete" className={styles.rowActionIcon} weight={500} opticalSize={20} />
-                          </button>
-                        </div>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={8} className={styles.subtleText}>
+                        Cargando pagos...
                       </td>
                     </tr>
-                  ))}
+                  ) : rows.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className={styles.subtleText}>
+                        No se encontraron pagos para los filtros seleccionados.
+                      </td>
+                    </tr>
+                  ) : (
+                    rows.map((row) => (
+                      <tr key={row.studentProfileId}>
+                        <td>
+                          <div className={styles.studentWrap}>
+                            <span className={styles.initials}>{row.initials}</span>
+                            <span className={styles.studentName}>{row.fullName}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <span className={styles.subtleText}>{row.email}</span>
+                        </td>
+                        <td>
+                          <span className={styles.subtleText}>{row.phone || "-"}</span>
+                        </td>
+                        <td>
+                          <span className={styles.amount}>{formatCurrencyARS(row.amountInCents)}</span>
+                        </td>
+                        <td>
+                          <span className={styles.subtleText}>{formatDateEsAr(row.dueDate)}</span>
+                        </td>
+                        <td>
+                          <span className={styles.subtleText}>{mapDaysToExpireLabel(row.daysToExpire)}</span>
+                        </td>
+                        <td>
+                          <span className={styles.statusWrap}>
+                            <span className={styles.statusDot} aria-hidden="true" />
+                            <span className={styles.statusText}>{row.statusLabel}</span>
+                          </span>
+                        </td>
+                        <td className={styles.alignRight}>
+                          <div className={styles.rowActions}>
+                            <button
+                              type="button"
+                              className={styles.rowButton}
+                              aria-label={`Registrar pago de ${row.fullName}`}
+                              onClick={() => openRegisterModal(row)}
+                            >
+                              <MaterialSymbol name="payments" className={styles.rowActionIcon} weight={500} opticalSize={20} />
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.rowButton}
+                              aria-label={`Editar pago de ${row.fullName}`}
+                              onClick={() => openEditModal(row)}
+                            >
+                              <MaterialSymbol name="edit" className={styles.rowActionIcon} weight={500} opticalSize={20} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
-
-            <footer className={styles.pagination}>
-              <p>Página 1 de 1</p>
-
-              <div className={styles.paginationControls}>
-                <div className={styles.rowsControl}>
-                  <p>Filas:</p>
-                  <select defaultValue="10" aria-label="Filas por página">
-                    <option value="10">10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                  </select>
-                </div>
-
-                <div className={styles.paginationButtons}>
-                  <button type="button" disabled aria-label="Página anterior">
-                    <MaterialSymbol name="chevron_left" className={styles.paginationIcon} weight={500} opticalSize={20} />
-                  </button>
-                  <button type="button" aria-label="Página siguiente">
-                    <MaterialSymbol name="chevron_right" className={styles.paginationIcon} weight={500} opticalSize={20} />
-                  </button>
-                </div>
-              </div>
-            </footer>
           </div>
         </section>
       </div>
 
-      {paymentToDelete ? (
-        <DestructiveConfirmationModal
-          ariaLabel={`Eliminar pago de ${paymentToDelete.name}`}
-          title="¿Eliminar registro de pago?"
-          description="Este registro dejará de mostrarse en la tabla actual. Esta acción no se puede deshacer desde esta vista."
-          headerAlignment="center"
-          density="compact"
-          confirmLabel="Eliminar pago"
-          onConfirm={handleConfirmDelete}
-          onCancel={closeDeleteModal}
-          targetCard={
-            <>
-              <div className={styles.deletePaymentIconWrap}>
-                <span className={styles.deletePaymentIconBadge}>
-                  <MaterialSymbol name="payments" className={styles.deletePaymentIcon} weight={500} opticalSize={20} />
-                </span>
-
-                <span className={styles.deletePaymentDangerBadge}>
-                  <MaterialSymbol
-                    name="delete"
-                    className={styles.deletePaymentDangerBadgeIcon}
-                    fill={1}
-                    weight={500}
-                    opticalSize={14}
-                  />
-                </span>
-              </div>
-
+      {isRegisterModalOpen ? (
+        <div className={styles.modalOverlay} role="presentation" onClick={closeRegisterModal}>
+          <div className={styles.registerModal} role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+            <header className={styles.registerHeader}>
               <div>
-                <small>Pagos</small>
-                <strong>{paymentToDelete.name}</strong>
-              </div>
-
-              <em>
-                {paymentToDelete.amount} · Vence {paymentToDelete.dueDate}
-              </em>
-            </>
-          }
-        />
-      ) : null}
-
-      {editingPayment && editPaymentForm ? (
-        <div className={styles.modalOverlay} role="presentation" onClick={closeEditModal}>
-          <div className={styles.editModal} role="dialog" aria-modal="true" aria-label="Editar pago" onClick={(event) => event.stopPropagation()}>
-            <header className={styles.editHeader}>
-              <div>
-                <div className={styles.editTitleRow}>
-                  <MaterialSymbol name="edit_note" className={styles.editSectionIcon} weight={500} opticalSize={20} />
-                  <h2>Editar Pago</h2>
+                <div className={styles.registerTitleRow}>
+                  <h2>Registrar Pago</h2>
                 </div>
-                <p>Actualizá la información del cobro seleccionado.</p>
+                <p>Registrá un cobro y renová el ciclo del alumno.</p>
               </div>
-              <button type="button" className={styles.modalCloseButton} aria-label="Cerrar modal" onClick={closeEditModal}>
+              <button type="button" className={styles.modalCloseButton} aria-label="Cerrar" onClick={closeRegisterModal}>
                 <MaterialSymbol name="close" className={styles.modalCloseIcon} weight={500} opticalSize={22} />
               </button>
             </header>
 
-            <div className={styles.editBody}>
-              <form id="edit-payment-form" className={styles.editForm} onSubmit={handleEditPaymentSubmit}>
-                <label className={`${styles.fieldWrap} ${styles.editFullRow}`}>
+            <div className={styles.registerBody}>
+              <form id="register-payment-form" className={styles.registerForm} onSubmit={handleRegisterSubmit}>
+                <label className={`${styles.fieldWrap} ${styles.registerFullRow}`}>
                   <span>Alumno</span>
-                  <input type="text" value={editPaymentForm.name} onChange={(event) => handleEditPaymentField("name", event.target.value)} />
-                </label>
-
-                <label className={styles.fieldWrap}>
-                  <span>Email</span>
-                  <input type="email" value={editPaymentForm.email} onChange={(event) => handleEditPaymentField("email", event.target.value)} />
-                </label>
-
-                <label className={styles.fieldWrap}>
-                  <span>Teléfono</span>
-                  <div className={styles.leadingIconInput}>
-                    <input type="tel" value={editPaymentForm.phone} onChange={(event) => handleEditPaymentField("phone", event.target.value)} />
-                  </div>
-                </label>
-
-                <label className={styles.fieldWrap}>
-                  <span>Monto</span>
-                  <div className={styles.moneyInputWrap}>
-                    <i>$</i>
-                    <input
-                      type="text"
-                      value={editPaymentForm.amount.replace(/^\$\s*/, "")}
-                      onChange={(event) => handleEditPaymentField("amount", `$ ${event.target.value}`)}
-                    />
-                  </div>
-                </label>
-
-                <label className={styles.fieldWrap}>
-                  <span>Próximo vencimiento</span>
-                  <div className={styles.leadingIconInput}>
-                    <MaterialSymbol name="calendar_today" className={styles.leadingInputIcon} weight={500} opticalSize={16} />
-                    <input
-                      type="text"
-                      value={editPaymentForm.dueDate}
-                      onChange={(event) => handleEditPaymentField("dueDate", event.target.value)}
-                    />
-                  </div>
-                </label>
-
-                <label className={styles.fieldWrap}>
-                  <span>Días a vencer</span>
-                  <div className={styles.trailingUnitInput}>
-                    <input
-                      type="number"
-                      min={0}
-                      value={editPaymentForm.daysToExpire.replace(/\D/g, "")}
-                      onChange={(event) => handleEditPaymentField("daysToExpire", `${event.target.value} días`)}
-                    />
-                    <i>días</i>
-                  </div>
-                </label>
-
-                <label className={styles.fieldWrap}>
-                  <span>Estado</span>
                   <div className={styles.selectWrap}>
                     <select
-                      value={editPaymentForm.status}
-                      onChange={(event) => handleEditPaymentField("status", event.target.value as PaymentRow["status"])}
-                      aria-label="Estado del pago"
+                      value={registerStudentProfileId}
+                      onChange={(event) => setRegisterStudentProfileId(event.target.value)}
+                      disabled={isRegistering}
                     >
-                      <option value="Activo">Activo</option>
-                      <option value="Inactivo">Inactivo</option>
+                      <option value="">Seleccionar alumno</option>
+                      {rows.map((row) => (
+                        <option key={row.studentProfileId} value={row.studentProfileId}>
+                          {row.fullName}
+                        </option>
+                      ))}
                     </select>
                     <MaterialSymbol name="expand_more" className={styles.selectIcon} weight={500} opticalSize={18} />
                   </div>
                 </label>
+
+                <label className={styles.fieldWrap}>
+                  <span>Monto (ARS)</span>
+                  <div className={styles.moneyInputWrap}>
+                    <i>$</i>
+                    <input
+                      type="text"
+                      value={registerAmount}
+                      onChange={(event) => setRegisterAmount(formatAmountInput(event.target.value))}
+                      placeholder="30000"
+                      disabled={isRegistering}
+                    />
+                  </div>
+                </label>
+
+                <label className={styles.fieldWrap}>
+                  <span>Fecha de pago</span>
+                  <input
+                    type="date"
+                    value={registerPaymentDate}
+                    onChange={(event) => setRegisterPaymentDate(event.target.value)}
+                    disabled={isRegistering}
+                  />
+                </label>
+
+                {selectedRegisterRow ? (
+                  <label className={`${styles.fieldWrap} ${styles.registerFullRow}`}>
+                    <span>Próximo vencimiento estimado</span>
+                    <input type="text" value={formatDateEsAr(new Date(registerPaymentDate || selectedRegisterRow.startDate))} disabled />
+                  </label>
+                ) : null}
+
+                {registerError ? <p className={styles.subtleText}>{registerError}</p> : null}
               </form>
             </div>
 
-            <footer className={styles.editFooter}>
-              <button type="button" className={styles.modalCancelGhostButton} onClick={closeEditModal}>
+            <footer className={styles.registerFooter}>
+              <button type="button" className={styles.modalCancelGhostButton} onClick={closeRegisterModal} disabled={isRegistering}>
                 Cancelar
               </button>
-              <button type="submit" className={styles.modalConfirmButton} form="edit-payment-form">
+              <button type="submit" className={styles.modalConfirmButton} form="register-payment-form" disabled={isRegistering}>
                 <MaterialSymbol name="save" className={styles.confirmIcon} fill={1} weight={500} opticalSize={18} />
-                Guardar cambios
+                {isRegistering ? "Registrando..." : "Registrar pago"}
               </button>
             </footer>
           </div>
         </div>
       ) : null}
 
-      {isRegisterModalOpen ? (
-        <div className={styles.modalOverlay} role="presentation" onClick={closeRegisterModal}>
-          <div
-            className={styles.registerModal}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Registrar pago"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <header className={styles.registerHeader}>
+      {editingPayment ? (
+        <div className={styles.modalOverlay} role="presentation" onClick={closeEditModal}>
+          <div className={styles.editModal} role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+            <header className={styles.editHeader}>
               <div>
-                <div className={styles.registerTitleRow}>
-                  <h2>Registrar Pago</h2>
+                <div className={styles.editTitleRow}>
+                  <MaterialSymbol name="edit_note" className={styles.editSectionIcon} weight={500} opticalSize={20} />
+                  <h2>Editar Pago</h2>
                 </div>
-                <p>Completá los datos del cobro para visualizar el registro en esta vista.</p>
+                <p>Modificá el estado actual del ciclo sin crear historial.</p>
               </div>
-              <button type="button" className={styles.modalCloseButton} aria-label="Cerrar modal" onClick={closeRegisterModal}>
+              <button type="button" className={styles.modalCloseButton} aria-label="Cerrar" onClick={closeEditModal}>
                 <MaterialSymbol name="close" className={styles.modalCloseIcon} weight={500} opticalSize={22} />
               </button>
             </header>
 
-            <div className={styles.registerBody}>
-              <form
-                id="register-payment-form"
-                className={styles.registerForm}
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  closeRegisterModal();
-                }}
-              >
-                <label className={`${styles.fieldWrap} ${styles.registerFullRow}`}>
+            <div className={styles.editBody}>
+              <form id="edit-payment-form" className={styles.editForm} onSubmit={handleEditSubmit}>
+                <label className={`${styles.fieldWrap} ${styles.editFullRow}`}>
                   <span>Alumno</span>
-                  <input type="text" placeholder="Ej. Mariano Tarditi" />
+                  <input type="text" value={editingPayment.fullName} disabled />
                 </label>
 
                 <label className={styles.fieldWrap}>
-                  <span>Email</span>
-                  <input type="email" placeholder="alumno@email.com" />
-                </label>
-
-                <label className={styles.fieldWrap}>
-                  <span>Teléfono</span>
-                  <input type="tel" placeholder="+54 9 11 1234 5678" />
-                </label>
-
-                <label className={styles.fieldWrap}>
-                  <span>Monto</span>
+                  <span>Monto (ARS)</span>
                   <div className={styles.moneyInputWrap}>
                     <i>$</i>
-                    <input type="text" placeholder="45.000" />
+                    <input
+                      type="text"
+                      value={editAmount}
+                      onChange={(event) => setEditAmount(formatAmountInput(event.target.value))}
+                      placeholder="30000"
+                      disabled={isEditing}
+                    />
                   </div>
                 </label>
 
                 <label className={styles.fieldWrap}>
-                  <span>Próximo vencimiento</span>
-                  <input type="text" placeholder="DD/MM/AAAA" />
+                  <span>Fecha de inicio</span>
+                  <input
+                    type="date"
+                    value={editStartDate}
+                    onChange={(event) => setEditStartDate(event.target.value)}
+                    disabled={isEditing}
+                  />
                 </label>
 
-                <label className={styles.fieldWrap}>
-                  <span>Días a vencer</span>
-                  <input type="number" min={0} placeholder="3" />
-                </label>
-
-                <label className={styles.fieldWrap}>
-                  <span>Estado</span>
-                  <div className={styles.selectWrap}>
-                    <select defaultValue="Activo" aria-label="Estado del pago">
-                      <option value="Activo">Activo</option>
-                      <option value="Inactivo">Inactivo</option>
-                    </select>
-                    <MaterialSymbol name="expand_more" className={styles.selectIcon} weight={500} opticalSize={18} />
-                  </div>
-                </label>
+                {editError ? <p className={styles.subtleText}>{editError}</p> : null}
               </form>
             </div>
 
-            <footer className={styles.registerFooter}>
-              <button type="button" className={styles.modalCancelGhostButton} onClick={closeRegisterModal}>
+            <footer className={styles.editFooter}>
+              <button type="button" className={styles.modalCancelGhostButton} onClick={closeEditModal} disabled={isEditing}>
                 Cancelar
               </button>
-              <button type="submit" className={styles.modalConfirmButton} form="register-payment-form">
+              <button type="submit" className={styles.modalConfirmButton} form="edit-payment-form" disabled={isEditing}>
                 <MaterialSymbol name="save" className={styles.confirmIcon} fill={1} weight={500} opticalSize={18} />
-                Registrar pago
+                {isEditing ? "Guardando..." : "Guardar cambios"}
               </button>
             </footer>
           </div>

@@ -28,9 +28,12 @@ export default auth((request: NextAuthRequest) => {
     return NextResponse.redirect(signInUrl);
   }
 
-  if (request.auth.user.role === "STUDENT" && request.auth.user.studentStatus === "BLOCKED") {
+  if (request.auth.user.role === "STUDENT" && request.auth.user.accessBlockReason) {
     const blockedUrl = new URL("/login", nextUrl);
-    blockedUrl.searchParams.set("error", "AccountBlocked");
+    blockedUrl.searchParams.set(
+      "error",
+      request.auth.user.accessBlockReason === "PAYMENT_OVERDUE" ? "PaymentOverdue" : "AccountBlocked"
+    );
     return NextResponse.redirect(blockedUrl);
   }
 

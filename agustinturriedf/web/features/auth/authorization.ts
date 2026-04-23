@@ -1,5 +1,6 @@
 import type { Session } from "next-auth";
 
+import type { AccessBlockReason, PaymentStatus } from "@/features/auth/payment-access";
 import { ApiError } from "@/lib/http/api-response";
 
 type Role = "ADMIN" | "TRAINER" | "STUDENT";
@@ -7,6 +8,11 @@ type Role = "ADMIN" | "TRAINER" | "STUDENT";
 export type AuthenticatedUser = Session["user"] & {
   id: string;
   role: Role;
+  studentStatus?: "ACTIVE" | "INACTIVE" | "BLOCKED";
+  studentProfileId?: string;
+  trainerId?: string;
+  paymentStatus?: PaymentStatus;
+  accessBlockReason?: AccessBlockReason;
 };
 
 export const hasRole = (user: AuthenticatedUser, allowedRoles: readonly Role[]) =>

@@ -2,10 +2,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
   findFolderByStudentUserIdMock,
-  listFoldersWithOwnershipMock,
+  listFolderSummariesWithOwnershipMock,
   findFolderWithOwnershipByIdMock,
   createFileMock,
   updateFileStorageMock,
+  updateFileMetadataMock,
   deleteFileByIdMock,
   findFileByIdMock,
   findFileWithOwnershipByIdMock,
@@ -17,10 +18,11 @@ const {
   getRoutineAbsolutePathMock,
 } = vi.hoisted(() => ({
   findFolderByStudentUserIdMock: vi.fn(),
-  listFoldersWithOwnershipMock: vi.fn(),
+  listFolderSummariesWithOwnershipMock: vi.fn(),
   findFolderWithOwnershipByIdMock: vi.fn(),
   createFileMock: vi.fn(),
   updateFileStorageMock: vi.fn(),
+  updateFileMetadataMock: vi.fn(),
   deleteFileByIdMock: vi.fn(),
   findFileByIdMock: vi.fn(),
   findFileWithOwnershipByIdMock: vi.fn(),
@@ -35,10 +37,11 @@ const {
 vi.mock("@/features/routines/repository", () => ({
   routinesRepository: {
     findFolderByStudentUserId: findFolderByStudentUserIdMock,
-    listFoldersWithOwnership: listFoldersWithOwnershipMock,
+    listFolderSummariesWithOwnership: listFolderSummariesWithOwnershipMock,
     findFolderWithOwnershipById: findFolderWithOwnershipByIdMock,
     createFile: createFileMock,
     updateFileStorage: updateFileStorageMock,
+    updateFileMetadata: updateFileMetadataMock,
     deleteFileById: deleteFileByIdMock,
     findFileById: findFileByIdMock,
     findFileWithOwnershipById: findFileWithOwnershipByIdMock,
@@ -74,19 +77,69 @@ describe("RoutinesService permissions and business rules", () => {
       studentProfileId: "sp-1",
       displayName: "Rutinas de Alumno Uno",
       storageKey: "student:alumno@demo.com",
-      studentProfile: { userId: "student-1" },
+      studentProfile: {
+        userId: "student-1",
+        user: {
+          firstName: "Alumno",
+          lastName: "Uno",
+          email: "alumno@demo.com",
+        },
+      },
       files: [],
     });
 
     const result = await routinesService.listFolders({ id: "student-1", role: "STUDENT" });
 
     expect(findFolderByStudentUserIdMock).toHaveBeenCalledWith("student-1");
-    expect(listFoldersWithOwnershipMock).not.toHaveBeenCalled();
+    expect(listFolderSummariesWithOwnershipMock).not.toHaveBeenCalled();
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({
       id: "folder-1",
       studentUserId: "student-1",
+      fileCount: 0,
+      firstName: "Alumno",
+      lastName: "Uno",
+      email: "alumno@demo.com",
     });
+    expect(result[0]).not.toHaveProperty("files");
+  });
+
+  it("returns summary list for staff without exposing files arrays", async () => {
+    listFolderSummariesWithOwnershipMock.mockResolvedValue([
+      {
+        id: "folder-2",
+        studentProfileId: "sp-2",
+        displayName: "Rutinas de Pedro",
+        storageKey: "student:pedro@demo.com",
+        studentProfile: {
+          userId: "student-2",
+          user: {
+            firstName: "Pedro",
+            lastName: "Gómez",
+            email: "pedro@demo.com",
+          },
+        },
+        _count: { files: 3 },
+      },
+    ]);
+
+    const result = await routinesService.listFolders({ id: "trainer-1", role: "TRAINER" });
+
+    expect(listFolderSummariesWithOwnershipMock).toHaveBeenCalledTimes(1);
+    expect(result).toEqual([
+      {
+        id: "folder-2",
+        studentProfileId: "sp-2",
+        studentUserId: "student-2",
+        displayName: "Rutinas de Pedro",
+        storageKey: "student:pedro@demo.com",
+        fileCount: 3,
+        firstName: "Pedro",
+        lastName: "Gómez",
+        email: "pedro@demo.com",
+      },
+    ]);
+    expect(result[0]).not.toHaveProperty("files");
   });
 
   it("rejects STUDENT trying to read another student's folder", async () => {
@@ -135,34 +188,60 @@ describe("RoutinesService permissions and business rules", () => {
     expect(createFileMock).not.toHaveBeenCalled();
   });
 
-  it("maps duplicate filename DB error to CONFLICT", async () => {
+  it("replaces file when there is exactly one name match", async () => {
     findFolderWithOwnershipByIdMock.mockResolvedValue({
       id: "folder-1",
       studentProfileId: "sp-1",
       displayName: "Rutinas",
       storageKey: "student:demo@demo.com",
       studentProfile: { userId: "student-1" },
-      files: [],
-    });
-
-    createFileMock.mockRejectedValue({
-      code: "P2002",
-      meta: { target: ["folderId", "normalizedName"] },
-    });
-
-    await expect(
-      routinesService.uploadFile(
-        { id: "admin-1", role: "ADMIN" },
+      files: [
         {
-          folderId: "folder-1",
-          originalName: "rutina.pdf",
-          sizeBytes: 250,
-          content: Buffer.from("abc"),
-        }
-      )
-    ).rejects.toMatchObject({
-      status: 409,
-      code: "CONFLICT",
+          id: "file-1",
+          originalName: "Rutina.PDF",
+          normalizedName: "rutina.pdf",
+          extension: "pdf",
+          relativePath: "sp-1/rutina--file-1.pdf",
+          sizeBytes: 2,
+          observations: "prev",
+          uploadedAt: new Date("2026-04-19T08:00:00.000Z"),
+        },
+      ],
+    });
+
+    updateFileMetadataMock.mockResolvedValue({
+      id: "file-1",
+      originalName: "rutina.pdf",
+      extension: "pdf",
+      relativePath: "sp-1/plan--file-1.pdf",
+      sizeBytes: 3,
+      observations: null,
+      uploadedAt: new Date("2026-04-20T12:00:00.000Z"),
+    });
+
+    const result = await routinesService.uploadFile(
+      { id: "admin-1", role: "ADMIN" },
+      {
+        folderId: "folder-1",
+        originalName: "rutina.pdf",
+        sizeBytes: 250,
+        content: Buffer.from("abc"),
+      }
+    );
+
+    expect(createFileMock).not.toHaveBeenCalled();
+    expect(updateFileMetadataMock).toHaveBeenCalledWith(
+      "file-1",
+      expect.objectContaining({
+        originalName: "rutina.pdf",
+        normalizedName: "rutina.pdf",
+        extension: "pdf",
+      })
+    );
+    expect(result).toMatchObject({
+      id: "file-1",
+      name: "rutina.pdf",
+      type: "pdf",
     });
   });
 
@@ -232,6 +311,107 @@ describe("RoutinesService permissions and business rules", () => {
       sizeBytes: 3,
       observations: "ok",
     });
+  });
+
+  it("replaces by file type when there is a single same-type candidate", async () => {
+    findFolderWithOwnershipByIdMock.mockResolvedValue({
+      id: "folder-1",
+      studentProfileId: "sp-1",
+      displayName: "Rutinas",
+      storageKey: "student:demo@demo.com",
+      studentProfile: { userId: "student-1" },
+      files: [
+        {
+          id: "file-pdf",
+          originalName: "semana-1.pdf",
+          normalizedName: "semana-1.pdf",
+          extension: "pdf",
+          relativePath: "sp-1/semana-1--file-pdf.pdf",
+          sizeBytes: 200,
+          observations: null,
+          uploadedAt: new Date("2026-04-18T12:00:00.000Z"),
+        },
+      ],
+    });
+
+    updateFileMetadataMock.mockResolvedValue({
+      id: "file-pdf",
+      originalName: "nuevo-plan.pdf",
+      extension: "pdf",
+      relativePath: "sp-1/plan--file-1.pdf",
+      sizeBytes: 3,
+      observations: null,
+      uploadedAt: new Date("2026-04-20T12:00:00.000Z"),
+    });
+
+    const result = await routinesService.uploadFile(
+      { id: "trainer-1", role: "TRAINER" },
+      {
+        folderId: "folder-1",
+        originalName: "nuevo-plan.pdf",
+        sizeBytes: 3,
+        content: Buffer.from("abc"),
+      }
+    );
+
+    expect(createFileMock).not.toHaveBeenCalled();
+    expect(updateFileMetadataMock).toHaveBeenCalledWith(
+      "file-pdf",
+      expect.objectContaining({
+        originalName: "nuevo-plan.pdf",
+      })
+    );
+    expect(result.id).toBe("file-pdf");
+  });
+
+  it("returns AMBIGUOUS_REPLACEMENT when multiple same-type candidates exist", async () => {
+    findFolderWithOwnershipByIdMock.mockResolvedValue({
+      id: "folder-1",
+      studentProfileId: "sp-1",
+      displayName: "Rutinas",
+      storageKey: "student:demo@demo.com",
+      studentProfile: { userId: "student-1" },
+      files: [
+        {
+          id: "file-1",
+          originalName: "semana-1.pdf",
+          normalizedName: "semana-1.pdf",
+          extension: "pdf",
+          relativePath: "sp-1/semana-1--file-1.pdf",
+          sizeBytes: 200,
+          observations: null,
+          uploadedAt: new Date("2026-04-18T12:00:00.000Z"),
+        },
+        {
+          id: "file-2",
+          originalName: "semana-2.pdf",
+          normalizedName: "semana-2.pdf",
+          extension: "pdf",
+          relativePath: "sp-1/semana-2--file-2.pdf",
+          sizeBytes: 220,
+          observations: null,
+          uploadedAt: new Date("2026-04-17T12:00:00.000Z"),
+        },
+      ],
+    });
+
+    await expect(
+      routinesService.uploadFile(
+        { id: "trainer-1", role: "TRAINER" },
+        {
+          folderId: "folder-1",
+          originalName: "nuevo-plan.pdf",
+          sizeBytes: 3,
+          content: Buffer.from("abc"),
+        }
+      )
+    ).rejects.toMatchObject({
+      status: 409,
+      code: "AMBIGUOUS_REPLACEMENT",
+    });
+
+    expect(createFileMock).not.toHaveBeenCalled();
+    expect(updateFileMetadataMock).not.toHaveBeenCalled();
   });
 
   it("allows STUDENT to access own file metadata but not foreign file", async () => {

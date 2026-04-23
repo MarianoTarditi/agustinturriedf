@@ -48,7 +48,38 @@ describe("authorizeCredentials", () => {
     });
   });
 
-  it("rejects blocked students on login", async () => {
+  it("allows student due today and propagates payment status", async () => {
+    findUniqueMock.mockResolvedValue({
+      id: "student-1",
+      firstName: "Duen",
+      lastName: "Hoy",
+      email: "student@example.com",
+      role: "STUDENT",
+      passwordHash: "hash",
+      photoUrl: null,
+      studentProfile: {
+        id: "sp-1",
+        status: "ACTIVE",
+        trainerId: "trainer-1",
+        currentPayment: {
+          dueDate: new Date(),
+        },
+      },
+    });
+    compareMock.mockResolvedValue(true);
+
+    const result = await authorizeCredentials({
+      email: "student@example.com",
+      password: "123456789",
+    });
+
+    expect(result).toMatchObject({
+      id: "student-1",
+      paymentStatus: "CURRENT",
+    });
+  });
+
+  it("rejects overdue students on login", async () => {
     findUniqueMock.mockResolvedValue({
       id: "student-1",
       firstName: "Bloq",
@@ -56,10 +87,14 @@ describe("authorizeCredentials", () => {
       email: "student@example.com",
       role: "STUDENT",
       passwordHash: "hash",
+      photoUrl: null,
       studentProfile: {
         id: "sp-1",
-        status: "BLOCKED",
+        status: "ACTIVE",
         trainerId: "trainer-1",
+        currentPayment: {
+          dueDate: new Date("2020-01-01T00:00:00.000Z"),
+        },
       },
     });
     compareMock.mockResolvedValue(true);
