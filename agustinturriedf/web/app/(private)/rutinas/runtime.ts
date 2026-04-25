@@ -59,6 +59,15 @@ export type RoutineUiPermissions = {
   canDeleteFolders: boolean;
 };
 
+export type RoutineUploadValidationResult =
+  | {
+      ok: true;
+    }
+  | {
+      ok: false;
+      error: string;
+    };
+
 export const getRoutineUiPermissions = (viewData: RoutinesViewData | null): RoutineUiPermissions => {
   if (!viewData) {
     return {
@@ -209,3 +218,100 @@ export const deleteRoutineFile = async (fetchImpl: typeof fetch, fileId: string)
 };
 
 export const buildRoutineDownloadUrl = (fileId: string) => `/api/routines/files/${encodeURIComponent(fileId)}/download`;
+
+export const buildRoutinePreviewUrl = (fileId: string) => `/api/routines/files/${encodeURIComponent(fileId)}/preview`;
+
+const ROUTINE_UPLOAD_ACCEPTED_EXTENSIONS = new Set(["pdf", "xls", "xlsx"]);
+
+const getExtensionFromName = (fileName: string) => {
+  const trimmed = fileName.trim();
+  const lastDotIndex = trimmed.lastIndexOf(".");
+
+  if (lastDotIndex <= 0 || lastDotIndex === trimmed.length - 1) {
+    return null;
+  }
+
+  return trimmed.slice(lastDotIndex + 1).toLowerCase();
+};
+
+export const validateRoutineFileForUpload = (file: File): RoutineUploadValidationResult => {
+  if (file.size <= 0) {
+    return {
+      ok: false,
+      error: "El archivo no puede estar vacío.",
+    };
+  }
+
+  const extension = getExtensionFromName(file.name);
+
+  if (!extension || !ROUTINE_UPLOAD_ACCEPTED_EXTENSIONS.has(extension)) {
+    return {
+      ok: false,
+      error: "Tipo de archivo no soportado. Solo se permiten PDF, XLS y XLSX.",
+    };
+  }
+
+  return { ok: true };
+};
+
+const normalizeUploadResponse = (payloadData: RoutineFile | RoutineFile[] | null | undefined): RoutineFile[] => {
+  if (!payloadData) {
+    return [];
+  }
+
+  return Array.isArray(payloadData) ? payloadData : [payloadData];
+};
+
+export const uploadRoutineFiles = async (
+  fetchImpl: typeof fetch,
+  folderId: string,
+  files: File[]
+): Promise<RoutineFile[]> => {
+  if (files.length === 0) {
+    throw new Error("Seleccioná al menos un archivo para subir.");
+  }
+
+  const validationErrors = files
+    .map((file) => {
+      const validation = validateRoutineFileForUpload(file);
+      return validation.ok ? null : `${file.name}: ${validation.error}`;
+    })
+    .filter((value): value is string => value !== null);
+
+  if (validationErrors.length > 0) {
+    throw new Error(validationErrors.join(" "));
+  }
+
+  const formData = new FormData();
+  files.forEach((file) => {
+    formData.append("files[]", file);
+  });
+
+  const response = await fetchImpl(`/api/routines/folders/${encodeURIComponent(folderId)}/files`, {
+    method: "POST",
+    body: formData,
+  });
+
+  const payload = await parseApiPayload<RoutineFile | RoutineFile[]>(response);
+
+  if (!response.ok) {
+    throw new Error(payload.success ? "No se pudieron subir los archivos." : payload.error.message);
+  }
+
+  const uploaded = assertApiSuccess(payload, "No se pudieron subir los archivos.");
+  return normalizeUploadResponse(uploaded);
+};
+
+export const fetchRoutinePreviewBinary = async (fetchImpl: typeof fetch, fileId: string): Promise<ArrayBuffer> => {
+  const response = await fetchImpl(buildRoutinePreviewUrl(fileId), {
+    method: "GET",
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const payload = await parseApiPayload<unknown>(response);
+    throw new Error(payload.success ? "No se pudo cargar la previsualización del archivo." : payload.error.message);
+  }
+
+  return response.arrayBuffer();
+};

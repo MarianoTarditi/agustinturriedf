@@ -4,7 +4,7 @@ const { authMock } = vi.hoisted(() => ({
   authMock: vi.fn((handler: unknown) => handler),
 }));
 
-vi.mock("@/auth", () => ({
+vi.mock("@/auth-edge", () => ({
   auth: authMock,
 }));
 

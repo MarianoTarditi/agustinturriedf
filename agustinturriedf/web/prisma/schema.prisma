@@ -38,16 +38,30 @@ model User {
   heightCm     Int?
   weightKg     Int?
   passwordHash String
+  passwordUpdatedAt DateTime?
   role         Role
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
 
-  studentProfile StudentProfile? @relation("StudentUserProfile")
-  trainerStudents StudentProfile[] @relation("TrainerToStudents")
-  trainerConfig   TrainerConfig?   @relation("TrainerConfigOwner")
+  studentProfile  StudentProfile?   @relation("StudentUserProfile")
+  trainerStudents StudentProfile[]  @relation("TrainerToStudents")
+  trainerConfig   TrainerConfig?    @relation("TrainerConfigOwner")
+  resetToken      PasswordResetToken?
   recordedPayments PaymentHistory[] @relation("PaymentRecordedByUser")
 
   @@index([role])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
 }
 
 model StudentProfile {
@@ -149,12 +163,16 @@ model RoutineFile {
 model VideotecaFolder {
   id        String   @id @default(cuid())
   name      String
+  parentId  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  files VideotecaFile[]
+  parent   VideotecaFolder?  @relation("VideotecaFolderHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children VideotecaFolder[] @relation("VideotecaFolderHierarchy")
+  files    VideotecaFile[]
 
   @@index([updatedAt])
+  @@index([parentId])
 }
 
 model VideotecaFile {

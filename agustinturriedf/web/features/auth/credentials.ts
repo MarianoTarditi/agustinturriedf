@@ -1,6 +1,7 @@
 import { compare } from "bcryptjs";
 
 import { evaluatePaymentAccess } from "@/features/auth/payment-access";
+import { toPasswordUpdatedAtIso } from "@/features/auth/password-updated-at";
 import { prisma } from "@/lib/prisma";
 
 type RawCredentials = Partial<Record<"email" | "password", unknown>> | undefined;
@@ -32,6 +33,7 @@ export const authorizeCredentials = async (credentials: RawCredentials) => {
         lastName: string;
         photoUrl: string | null;
         passwordHash: string;
+        passwordUpdatedAt?: Date | null;
         role: "ADMIN" | "TRAINER" | "STUDENT";
         studentProfile?: {
           id: string;
@@ -70,6 +72,7 @@ export const authorizeCredentials = async (credentials: RawCredentials) => {
     name: `${user.firstName} ${user.lastName}`.trim(),
     image: user.photoUrl ?? null,
     role: user.role,
+    passwordUpdatedAt: toPasswordUpdatedAtIso(user.passwordUpdatedAt),
     studentStatus: user.studentProfile?.status,
     studentProfileId: user.studentProfile?.id,
     trainerId: user.studentProfile?.trainerId,

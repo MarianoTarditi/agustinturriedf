@@ -4,6 +4,7 @@ import { type FormEvent, useEffect, useMemo, useState } from "react";
 
 import styles from "@/app/(private)/pagos/pagos.module.css";
 import {
+  buildRegisterWarningPayload,
   buildInitials,
   editPaymentRuntime,
   fetchPaymentConfigRuntime,
@@ -13,6 +14,9 @@ import {
   mapDaysToExpireLabel,
   mapRowStatusLabel,
   registerPaymentRuntime,
+  runRegisterWarningDecision,
+  type RegisterPaymentInput,
+  type RegisterWarningPayload,
   updatePaymentConfigRuntime,
   type PaymentView,
 } from "@/app/(private)/pagos/runtime";
@@ -29,6 +33,7 @@ type DashboardRow = {
   startDate: string;
   dueDate: string;
   daysToExpire: number;
+  paymentStatus: "CURRENT" | "DUE_SOON" | "OVERDUE";
   statusLabel: string;
   initials: string;
 };
@@ -84,6 +89,7 @@ export default function PagosPage() {
   const [registerPaymentDate, setRegisterPaymentDate] = useState(toIsoLocalDate(new Date()));
   const [registerError, setRegisterError] = useState<string | null>(null);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [registerWarningPayload, setRegisterWarningPayload] = useState<RegisterWarningPayload | null>(null);
 
   const [editingPayment, setEditingPayment] = useState<DashboardRow | null>(null);
   const [editStartDate, setEditStartDate] = useState("");
@@ -116,6 +122,7 @@ export default function PagosPage() {
           startDate: row.startDate,
           dueDate: row.dueDate,
           daysToExpire: row.daysToExpire,
+          paymentStatus: row.paymentStatus,
           statusLabel: mapRowStatusLabel(row.studentStatus, row.paymentStatus),
           initials: buildInitials(row.fullName),
         }))
@@ -220,6 +227,7 @@ export default function PagosPage() {
     setRegisterAmount("");
     setRegisterPaymentDate(toIsoLocalDate(new Date()));
     setRegisterError(null);
+    setRegisterWarningPayload(null);
   };
 
   const openRegisterModal = (row?: DashboardRow) => {
@@ -227,7 +235,24 @@ export default function PagosPage() {
     setRegisterAmount(row ? String(Math.round(row.amountInCents / 100)) : "");
     setRegisterPaymentDate(toIsoLocalDate(new Date()));
     setRegisterError(null);
+    setRegisterWarningPayload(null);
     setIsRegisterModalOpen(true);
+  };
+
+  const submitRegisterPayment = async (payload: RegisterPaymentInput) => {
+    try {
+      setIsRegistering(true);
+      setRegisterError(null);
+
+      await registerPaymentRuntime(fetch, payload);
+
+      closeRegisterModal();
+      await loadDashboard(view, query);
+    } catch (submitError) {
+      setRegisterError(submitError instanceof Error ? submitError.message : "No se pudo registrar el pago.");
+    } finally {
+      setIsRegistering(false);
+    }
   };
 
   const handleRegisterSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -250,23 +275,42 @@ export default function PagosPage() {
       return;
     }
 
-    try {
-      setIsRegistering(true);
-      setRegisterError(null);
+    const selectedRow = rows.find((row) => row.studentProfileId === registerStudentProfileId) ?? null;
+    const registerPayload: RegisterPaymentInput = {
+      studentProfileId: registerStudentProfileId,
+      amountInCents,
+      paymentDate: registerPaymentDate,
+    };
+    const warningPayload = buildRegisterWarningPayload(selectedRow, registerPayload);
 
-      await registerPaymentRuntime(fetch, {
-        studentProfileId: registerStudentProfileId,
-        amountInCents,
-        paymentDate: registerPaymentDate,
-      });
-
-      closeRegisterModal();
-      await loadDashboard(view, query);
-    } catch (submitError) {
-      setRegisterError(submitError instanceof Error ? submitError.message : "No se pudo registrar el pago.");
-    } finally {
-      setIsRegistering(false);
+    if (warningPayload) {
+      setRegisterWarningPayload(warningPayload);
+      return;
     }
+
+    await submitRegisterPayment(registerPayload);
+  };
+
+  const handleConfirmRegisterWarning = async () => {
+    const warningPayload = registerWarningPayload;
+
+    setRegisterWarningPayload(null);
+
+    await runRegisterWarningDecision(
+      {
+        decision: "confirm",
+        warningPayload,
+      },
+      submitRegisterPayment
+    );
+  };
+
+  const closeRegisterWarning = () => {
+    if (isRegistering) {
+      return;
+    }
+
+    setRegisterWarningPayload(null);
   };
 
   const openEditModal = (row: DashboardRow) => {
@@ -621,6 +665,46 @@ export default function PagosPage() {
               <button type="submit" className={styles.modalConfirmButton} form="register-payment-form" disabled={isRegistering}>
                 <MaterialSymbol name="save" className={styles.confirmIcon} fill={1} weight={500} opticalSize={18} />
                 {isRegistering ? "Registrando..." : "Registrar pago"}
+              </button>
+            </footer>
+          </div>
+        </div>
+      ) : null}
+
+      {registerWarningPayload ? (
+        <div className={styles.modalOverlay} role="presentation" onClick={closeRegisterWarning}>
+          <div className={styles.editModal} role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+            <header className={styles.editHeader}>
+              <div>
+                <div className={styles.editTitleRow}>
+                  <MaterialSymbol name="warning" className={styles.editSectionIcon} weight={500} opticalSize={20} />
+                  <h2>Confirmar registro anticipado</h2>
+                </div>
+                <p>
+                  {registerWarningPayload.fullName} está al día y todavía le quedan {registerWarningPayload.daysToExpire} días para
+                  el próximo vencimiento.
+                </p>
+                <p>
+                  Si registrás este pago ahora, el ciclo mensual se reinicia desde {formatDateEsAr(registerWarningPayload.paymentDate)}.
+                </p>
+              </div>
+              <button type="button" className={styles.modalCloseButton} aria-label="Cerrar" onClick={closeRegisterWarning}>
+                <MaterialSymbol name="close" className={styles.modalCloseIcon} weight={500} opticalSize={22} />
+              </button>
+            </header>
+
+            <footer className={styles.editFooter}>
+              <button
+                type="button"
+                className={styles.modalCancelGhostButton}
+                onClick={closeRegisterWarning}
+                disabled={isRegistering}
+              >
+                Cancelar
+              </button>
+              <button type="button" className={styles.modalConfirmButton} onClick={handleConfirmRegisterWarning} disabled={isRegistering}>
+                <MaterialSymbol name="payments" className={styles.confirmIcon} fill={1} weight={500} opticalSize={18} />
+                {isRegistering ? "Registrando..." : "Registrar igual"}
               </button>
             </footer>
           </div>

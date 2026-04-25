@@ -8,9 +8,11 @@ import { MaterialSymbol } from "@/components/material-symbol";
 import { PrivateBreadcrumb } from "@/components/private-breadcrumb";
 import { PrivateTopbar } from "@/components/private-topbar";
 import {
-  buildFolderDraft,
-  MOCK_VIDEOTECA_FOLDERS,
+  createVideotecaFolder,
+  deleteVideotecaFolder,
+  fetchVideotecaFolders,
   normalizeFolderName,
+  renameVideotecaFolder,
 } from "@/app/(private)/videoteca/videoteca.service";
 
 type FolderCard = {
@@ -29,7 +31,10 @@ type FolderContextMenuState = {
 
 export default function VideotecaPage() {
   const router = useRouter();
-  const [folders, setFolders] = useState<FolderCard[]>(MOCK_VIDEOTECA_FOLDERS);
+  const [folders, setFolders] = useState<FolderCard[]>([]);
+  const [isFoldersLoading, setIsFoldersLoading] = useState(true);
+  const [foldersLoadError, setFoldersLoadError] = useState<string | null>(null);
+  const [foldersReloadNonce, setFoldersReloadNonce] = useState(0);
   const [folderContextMenu, setFolderContextMenu] =
     useState<FolderContextMenuState | null>(null);
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
@@ -38,6 +43,10 @@ export default function VideotecaPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [draftFolderName, setDraftFolderName] = useState("");
   const [newFolderName, setNewFolderName] = useState("");
+  const [folderMutationError, setFolderMutationError] = useState<string | null>(null);
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+  const [isRenamingFolder, setIsRenamingFolder] = useState(false);
+  const [isDeletingFolder, setIsDeletingFolder] = useState(false);
 
   const editingFolder = editingFolderId
     ? (folders.find((folder) => folder.id === editingFolderId) ?? null)
@@ -98,6 +107,37 @@ export default function VideotecaPage() {
   };
 
   useEffect(() => {
+    let isMounted = true;
+
+    setIsFoldersLoading(true);
+    setFoldersLoadError(null);
+
+    void fetchVideotecaFolders(fetch)
+      .then((backendFolders) => {
+        if (!isMounted) return;
+        setFolders(backendFolders);
+      })
+      .catch((error) => {
+        if (!isMounted) return;
+
+        setFolders([]);
+        setFoldersLoadError(
+          error instanceof Error
+            ? error.message
+            : "No se pudieron cargar las carpetas de videoteca.",
+        );
+      })
+      .finally(() => {
+        if (!isMounted) return;
+        setIsFoldersLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [foldersReloadNonce]);
+
+  useEffect(() => {
     if (!folderContextMenu) return;
 
     const handlePointerDown = (event: PointerEvent) => {
@@ -146,67 +186,120 @@ export default function VideotecaPage() {
 
   const openEditModal = (folder: FolderCard) => {
     closeFolderContextMenu();
+    setFolderMutationError(null);
     setEditingFolderId(folder.id);
     setDraftFolderName(folder.name);
   };
 
-  const closeEditModal = () => {
+  const closeEditModal = (force = false) => {
+    if (isRenamingFolder && !force) return;
     setEditingFolderId(null);
     setDraftFolderName("");
+    setFolderMutationError(null);
   };
 
-  const handleConfirmEdit = () => {
-    const nextName = draftFolderName.trim();
+  const handleConfirmEdit = async () => {
+    const nextName = normalizeFolderName(draftFolderName);
     if (!editingFolderId || !nextName) return;
 
-    setFolders((currentFolders) =>
-      currentFolders.map((folder) =>
-        folder.id === editingFolderId ? { ...folder, name: nextName } : folder,
-      ),
-    );
+    setFolderMutationError(null);
+    setIsRenamingFolder(true);
 
-    closeEditModal();
+    try {
+      const updatedFolder = await renameVideotecaFolder(fetch, editingFolderId, {
+        name: nextName,
+      });
+
+      setFolders((currentFolders) =>
+        currentFolders.map((folder) =>
+          folder.id === editingFolderId ? updatedFolder : folder,
+        ),
+      );
+
+      closeEditModal(true);
+    } catch (error) {
+      setFolderMutationError(
+        error instanceof Error ? error.message : "No se pudo editar la carpeta.",
+      );
+    } finally {
+      setIsRenamingFolder(false);
+    }
   };
 
   const openDeleteModal = (folder: FolderCard) => {
     closeFolderContextMenu();
+    setFolderMutationError(null);
     setActiveDeleteFolder(folder);
   };
 
-  const closeDeleteModal = () => {
+  const closeDeleteModal = (force = false) => {
+    if (isDeletingFolder && !force) return;
     setActiveDeleteFolder(null);
+    setFolderMutationError(null);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!activeDeleteFolder) return;
 
-    setFolders((currentFolders) =>
-      currentFolders.filter((folder) => folder.id !== activeDeleteFolder.id),
-    );
-    closeDeleteModal();
+    setFolderMutationError(null);
+    setIsDeletingFolder(true);
+
+    try {
+      await deleteVideotecaFolder(fetch, activeDeleteFolder.id);
+      setFolders((currentFolders) =>
+        currentFolders.filter((folder) => folder.id !== activeDeleteFolder.id),
+      );
+      closeDeleteModal(true);
+    } catch (error) {
+      setFolderMutationError(
+        error instanceof Error ? error.message : "No se pudo eliminar la carpeta.",
+      );
+    } finally {
+      setIsDeletingFolder(false);
+    }
   };
 
   const openCreateModal = () => {
+    setFolderMutationError(null);
     setIsCreateModalOpen(true);
     setNewFolderName("");
   };
 
-  const closeCreateModal = () => {
+  const closeCreateModal = (force = false) => {
+    if (isCreatingFolder && !force) return;
     setIsCreateModalOpen(false);
     setNewFolderName("");
+    setFolderMutationError(null);
   };
 
-  const handleConfirmCreate = () => {
-    const folderDraft = buildFolderDraft({ name: newFolderName });
+  const handleConfirmCreate = async () => {
+    const folderName = normalizeFolderName(newFolderName);
 
-    if (!folderDraft) return;
+    if (!folderName) return;
 
-    setFolders((currentFolders) => [folderDraft, ...currentFolders]);
-    closeCreateModal();
+    setFolderMutationError(null);
+    setIsCreatingFolder(true);
+
+    try {
+      const createdFolder = await createVideotecaFolder(fetch, { name: folderName });
+
+      setFolders((currentFolders) => [createdFolder, ...currentFolders]);
+      closeCreateModal(true);
+    } catch (error) {
+      setFolderMutationError(
+        error instanceof Error ? error.message : "No se pudo crear la carpeta.",
+      );
+    } finally {
+      setIsCreatingFolder(false);
+    }
   };
 
   const openFolder = (folderId: string) => {
     router.push(`/videoteca/${folderId}`);
+  };
+
+  const retryLoadFolders = () => {
+    setFoldersReloadNonce((currentNonce) => currentNonce + 1);
   };
 
   return (
@@ -295,101 +388,157 @@ export default function VideotecaPage() {
         </section>
 
         <section className={styles.folderGrid}>
-          {folders.map((folder) => (
-            <article
-              key={folder.id}
-              className={styles.folderCard}
-              data-folder-card="true"
-              onContextMenu={(event) => {
-                event.preventDefault();
-                openFolderContextMenu(folder.id, event.clientX, event.clientY);
-              }}
-              onDoubleClick={() => openFolder(folder.id)}
-            >
-              <div className={styles.cardHead}>
-                <span className={styles.folderIconWrap}>
+          {isFoldersLoading ? (
+            <div className={styles.folderGridState} role="status" aria-live="polite">
+              <MaterialSymbol
+                name="progress_activity"
+                className={styles.folderGridStateIcon}
+                weight={500}
+                opticalSize={22}
+              />
+              <p>Cargando carpetas de videoteca...</p>
+            </div>
+          ) : foldersLoadError ? (
+            <div className={styles.folderGridState} role="alert" aria-live="assertive">
+              <MaterialSymbol
+                name="warning"
+                className={styles.folderGridStateIcon}
+                weight={500}
+                opticalSize={22}
+              />
+              <p>{foldersLoadError}</p>
+              <button
+                type="button"
+                className={styles.folderGridRetryButton}
+                onClick={retryLoadFolders}
+              >
+                Reintentar
+              </button>
+            </div>
+          ) : folders.length === 0 ? (
+            <div className={styles.folderGridState} role="status" aria-live="polite">
+              <MaterialSymbol
+                name="folder_open"
+                className={styles.folderGridStateIcon}
+                weight={500}
+                opticalSize={22}
+              />
+              <h3 className={styles.folderGridStateTitle}>
+                Todavía no hay carpetas en la videoteca
+              </h3>
+              <p>Creá la primera carpeta para empezar a organizar tus videos.</p>
+              <button
+                type="button"
+                className={styles.folderGridPrimaryButton}
+                onClick={openCreateModal}
+              >
+                <MaterialSymbol
+                  name="create_new_folder"
+                  className={styles.folderGridPrimaryButtonIcon}
+                  weight={500}
+                  opticalSize={18}
+                />
+                Nueva carpeta
+              </button>
+            </div>
+          ) : (
+            <>
+              {folders.map((folder) => (
+                <article
+                  key={folder.id}
+                  className={styles.folderCard}
+                  data-folder-card="true"
+                  onContextMenu={(event) => {
+                    event.preventDefault();
+                    openFolderContextMenu(folder.id, event.clientX, event.clientY);
+                  }}
+                  onDoubleClick={() => openFolder(folder.id)}
+                >
+                  <div className={styles.cardHead}>
+                    <span className={styles.folderIconWrap}>
+                      <MaterialSymbol
+                        name="folder"
+                        className={styles.folderIcon}
+                        fill={1}
+                        weight={500}
+                        opticalSize={22}
+                      />
+                    </span>
+
+                    <div className={styles.cardActions}>
+                      <button
+                        type="button"
+                        className={styles.cardMenuTriggerButton}
+                        data-folder-menu-trigger="true"
+                        aria-label={`Abrir menú de opciones de ${folder.name}`}
+                        aria-haspopup="menu"
+                        aria-expanded={folderContextMenu?.folderId === folder.id}
+                        onDoubleClick={(event) => event.stopPropagation()}
+                        onClick={(event) => handleFolderMenuButtonClick(event, folder)}
+                      >
+                        <MaterialSymbol
+                          name="more_vert"
+                          className={styles.cardMenuTriggerIcon}
+                          weight={500}
+                          opticalSize={18}
+                        />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className={styles.cardBody}>
+                    <h3>
+                      <button
+                        type="button"
+                        className={styles.folderNameButton}
+                        onClick={() => openFolder(folder.id)}
+                        aria-label={`Abrir carpeta ${folder.name}`}
+                      >
+                        {folder.name}
+                      </button>
+                    </h3>
+
+                    <div className={styles.cardFooter}>
+                      <span className={styles.filesCount}>
+                        <MaterialSymbol
+                          name="video_library"
+                          className={styles.filesIcon}
+                          weight={500}
+                          opticalSize={16}
+                        />
+                        {folder.fileCount} archivos
+                      </span>
+
+                      <div className={styles.tags}>
+                        {folder.tags.map((tag) => (
+                          <span key={`${folder.id}-${tag}`} className={styles.tag}>
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              ))}
+
+              <button
+                type="button"
+                className={styles.addCard}
+                onClick={openCreateModal}
+                aria-label="Crear carpeta"
+              >
+                <span className={styles.addCardIconWrap}>
                   <MaterialSymbol
-                    name="folder"
-                    className={styles.folderIcon}
-                    fill={1}
+                    name="create_new_folder"
+                    className={styles.addCardIcon}
                     weight={500}
-                    opticalSize={22}
+                    opticalSize={24}
                   />
                 </span>
-
-                <div className={styles.cardActions}>
-                  <button
-                    type="button"
-                    className={styles.cardMenuTriggerButton}
-                    data-folder-menu-trigger="true"
-                    aria-label={`Abrir menú de opciones de ${folder.name}`}
-                    aria-haspopup="menu"
-                    aria-expanded={folderContextMenu?.folderId === folder.id}
-                    onDoubleClick={(event) => event.stopPropagation()}
-                    onClick={(event) => handleFolderMenuButtonClick(event, folder)}
-                  >
-                    <MaterialSymbol
-                      name="more_vert"
-                      className={styles.cardMenuTriggerIcon}
-                      weight={500}
-                      opticalSize={18}
-                    />
-                  </button>
-                </div>
-              </div>
-
-              <div className={styles.cardBody}>
-                <h3>
-                  <button
-                    type="button"
-                    className={styles.folderNameButton}
-                    onClick={() => openFolder(folder.id)}
-                    aria-label={`Abrir carpeta ${folder.name}`}
-                  >
-                    {folder.name}
-                  </button>
-                </h3>
-             
-
-                <div className={styles.cardFooter}>
-                  <span className={styles.filesCount}>
-                    <MaterialSymbol
-                      name="video_library"
-                      className={styles.filesIcon}
-                      weight={500}
-                      opticalSize={16}
-                    />
-                    {folder.fileCount} archivos
-                  </span>
-
-                  <div className={styles.tags}>
-                    {folder.tags.map((tag) => (
-                      <span key={`${folder.id}-${tag}`} className={styles.tag}>
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </article>
-          ))}
-
-          <button
-            type="button"
-            className={styles.addCard}
-            onClick={openCreateModal}
-            aria-label="Crear carpeta"
-          >
-            <span className={styles.addCardIconWrap}>
-              <MaterialSymbol
-                name="create_new_folder"
-                className={styles.addCardIcon}
-                weight={500}
-                opticalSize={24}
-              />
-            </span>
-            <p>Crear carpeta</p>
-          </button>
+                <p>Crear carpeta</p>
+              </button>
+            </>
+          )}
         </section>
 
         <section className={styles.featuredSection}>
@@ -513,7 +662,7 @@ export default function VideotecaPage() {
         <div
           className={styles.modalOverlay}
           role="presentation"
-          onClick={closeEditModal}
+          onClick={() => closeEditModal()}
         >
           <div
             className={styles.editModal}
@@ -532,7 +681,7 @@ export default function VideotecaPage() {
                 type="button"
                 className={styles.modalCloseButton}
                 aria-label="Cerrar modal"
-                onClick={closeEditModal}
+                onClick={() => closeEditModal()}
               >
                 <MaterialSymbol
                   name="close"
@@ -553,13 +702,17 @@ export default function VideotecaPage() {
                   placeholder="Ej: Movilidad avanzada"
                 />
               </label>
+              {folderMutationError ? (
+                <p className={styles.modalInlineError}>{folderMutationError}</p>
+              ) : null}
             </div>
 
             <footer className={styles.modalActions}>
               <button
                 type="button"
                 className={styles.modalCancelGhostButton}
-                onClick={closeEditModal}
+                onClick={() => closeEditModal()}
+                disabled={isRenamingFolder}
               >
                 Cancelar
               </button>
@@ -568,7 +721,7 @@ export default function VideotecaPage() {
                 type="button"
                 className={styles.modalConfirmButton}
                 onClick={handleConfirmEdit}
-                disabled={!draftFolderName.trim()}
+                disabled={!normalizeFolderName(draftFolderName) || isRenamingFolder}
               >
                 <MaterialSymbol
                   name="save"
@@ -577,7 +730,7 @@ export default function VideotecaPage() {
                   weight={500}
                   opticalSize={18}
                 />
-                Guardar cambios
+                {isRenamingFolder ? "Guardando..." : "Guardar cambios"}
               </button>
             </footer>
           </div>
@@ -588,7 +741,7 @@ export default function VideotecaPage() {
         <div
           className={styles.modalOverlay}
           role="presentation"
-          onClick={closeCreateModal}
+          onClick={() => closeCreateModal()}
         >
           <div
             className={styles.editModal}
@@ -607,7 +760,7 @@ export default function VideotecaPage() {
                 type="button"
                 className={styles.modalCloseButton}
                 aria-label="Cerrar modal"
-                onClick={closeCreateModal}
+                onClick={() => closeCreateModal()}
               >
                 <MaterialSymbol
                   name="close"
@@ -629,13 +782,17 @@ export default function VideotecaPage() {
                   autoFocus
                 />
               </label>
+              {folderMutationError ? (
+                <p className={styles.modalInlineError}>{folderMutationError}</p>
+              ) : null}
             </div>
 
             <footer className={styles.modalActions}>
               <button
                 type="button"
                 className={styles.modalCancelGhostButton}
-                onClick={closeCreateModal}
+                onClick={() => closeCreateModal()}
+                disabled={isCreatingFolder}
               >
                 Cancelar
               </button>
@@ -644,7 +801,7 @@ export default function VideotecaPage() {
                 type="button"
                 className={styles.modalConfirmButton}
                 onClick={handleConfirmCreate}
-                disabled={!normalizeFolderName(newFolderName)}
+                disabled={!normalizeFolderName(newFolderName) || isCreatingFolder}
               >
                 <MaterialSymbol
                   name="create_new_folder"
@@ -653,7 +810,7 @@ export default function VideotecaPage() {
                   weight={500}
                   opticalSize={18}
                 />
-                Crear carpeta
+                {isCreatingFolder ? "Creando..." : "Crear carpeta"}
               </button>
             </footer>
           </div>
@@ -668,6 +825,9 @@ export default function VideotecaPage() {
           headerAlignment="center"
           density="compact"
           confirmLabel="Eliminar carpeta"
+          errorMessage={folderMutationError}
+          isPending={isDeletingFolder}
+          pendingConfirmLabel="Eliminando..."
           onConfirm={handleConfirmDelete}
           onCancel={closeDeleteModal}
           targetCard={

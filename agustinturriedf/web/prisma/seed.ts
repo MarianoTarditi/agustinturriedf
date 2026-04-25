@@ -5,6 +5,34 @@ const prisma = new PrismaClient();
 
 const DEFAULT_PASSWORD = "123456789";
 
+const VIDEOTECA_SEED_FOLDERS = [
+  { id: "folder-1", name: "RODILLA" },
+  { id: "folder-2", name: "May correa" },
+  { id: "folder-3", name: "Cadera" },
+  { id: "folder-4", name: "CORE & ESTABILIDAD" },
+  { id: "folder-5", name: "Hombro" },
+  { id: "folder-6", name: "Técnicas de Fuerza" },
+] as const;
+
+async function seedVideotecaFolders() {
+  await Promise.all(
+    VIDEOTECA_SEED_FOLDERS.map((folder) =>
+      prisma.videotecaFolder.upsert({
+        where: { id: folder.id },
+        update: {
+          name: folder.name,
+          parentId: null,
+        },
+        create: {
+          id: folder.id,
+          name: folder.name,
+          parentId: null,
+        },
+      })
+    )
+  );
+}
+
 async function main() {
   const passwordHash = await hash(DEFAULT_PASSWORD, 12);
 
@@ -80,6 +108,9 @@ async function main() {
       },
     });
   }
+
+  // Continuidad de activación backend: mantener IDs de carpetas iguales al fallback mock actual.
+  await seedVideotecaFolders();
 
   console.info(`Seed completed. Admin user: ${admin.email}`);
 }

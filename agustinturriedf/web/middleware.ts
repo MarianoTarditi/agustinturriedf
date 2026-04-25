@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextAuthRequest } from "next-auth";
 
-import { auth } from "@/auth";
+import { auth } from "@/auth-edge";
 
 const PRIVATE_PATH_PREFIXES = [
   "/dashboard",

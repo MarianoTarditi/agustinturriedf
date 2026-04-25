@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { evaluatePaymentAccess } from "@/features/auth/payment-access";
+import { toPasswordUpdatedAtIso } from "@/features/auth/password-updated-at";
 import { type AuthenticatedUser } from "@/features/auth/authorization";
 import { ApiError } from "@/lib/http/api-response";
 import { prisma } from "@/lib/prisma";
@@ -28,6 +29,7 @@ export const requireSession = async (): Promise<AuthenticatedUser> => {
     | {
         id: string;
         role: "ADMIN" | "TRAINER" | "STUDENT";
+        passwordUpdatedAt?: Date | null;
         studentProfile?: {
           id: string;
           trainerId: string;
@@ -61,6 +63,9 @@ export const requireSession = async (): Promise<AuthenticatedUser> => {
     ...session.user,
     id: currentUser.id,
     role: currentUser.role,
+    passwordUpdatedAt:
+      toPasswordUpdatedAtIso(currentUser.passwordUpdatedAt) ??
+      toPasswordUpdatedAtIso(session.user.passwordUpdatedAt),
     studentStatus: currentUser.studentProfile?.status,
     studentProfileId: currentUser.studentProfile?.id,
     trainerId: currentUser.studentProfile?.trainerId,

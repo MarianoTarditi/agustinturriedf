@@ -22,17 +22,30 @@ type ApiPayload<T> = ApiSuccessPayload<T> | ApiErrorPayload;
 
 export type CreateFolderInput = {
   name: string;
+  parentId?: string | null;
 };
 
 export type VideotecaFolder = {
   id: string;
   name: string;
+  parentId: string | null;
   updatedAt: string;
   fileCount: number;
   tags: string[];
 };
 
-export type CreateFolderDraft = VideotecaFolder;
+export type VideotecaFolderParentSummary = {
+  id: string;
+  name: string;
+};
+
+export type UpdateFolderInput = {
+  name: string;
+};
+
+export type UpdateFileInput = {
+  name: string;
+};
 
 export type VideotecaFile = {
   id: string;
@@ -47,376 +60,14 @@ export type VideotecaFile = {
 };
 
 export type VideotecaFolderDetail = VideotecaFolder & {
+  parent: VideotecaFolderParentSummary | null;
+  childFolders: VideotecaFolder[];
   files: VideotecaFile[];
 };
 
 export type UploadProgressInput = {
   loaded: number;
   total: number;
-};
-
-export const MOCK_VIDEOTECA_FOLDERS: VideotecaFolder[] = [
-  {
-    id: "folder-1",
-    name: "RODILLA",
-    updatedAt: "12 Oct 2023",
-    fileCount: 14,
-    tags: ["rodilla", "movilidad"],
-  },
-  {
-    id: "folder-2",
-    name: "May correa",
-    updatedAt: "08 Oct 2023",
-    fileCount: 2,
-    tags: ["aad"],
-  },
-  {
-    id: "folder-3",
-    name: "Cadera",
-    updatedAt: "25 Sep 2023",
-    fileCount: 8,
-    tags: ["cadera", "atleta"],
-  },
-  {
-    id: "folder-4",
-    name: "CORE & ESTABILIDAD",
-    updatedAt: "14 Sep 2023",
-    fileCount: 21,
-    tags: ["core"],
-  },
-  {
-    id: "folder-5",
-    name: "Hombro",
-    updatedAt: "02 Sep 2023",
-    fileCount: 6,
-    tags: ["articulación"],
-  },
-  {
-    id: "folder-6",
-    name: "Técnicas de Fuerza",
-    updatedAt: "28 Ago 2023",
-    fileCount: 32,
-    tags: ["élite", "fuerza"],
-  },
-];
-
-const mockVideotecaFolderById = new Map(
-  MOCK_VIDEOTECA_FOLDERS.map((folder) => [folder.id, folder]),
-);
-
-const MOCK_VIDEOTECA_FILES_BY_FOLDER_ID: Record<
-  string,
-  Array<{
-    id: string;
-    folderId: string;
-    name: string;
-    type: "video" | "image";
-    duration: string;
-    updatedAt: string;
-    sizeBytes: number;
-    orderIndex: number;
-  }>
-> = {
-  "folder-1": [
-    {
-      id: "folder-1-file-1",
-      folderId: "folder-1",
-      name: "Evaluación inicial de rodilla",
-      type: "video",
-      duration: "05:28",
-      updatedAt: "15 Oct 2023",
-      sizeBytes: 48234496,
-      orderIndex: 1,
-    },
-    {
-      id: "folder-1-file-2",
-      folderId: "folder-1",
-      name: "Checklist de dolor patelofemoral",
-      type: "image",
-      duration: "—",
-      updatedAt: "14 Oct 2023",
-      sizeBytes: 1264512,
-      orderIndex: 2,
-    },
-    {
-      id: "folder-1-file-3",
-      folderId: "folder-1",
-      name: "Isometría de cuádriceps",
-      type: "video",
-      duration: "03:42",
-      updatedAt: "13 Oct 2023",
-      sizeBytes: 35913728,
-      orderIndex: 3,
-    },
-    {
-      id: "folder-1-file-4",
-      folderId: "folder-1",
-      name: "Progresión en split squat",
-      type: "video",
-      duration: "06:11",
-      updatedAt: "12 Oct 2023",
-      sizeBytes: 58150912,
-      orderIndex: 4,
-    },
-    {
-      id: "folder-1-file-5",
-      folderId: "folder-1",
-      name: "Guía visual de alineación",
-      type: "image",
-      duration: "—",
-      updatedAt: "11 Oct 2023",
-      sizeBytes: 1982464,
-      orderIndex: 5,
-    },
-  ],
-  "folder-2": [
-    {
-      id: "folder-2-file-1",
-      folderId: "folder-2",
-      name: "May Correa - rutina diaria",
-      type: "video",
-      duration: "02:58",
-      updatedAt: "08 Oct 2023",
-      sizeBytes: 28432128,
-      orderIndex: 1,
-    },
-    {
-      id: "folder-2-file-2",
-      folderId: "folder-2",
-      name: "Foto control semana 4",
-      type: "image",
-      duration: "—",
-      updatedAt: "08 Oct 2023",
-      sizeBytes: 1679360,
-      orderIndex: 2,
-    },
-    {
-      id: "folder-2-file-3",
-      folderId: "folder-2",
-      name: "Movilidad previa al trote",
-      type: "video",
-      duration: "01:49",
-      updatedAt: "07 Oct 2023",
-      sizeBytes: 18109440,
-      orderIndex: 3,
-    },
-  ],
-  "folder-3": [
-    {
-      id: "folder-3-file-1",
-      folderId: "folder-3",
-      name: "Control lumbo-pélvico",
-      type: "video",
-      duration: "04:36",
-      updatedAt: "25 Sep 2023",
-      sizeBytes: 42642432,
-      orderIndex: 1,
-    },
-    {
-      id: "folder-3-file-2",
-      folderId: "folder-3",
-      name: "Referencia de bisagra de cadera",
-      type: "image",
-      duration: "—",
-      updatedAt: "24 Sep 2023",
-      sizeBytes: 1436672,
-      orderIndex: 2,
-    },
-    {
-      id: "folder-3-file-3",
-      folderId: "folder-3",
-      name: "Step-up unilateral",
-      type: "video",
-      duration: "03:15",
-      updatedAt: "23 Sep 2023",
-      sizeBytes: 33423360,
-      orderIndex: 3,
-    },
-    {
-      id: "folder-3-file-4",
-      folderId: "folder-3",
-      name: "Respiración 90-90",
-      type: "video",
-      duration: "02:24",
-      updatedAt: "22 Sep 2023",
-      sizeBytes: 25165824,
-      orderIndex: 4,
-    },
-  ],
-  "folder-4": [
-    {
-      id: "folder-4-file-1",
-      folderId: "folder-4",
-      name: "Circuito anti-rotación",
-      type: "video",
-      duration: "07:03",
-      updatedAt: "14 Sep 2023",
-      sizeBytes: 65273856,
-      orderIndex: 1,
-    },
-    {
-      id: "folder-4-file-2",
-      folderId: "folder-4",
-      name: "Plancha lateral - puntos clave",
-      type: "image",
-      duration: "—",
-      updatedAt: "13 Sep 2023",
-      sizeBytes: 1155072,
-      orderIndex: 2,
-    },
-    {
-      id: "folder-4-file-3",
-      folderId: "folder-4",
-      name: "Dead bug con banda",
-      type: "video",
-      duration: "03:34",
-      updatedAt: "12 Sep 2023",
-      sizeBytes: 38830080,
-      orderIndex: 3,
-    },
-    {
-      id: "folder-4-file-4",
-      folderId: "folder-4",
-      name: "Pallof press en rodillas",
-      type: "video",
-      duration: "02:57",
-      updatedAt: "11 Sep 2023",
-      sizeBytes: 30408704,
-      orderIndex: 4,
-    },
-    {
-      id: "folder-4-file-5",
-      folderId: "folder-4",
-      name: "Secuencia de activación core",
-      type: "image",
-      duration: "—",
-      updatedAt: "10 Sep 2023",
-      sizeBytes: 1732608,
-      orderIndex: 5,
-    },
-  ],
-  "folder-5": [
-    {
-      id: "folder-5-file-1",
-      folderId: "folder-5",
-      name: "Movilidad escapular asistida",
-      type: "video",
-      duration: "04:02",
-      updatedAt: "02 Sep 2023",
-      sizeBytes: 36700160,
-      orderIndex: 1,
-    },
-    {
-      id: "folder-5-file-2",
-      folderId: "folder-5",
-      name: "Control de manguito rotador",
-      type: "video",
-      duration: "05:10",
-      updatedAt: "01 Sep 2023",
-      sizeBytes: 47185920,
-      orderIndex: 2,
-    },
-    {
-      id: "folder-5-file-3",
-      folderId: "folder-5",
-      name: "Diagrama de elevación segura",
-      type: "image",
-      duration: "—",
-      updatedAt: "31 Ago 2023",
-      sizeBytes: 1540096,
-      orderIndex: 3,
-    },
-  ],
-  "folder-6": [
-    {
-      id: "folder-6-file-1",
-      folderId: "folder-6",
-      name: "Técnica de sentadilla frontal",
-      type: "video",
-      duration: "08:12",
-      updatedAt: "28 Ago 2023",
-      sizeBytes: 77594624,
-      orderIndex: 1,
-    },
-    {
-      id: "folder-6-file-2",
-      folderId: "folder-6",
-      name: "Checklist de brace abdominal",
-      type: "image",
-      duration: "—",
-      updatedAt: "27 Ago 2023",
-      sizeBytes: 1015808,
-      orderIndex: 2,
-    },
-    {
-      id: "folder-6-file-3",
-      folderId: "folder-6",
-      name: "Peso muerto - cues principales",
-      type: "video",
-      duration: "06:48",
-      updatedAt: "26 Ago 2023",
-      sizeBytes: 62914560,
-      orderIndex: 3,
-    },
-    {
-      id: "folder-6-file-4",
-      folderId: "folder-6",
-      name: "Empuje de trineo - ejecución",
-      type: "video",
-      duration: "02:39",
-      updatedAt: "25 Ago 2023",
-      sizeBytes: 27262976,
-      orderIndex: 4,
-    },
-    {
-      id: "folder-6-file-5",
-      folderId: "folder-6",
-      name: "Referencia visual de agarres",
-      type: "image",
-      duration: "—",
-      updatedAt: "24 Ago 2023",
-      sizeBytes: 1863680,
-      orderIndex: 5,
-    },
-    {
-      id: "folder-6-file-6",
-      folderId: "folder-6",
-      name: "Saltos pliométricos - progresión",
-      type: "video",
-      duration: "03:21",
-      updatedAt: "23 Ago 2023",
-      sizeBytes: 34603008,
-      orderIndex: 6,
-    },
-  ],
-};
-
-const buildMockVideotecaFolderDetail = (folderId: string): VideotecaFolderDetail | null => {
-  const folder = mockVideotecaFolderById.get(folderId);
-
-  if (!folder) {
-    return null;
-  }
-
-  const mockFiles = MOCK_VIDEOTECA_FILES_BY_FOLDER_ID[folderId] ?? [];
-
-  return {
-    ...folder,
-    fileCount: mockFiles.length,
-    files: mockFiles.map(mapApiFileToVideotecaFile),
-  };
-};
-
-const shouldUseMockFolderFallback = (folderId: string, status: number) => {
-  if (!mockVideotecaFolderById.has(folderId)) {
-    return false;
-  }
-
-  if (status === 404) {
-    return true;
-  }
-
-  return status >= 500;
 };
 
 const parseApiPayload = async <T>(response: Response): Promise<ApiPayload<T>> => {
@@ -465,32 +116,33 @@ export const fetchVideotecaFolderDetail = async (
   fetchImpl: typeof fetch,
   folderId: string
 ): Promise<VideotecaFolderDetail> => {
-  let response: Response;
-
-  try {
-    response = await fetchImpl(`/api/videoteca/folders/${encodeURIComponent(folderId)}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      cache: "no-store",
-    });
-  } catch (error) {
-    const fallback = buildMockVideotecaFolderDetail(folderId);
-
-    if (!fallback) {
-      throw error;
-    }
-
-    return fallback;
-  }
+  const response = await fetchImpl(`/api/videoteca/folders/${encodeURIComponent(folderId)}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    cache: "no-store",
+  });
 
   const payload = await parseApiPayload<{
     id: string;
     name: string;
+    parentId: string | null;
     updatedAt: string;
     fileCount: number;
     tags: string[];
+    parent: {
+      id: string;
+      name: string;
+    } | null;
+    childFolders: Array<{
+      id: string;
+      name: string;
+      parentId: string | null;
+      updatedAt: string;
+      fileCount: number;
+      tags: string[];
+    }>;
     files: Array<{
       id: string;
       folderId: string;
@@ -504,14 +156,6 @@ export const fetchVideotecaFolderDetail = async (
   }>(response);
 
   if (!response.ok) {
-    const fallback = shouldUseMockFolderFallback(folderId, response.status)
-      ? buildMockVideotecaFolderDetail(folderId)
-      : null;
-
-    if (fallback) {
-      return fallback;
-    }
-
     throw new Error(payload.success ? "No se pudo cargar la carpeta seleccionada." : payload.error.message);
   }
 
@@ -519,8 +163,127 @@ export const fetchVideotecaFolderDetail = async (
 
   return {
     ...folder,
+    childFolders: folder.childFolders,
     files: folder.files.map(mapApiFileToVideotecaFile),
   };
+};
+
+export const fetchVideotecaFolders = async (fetchImpl: typeof fetch): Promise<VideotecaFolder[]> => {
+  const response = await fetchImpl("/api/videoteca/folders", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    cache: "no-store",
+  });
+
+  const payload = await parseApiPayload<
+    Array<{
+      id: string;
+      name: string;
+      parentId: string | null;
+      updatedAt: string;
+      fileCount: number;
+      tags: string[];
+    }>
+  >(response);
+
+  if (!response.ok) {
+    throw new Error(payload.success ? "No se pudieron cargar las carpetas de videoteca." : payload.error.message);
+  }
+
+  return assertApiSuccess(payload, "No se pudieron cargar las carpetas de videoteca.");
+};
+
+export const createVideotecaFolder = async (
+  fetchImpl: typeof fetch,
+  input: CreateFolderInput
+): Promise<VideotecaFolder> => {
+  const name = normalizeFolderName(input.name);
+
+  const response = await fetchImpl("/api/videoteca/folders", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name,
+      parentId: input.parentId ?? null,
+    }),
+  });
+
+  const payload = await parseApiPayload<{
+    id: string;
+    name: string;
+    parentId: string | null;
+    updatedAt: string;
+    fileCount: number;
+    tags: string[];
+  }>(response);
+
+  if (!response.ok) {
+    throw new Error(payload.success ? "No se pudo crear la carpeta." : payload.error.message);
+  }
+
+  return assertApiSuccess(payload, "No se pudo crear la carpeta.");
+};
+
+export const renameVideotecaFolder = async (
+  fetchImpl: typeof fetch,
+  folderId: string,
+  input: UpdateFolderInput
+): Promise<VideotecaFolder> => {
+  const name = normalizeFolderName(input.name);
+
+  const response = await fetchImpl(`/api/videoteca/folders/${encodeURIComponent(folderId)}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ name }),
+  });
+
+  const payload = await parseApiPayload<{
+    id: string;
+    name: string;
+    parentId: string | null;
+    updatedAt: string;
+    fileCount: number;
+    tags: string[];
+  }>(response);
+
+  if (!response.ok) {
+    throw new Error(payload.success ? "No se pudo editar la carpeta." : payload.error.message);
+  }
+
+  return assertApiSuccess(payload, "No se pudo editar la carpeta.");
+};
+
+export const deleteVideotecaFolder = async (
+  fetchImpl: typeof fetch,
+  folderId: string
+): Promise<VideotecaFolder> => {
+  const response = await fetchImpl(`/api/videoteca/folders/${encodeURIComponent(folderId)}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const payload = await parseApiPayload<{
+    id: string;
+    name: string;
+    parentId: string | null;
+    updatedAt: string;
+    fileCount: number;
+    tags: string[];
+  }>(response);
+
+  if (!response.ok) {
+    throw new Error(payload.success ? "No se pudo eliminar la carpeta." : payload.error.message);
+  }
+
+  return assertApiSuccess(payload, "No se pudo eliminar la carpeta.");
 };
 
 export const uploadVideotecaFile = (
@@ -598,6 +361,94 @@ export const uploadVideotecaFile = (
   });
 };
 
+export const renameVideotecaFile = async (
+  fetchImpl: typeof fetch,
+  fileId: string,
+  input: UpdateFileInput
+): Promise<VideotecaFile> => {
+  const name = input.name.trim().replace(/\s+/g, " ");
+
+  const response = await fetchImpl(`/api/videoteca/files/${encodeURIComponent(fileId)}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ name }),
+  });
+
+  const payload = await parseApiPayload<{
+    id: string;
+    folderId: string;
+    name: string;
+    type: "video" | "image";
+    duration: string;
+    updatedAt: string;
+    sizeBytes: number;
+    orderIndex: number;
+  }>(response);
+
+  if (!response.ok) {
+    throw new Error(payload.success ? "No se pudo renombrar el archivo." : payload.error.message);
+  }
+
+  return mapApiFileToVideotecaFile(assertApiSuccess(payload, "No se pudo renombrar el archivo."));
+};
+
+export const deleteVideotecaFile = async (
+  fetchImpl: typeof fetch,
+  fileId: string
+): Promise<VideotecaFile> => {
+  const response = await fetchImpl(`/api/videoteca/files/${encodeURIComponent(fileId)}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  const payload = await parseApiPayload<{
+    id: string;
+    folderId: string;
+    name: string;
+    type: "video" | "image";
+    duration: string;
+    updatedAt: string;
+    sizeBytes: number;
+    orderIndex: number;
+  }>(response);
+
+  if (!response.ok) {
+    throw new Error(payload.success ? "No se pudo eliminar el archivo." : payload.error.message);
+  }
+
+  return mapApiFileToVideotecaFile(assertApiSuccess(payload, "No se pudo eliminar el archivo."));
+};
+
+export const downloadVideotecaFile = async (fetchImpl: typeof fetch, file: VideotecaFile): Promise<void> => {
+  const response = await fetchImpl(`/api/videoteca/files/${encodeURIComponent(file.id)}/download`, {
+    method: "GET",
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const payload = await parseApiPayload<unknown>(response);
+    throw new Error(payload.success ? "No se pudo descargar el archivo." : payload.error.message);
+  }
+
+  const blob = await response.blob();
+  const contentDisposition = response.headers.get("content-disposition") ?? "";
+  const encodedFilenameMatch = contentDisposition.match(/filename="([^"]+)"/i);
+  const decodedFilename = encodedFilenameMatch?.[1]
+    ? decodeURIComponent(encodedFilenameMatch[1])
+    : `${file.name.replace(/[\\/:*?"<>|]+/g, "-")}`;
+
+  const blobUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = blobUrl;
+  anchor.download = decodedFilename;
+  anchor.click();
+  URL.revokeObjectURL(blobUrl);
+};
+
 const allowedExtensionsSet = new Set<string>(VIDEOTECA_ALLOWED_EXTENSIONS);
 const imageExtensionsSet = new Set<string>(["jpg", "jpeg", "png", "webp"]);
 
@@ -649,22 +500,4 @@ const extractExtension = (fileName: string) => {
 
 export function normalizeFolderName(name: string) {
   return name.trim().replace(/\s+/g, " ");
-}
-
-export function buildFolderDraft(input: CreateFolderInput): CreateFolderDraft | null {
-  const name = normalizeFolderName(input.name);
-
-  if (!name) return null;
-
-  return {
-    id: `folder-${Date.now()}`,
-    name,
-    updatedAt: new Date().toLocaleDateString("es-AR", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    }),
-    fileCount: 0,
-    tags: [],
-  };
 }

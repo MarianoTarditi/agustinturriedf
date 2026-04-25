@@ -95,6 +95,14 @@ describe("POST /api/videoteca/folders/[folderId]/files", () => {
       { id: "admin-1", role: "ADMIN" },
       expect.objectContaining({
         folderId,
+        files: [
+          expect.objectContaining({
+            originalName: "video.mp4",
+            sizeBytes: 3,
+            declaredMimeType: "video/mp4",
+            openStream: expect.any(Function),
+          }),
+        ],
       })
     );
   });

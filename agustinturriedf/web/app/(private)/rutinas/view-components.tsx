@@ -1,3 +1,4 @@
+import type { KeyboardEvent, MouseEvent } from "react";
 import Link from "next/link";
 
 import styles from "@/app/(private)/rutinas/rutinas.module.css";
@@ -111,23 +112,55 @@ export const RoutineFolderSummaryCard = ({ folder }: { folder: RoutineFolder }) 
 export const RoutineFilesList = ({
   files,
   canDeleteFiles,
+  onPreview,
   onDelete,
   emptyMessage,
 }: {
   files: RoutineFile[];
   canDeleteFiles: boolean;
+  onPreview?: (file: RoutineFile) => void;
   onDelete?: (file: RoutineFile) => void;
   emptyMessage: string;
 }) => {
+  const handleCardPreview = (event: MouseEvent<HTMLElement>, file: RoutineFile) => {
+    if (!onPreview) return;
+
+    const target = event.target as HTMLElement;
+    if (target.closest(`.${styles.rowActions}`)) {
+      return;
+    }
+
+    onPreview(file);
+  };
+
+  const handleCardPreviewKeyDown = (event: KeyboardEvent<HTMLElement>, file: RoutineFile) => {
+    if (!onPreview) return;
+    if (event.target !== event.currentTarget) return;
+
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onPreview(file);
+    }
+  };
+
   return (
     <div className={styles.fileList}>
       {files.length === 0 ? <p className={styles.feedbackInfo}>{emptyMessage}</p> : null}
 
       {files.map((file) => {
         const visual = getTypeChip(file.type);
+        const isPreviewable = Boolean(onPreview);
 
         return (
-          <article key={file.id} className={`${styles.templateItem} ${visual.borderClass}`}>
+          <article
+            key={file.id}
+            className={`${styles.templateItem} ${visual.borderClass} ${isPreviewable ? styles.templateItemPreviewable : ""}`}
+            onClick={(event) => handleCardPreview(event, file)}
+            onKeyDown={(event) => handleCardPreviewKeyDown(event, file)}
+            role={isPreviewable ? "button" : undefined}
+            tabIndex={isPreviewable ? 0 : undefined}
+            aria-label={isPreviewable ? `Previsualizar ${file.name}` : undefined}
+          >
             <div className={`${styles.fileIconWrap} ${visual.iconClass}`}>
               <MaterialSymbol name={visual.icon} className={styles.fileIcon} weight={420} opticalSize={28} />
             </div>
@@ -148,7 +181,20 @@ export const RoutineFilesList = ({
             </div>
 
             <div className={styles.rowActions}>
-              <a href={buildRoutineDownloadUrl(file.id)} className={styles.openButton}>
+              {onPreview ? (
+                <button
+                  type="button"
+                  className={styles.openButton}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onPreview(file);
+                  }}
+                >
+                  Previsualizar
+                </button>
+              ) : null}
+
+              <a href={buildRoutineDownloadUrl(file.id)} className={styles.openButton} onClick={(event) => event.stopPropagation()}>
                 Descargar
               </a>
 
@@ -157,7 +203,10 @@ export const RoutineFilesList = ({
                   type="button"
                   className={`${styles.iconAction} ${styles.deleteAction}`}
                   aria-label={`Eliminar ${file.name}`}
-                  onClick={() => onDelete(file)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onDelete(file);
+                  }}
                 >
                   <MaterialSymbol name="delete" className={styles.rowActionIcon} weight={500} opticalSize={20} />
                 </button>

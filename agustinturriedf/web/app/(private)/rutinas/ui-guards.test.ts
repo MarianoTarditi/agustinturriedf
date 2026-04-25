@@ -57,6 +57,9 @@ describe("rutinas UI guards", () => {
 
   it("keeps /rutinas/[folderId] without manual folder CRUD and gates file actions by permissions", () => {
     const detailPageSource = readFileSync(resolveRutinasFile("[folderId]", "page.tsx"), "utf8");
+    const modalSource = readFileSync(resolveRutinasFile("file-preview-modal.tsx"), "utf8");
+    const uploadModalSource = readFileSync(resolveRutinasFile("routine-upload-modal.tsx"), "utf8");
+    const runtimeSource = readFileSync(resolveRutinasFile("runtime.ts"), "utf8");
 
     expect(detailPageSource).not.toContain("create_new_folder");
     expect(detailPageSource).not.toContain("Crear carpeta");
@@ -64,9 +67,51 @@ describe("rutinas UI guards", () => {
     expect(detailPageSource).toContain("routinePermissions.canDeleteFiles");
     expect(detailPageSource).not.toContain("RoutineFolderGrid");
     expect(detailPageSource).not.toContain("fetchRoutineFolders");
+    expect(detailPageSource).toContain("styles.detailHeaderRow");
+    expect(detailPageSource).toContain("styles.detailBackButton");
+    expect(detailPageSource).toContain("styles.detailHeaderActions");
+    expect(detailPageSource).toContain("styles.detailHeaderUploadButton");
     expect(detailPageSource).toContain("Volver a rutinas");
-    expect(detailPageSource).not.toContain("Subir archivo");
+    expect(detailPageSource).toContain("Subir archivo");
+    expect(detailPageSource).toContain("routinePermissions.canUploadFiles");
+    expect(detailPageSource).toContain("RoutineUploadModal");
+    expect(detailPageSource).toContain("ROUTINE_FILES_PAGE_SIZE");
+    expect(detailPageSource).toContain("getRoutineFilePage");
+    expect(detailPageSource).toContain("pagination.visibleFiles");
+    expect(detailPageSource).toContain("Paginación de archivos de rutina");
+    expect(detailPageSource).toContain("Anterior");
+    expect(detailPageSource).toContain("Siguiente");
     expect(detailPageSource).not.toContain("routine-file");
     expect(detailPageSource).not.toContain("styles.uploadSidebar");
+    expect(detailPageSource).toContain("FilePreviewModal");
+    expect(detailPageSource).toContain("onPreview={(file)");
+    expect(modalSource).toContain("buildRoutinePreviewUrl");
+    expect(modalSource).toContain("parseRoutineWorkbookPreview");
+    expect(modalSource).toContain("<iframe");
+    expect(modalSource).toContain("role=\"tablist\"");
+    expect(runtimeSource).toContain("buildRoutinePreviewUrl");
+    expect(runtimeSource).toContain("fetchRoutinePreviewBinary");
+    expect(runtimeSource).toContain("validateRoutineFileForUpload");
+    expect(runtimeSource).toContain("uploadRoutineFiles");
+    expect(uploadModalSource).toContain("multiple");
+    expect(uploadModalSource).toContain("validateRoutineFileForUpload");
+  });
+
+  it("keeps upload/loading animation and preview cursor affordances scoped to previewable cards", () => {
+    const rutinasStyles = readFileSync(resolveRutinasFile("rutinas.module.css"), "utf8");
+
+    expect(rutinasStyles).toContain(".detailHeaderRow {");
+    expect(rutinasStyles).toContain(".detailBackButton {");
+    expect(rutinasStyles).toContain(".detailHeaderActions {");
+    expect(rutinasStyles).toContain(".detailHeaderUploadButton {");
+    expect(rutinasStyles).toContain("background: linear-gradient(135deg, var(--primary-container), var(--primary-variant));");
+    expect(rutinasStyles).toContain(".uploadButtonIconLoading {");
+    expect(rutinasStyles).toContain("@keyframes routineUploadSpin {");
+    expect(rutinasStyles).toContain(".templateItemPreviewable {");
+    expect(rutinasStyles).toContain(".templateItemPreviewable:hover {");
+    expect(rutinasStyles).toContain(".detailPagination {");
+    expect(rutinasStyles).toContain(".detailPaginationButton {");
+    expect(rutinasStyles).toContain(".detailPaginationButton:disabled {");
+    expect(rutinasStyles).not.toContain(".templateItem:hover {");
   });
 });

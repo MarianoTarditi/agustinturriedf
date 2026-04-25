@@ -57,6 +57,15 @@ type UploadRoutineFileInput = {
   replaceFileId?: string | null;
 };
 
+type UploadRoutineBatchInput = {
+  folderId: string;
+  files: Array<{
+    originalName: string;
+    sizeBytes: number;
+    content: Buffer;
+  }>;
+};
+
 type ExistingRoutineFile = {
   id: string;
   originalName: string;
@@ -410,6 +419,81 @@ export class RoutinesService {
       await routinesRepository.deleteFileById(createdFile.id).catch(() => null);
       throw error;
     }
+  }
+
+  async uploadFilesAppend(actor: AuthenticatedUser, input: UploadRoutineBatchInput) {
+    requireRole(actor, ["ADMIN", "TRAINER"], "Solo ADMIN y TRAINER pueden subir rutinas");
+
+    if (!Array.isArray(input.files) || input.files.length === 0) {
+      throw new ApiError("Seleccioná al menos un archivo para subir", 400, "VALIDATION_ERROR");
+    }
+
+    const folder = await routinesRepository.findFolderWithOwnershipById(input.folderId);
+
+    if (!folder) {
+      throw new ApiError("Carpeta de rutinas no encontrada", 404, "NOT_FOUND");
+    }
+
+    const uploadedFiles: RoutineFileDTO[] = [];
+
+    for (const fileInput of input.files) {
+      const detectedSizeBytes = fileInput.content.length;
+
+      if (detectedSizeBytes === 0 || fileInput.sizeBytes <= 0) {
+        throw new ApiError("El archivo no puede estar vacío", 400, "VALIDATION_ERROR");
+      }
+
+      const extension = parseAllowedExtension(fileInput.originalName);
+      const normalizedName = normalizeFileNameForDuplicateCheck(fileInput.originalName);
+
+      const createdFile = await routinesRepository
+        .createFile({
+          folderId: folder.id,
+          originalName: fileInput.originalName,
+          normalizedName,
+          extension,
+          relativePath: "pending",
+          sizeBytes: detectedSizeBytes,
+          observations: null,
+        })
+        .catch((error: unknown) => {
+          if (isDuplicateNameConstraintError(error)) {
+            throw new ApiError(
+              "Ya existe un archivo con ese nombre en la carpeta del estudiante",
+              409,
+              "CONFLICT"
+            );
+          }
+
+          throw error;
+        });
+
+      const storageFileName = buildRoutineStorageFileName({
+        originalName: fileInput.originalName,
+        fileId: createdFile.id,
+        type: extension,
+      });
+
+      const relativePath = buildRoutineRelativePath(folder.studentProfileId, storageFileName);
+      const absolutePath = getRoutineAbsolutePath(relativePath);
+
+      try {
+        await ensureStudentRoutineDirectory(folder.studentProfileId);
+        await writeRoutineFileToDisk(absolutePath, fileInput.content);
+
+        const persisted = await routinesRepository.updateFileStorage(createdFile.id, {
+          relativePath,
+          normalizedName,
+        });
+
+        uploadedFiles.push(mapRoutineFile(persisted));
+      } catch (error) {
+        await routinesRepository.deleteFileById(createdFile.id).catch(() => null);
+        throw error;
+      }
+    }
+
+    return uploadedFiles;
   }
 
   async deleteFile(actor: AuthenticatedUser, fileId: string) {

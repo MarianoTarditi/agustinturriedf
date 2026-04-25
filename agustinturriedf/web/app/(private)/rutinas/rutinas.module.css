@@ -289,7 +289,7 @@
 .studentFolderCard {
   border-radius: 0.62rem;
   border: 1px solid rgba(76, 67, 83, 0.2);
-  background: var(--surface-low);
+  background: linear-gradient(165deg, #18151d 0%, #121015 100%);
   padding: 1rem;
   display: flex;
   align-items: center;
@@ -395,6 +395,100 @@
   gap: 1.25rem;
 }
 
+.detailHeaderRow {
+  border-bottom: 1px solid rgba(76, 67, 83, 0.24);
+  padding: 0.4rem 0 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.detailHeaderMain {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.detailHeaderActions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.detailBackButton {
+  min-height: 2.35rem;
+  border: 1px solid rgba(76, 67, 83, 0.24);
+  border-radius: 0.52rem;
+  background: var(--surface-container);
+  color: rgba(207, 194, 213, 0.86);
+  padding: 0.46rem 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color 200ms ease, color 200ms ease;
+}
+
+.detailBackButton:hover {
+  color: var(--primary);
+  border-color: rgba(222, 183, 255, 0.3);
+}
+
+.detailBackIcon {
+  font-size: 1rem;
+}
+
+.detailHeaderUploadButton {
+  border: 0;
+  border-radius: 0.45rem;
+  min-height: 2.45rem;
+  height: 2.45rem;
+  padding: 0 1.45rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  background: linear-gradient(135deg, var(--primary-container), var(--primary-variant));
+  color: #e4c2ff;
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 20px 40px rgba(123, 44, 191, 0.15);
+  cursor: pointer;
+  transition:
+    filter 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 140ms cubic-bezier(0.4, 0, 1, 1),
+    box-shadow 300ms cubic-bezier(0.22, 1, 0.36, 1);
+  white-space: nowrap;
+}
+
+.detailHeaderUploadButton:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 24px 44px rgba(123, 44, 191, 0.2);
+}
+
+.detailHeaderUploadButton:active {
+  transform: scale(0.95);
+}
+
+.detailHeaderUploadButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  filter: grayscale(0.15);
+}
+
+.detailHeaderUploadButtonIcon {
+  font-size: 1.15rem;
+}
+
 .libraryHeader {
   display: flex;
   align-items: center;
@@ -466,7 +560,11 @@
     box-shadow 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.templateItem:hover {
+.templateItemPreviewable {
+  cursor: pointer;
+}
+
+.templateItemPreviewable:hover {
   background: var(--surface-container);
   border-color: rgba(222, 183, 255, 0.12);
   box-shadow: 0 20px 40px rgba(123, 44, 191, 0.08);
@@ -624,6 +722,51 @@
   font-size: 1.1rem;
 }
 
+.detailPagination {
+  margin-top: 0.15rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.detailPaginationStatus {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.62rem;
+  color: rgba(207, 194, 213, 0.52);
+  font-weight: 700;
+}
+
+.detailPaginationControls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.detailPaginationButton {
+  border: 0;
+  background: transparent;
+  color: rgba(207, 194, 213, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.62rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.detailPaginationButton:hover {
+  color: var(--primary);
+}
+
+.detailPaginationButton:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
 .libraryFooter {
   margin-top: 0.15rem;
   display: flex;
@@ -685,6 +828,113 @@
   overflow: auto;
 }
 
+.detailUploadButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(76, 67, 83, 0.24);
+  border-radius: 0.45rem;
+  background: var(--surface-high);
+  color: var(--on-surface);
+  min-height: 2rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.detailUploadButton:hover {
+  background: rgba(76, 67, 83, 0.24);
+  border-color: rgba(222, 183, 255, 0.24);
+}
+
+.detailUploadButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.detailUploadButtonIcon {
+  font-size: 1rem;
+}
+
+.uploadButtonIconLoading {
+  animation: routineUploadSpin 1.05s linear infinite;
+}
+
+@keyframes routineUploadSpin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.routineUploadModal {
+  width: min(100%, 42rem);
+  max-height: min(90vh, 42rem);
+}
+
+.routineUploadHeaderActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.routineUploadInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.routineUploadQueueList {
+  margin-top: 0.9rem;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.routineUploadQueueItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  border: 1px solid rgba(76, 67, 83, 0.18);
+  border-radius: 0.55rem;
+  background: var(--surface-low);
+  padding: 0.65rem 0.75rem;
+}
+
+.routineUploadQueueMeta {
+  min-width: 0;
+}
+
+.routineUploadQueueMeta strong {
+  display: block;
+  font-size: 0.84rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.routineUploadQueueMeta p {
+  margin: 0.2rem 0 0;
+  color: rgba(207, 194, 213, 0.7);
+  font-size: 0.72rem;
+}
+
+.previewModal {
+  width: min(96vw, 74rem);
+  max-height: min(92vh, 56rem);
+}
+
 .modalHeader {
   padding: 1.2rem 1.35rem;
   border-bottom: 1px solid rgba(76, 67, 83, 0.2);
@@ -733,6 +983,70 @@
 
 .modalBody {
   padding: 1rem 1.35rem;
+}
+
+.previewModalBody {
+  min-height: min(72vh, 44rem);
+}
+
+.previewPdfFrame {
+  width: 100%;
+  min-height: min(70vh, 42rem);
+  border: 1px solid rgba(76, 67, 83, 0.24);
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.previewSpreadsheetWrap {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.previewSheetTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.previewSheetTab {
+  border: 1px solid rgba(76, 67, 83, 0.28);
+  border-radius: 999px;
+  background: var(--surface-high);
+  color: rgba(207, 194, 213, 0.8);
+  min-height: 2rem;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.previewSheetTabActive {
+  border-color: rgba(222, 183, 255, 0.6);
+  color: #e4c2ff;
+  background: rgba(123, 44, 191, 0.22);
+}
+
+.previewSpreadsheetTableWrap {
+  overflow: auto;
+  border: 1px solid rgba(76, 67, 83, 0.24);
+  border-radius: 0.5rem;
+  max-height: min(60vh, 34rem);
+}
+
+.previewSpreadsheetTable {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+}
+
+.previewSpreadsheetTable td {
+  border: 1px solid rgba(76, 67, 83, 0.2);
+  padding: 0.45rem 0.55rem;
+  font-size: 0.75rem;
+  color: rgba(232, 228, 236, 0.95);
+  white-space: nowrap;
 }
 
 .modalField {
@@ -903,6 +1217,19 @@
 
   .libraryHeader {
     align-items: flex-start;
+  }
+
+  .detailHeaderRow,
+  .detailHeaderActions {
+    width: 100%;
+  }
+
+  .detailHeaderActions {
+    justify-content: flex-start;
+  }
+
+  .detailHeaderUploadButton {
+    width: 100%;
   }
 
   .controlsRow {

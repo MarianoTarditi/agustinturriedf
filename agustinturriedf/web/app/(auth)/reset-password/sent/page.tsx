@@ -17,7 +17,7 @@ export default function ResetPasswordSentPage() {
         Te enviamos un enlace a tu email
       </h1>
       <p style={{ margin: "0.85rem 0 2rem", color: "var(--on-surface-variant)", opacity: 0.9, lineHeight: 1.55 }}>
-        Revisá tu bandeja de entrada y el correo no deseado para continuar con la recuperación del acceso.
+        Si el email existe, te enviamos instrucciones para recuperar el acceso. Revisá tu bandeja de entrada y el correo no deseado.
       </p>
 
       <Link

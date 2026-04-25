@@ -2,9 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "@/lib/http/api-response";
 
-const { requireSessionMock, uploadFileMock } = vi.hoisted(() => ({
+const { requireSessionMock, uploadFileMock, uploadFilesAppendMock } = vi.hoisted(() => ({
   requireSessionMock: vi.fn(),
   uploadFileMock: vi.fn(),
+  uploadFilesAppendMock: vi.fn(),
 }));
 
 vi.mock("@/features/auth/session", () => ({
@@ -14,6 +15,7 @@ vi.mock("@/features/auth/session", () => ({
 vi.mock("@/features/routines/service", () => ({
   routinesService: {
     uploadFile: uploadFileMock,
+    uploadFilesAppend: uploadFilesAppendMock,
   },
 }));
 
@@ -65,6 +67,62 @@ describe("POST /api/routines/folders/[folderId]/files", () => {
         message: "Validation failed",
       },
     });
+    expect(uploadFileMock).not.toHaveBeenCalled();
+    expect(uploadFilesAppendMock).not.toHaveBeenCalled();
+  });
+
+  it("uploads files[] batch and returns 201 when payload/session are valid", async () => {
+    requireSessionMock.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+
+    const folderId = "ck7m7x3k50000abcd1234efgh";
+    uploadFilesAppendMock.mockResolvedValue([
+      {
+        id: "file-1",
+        name: "plan-a.pdf",
+        type: "pdf",
+        path: "sp-1/plan-a--file-1.pdf",
+        uploadedAt: "2026-04-24T12:00:00.000Z",
+        sizeBytes: 3,
+        observations: null,
+      },
+      {
+        id: "file-2",
+        name: "plan-b.xlsx",
+        type: "xlsx",
+        path: "sp-1/plan-b--file-2.xlsx",
+        uploadedAt: "2026-04-24T12:00:01.000Z",
+        sizeBytes: 4,
+        observations: null,
+      },
+    ]);
+
+    const formData = new FormData();
+    formData.append("files[]", new File(["abc"], "plan-a.pdf", { type: "application/pdf" }));
+    formData.append("files[]", new File(["abcd"], "plan-b.xlsx", { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+
+    const response = await POST(new Request(`http://localhost/api/routines/folders/${folderId}/files`, { method: "POST", body: formData }), {
+      params: Promise.resolve({ folderId }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(body).toMatchObject({
+      success: true,
+      data: [
+        expect.objectContaining({ id: "file-1", name: "plan-a.pdf" }),
+        expect.objectContaining({ id: "file-2", name: "plan-b.xlsx" }),
+      ],
+    });
+    expect(uploadFilesAppendMock).toHaveBeenCalledWith(
+      { id: "admin-1", role: "ADMIN" },
+      {
+        folderId,
+        files: [
+          expect.objectContaining({ originalName: "plan-a.pdf", sizeBytes: 3 }),
+          expect.objectContaining({ originalName: "plan-b.xlsx", sizeBytes: 4 }),
+        ],
+      }
+    );
     expect(uploadFileMock).not.toHaveBeenCalled();
   });
 
@@ -118,6 +176,53 @@ describe("POST /api/routines/folders/[folderId]/files", () => {
 
     const uploadPayload = uploadFileMock.mock.calls[0][1] as { content: unknown };
     expect(Buffer.isBuffer(uploadPayload.content)).toBe(true);
+    expect(uploadFilesAppendMock).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 when files[] includes invalid extension", async () => {
+    requireSessionMock.mockResolvedValue({ id: "trainer-1", role: "TRAINER" });
+
+    const folderId = "ck7m7x3k50000abcd1234efgh";
+    const formData = new FormData();
+    formData.append("files[]", new File(["abc"], "plan.doc", { type: "application/msword" }));
+
+    const response = await POST(new Request(`http://localhost/api/routines/folders/${folderId}/files`, { method: "POST", body: formData }), {
+      params: Promise.resolve({ folderId }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body).toMatchObject({
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+      },
+    });
+    expect(uploadFilesAppendMock).not.toHaveBeenCalled();
+    expect(uploadFileMock).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 when files[] includes empty file", async () => {
+    requireSessionMock.mockResolvedValue({ id: "trainer-1", role: "TRAINER" });
+
+    const folderId = "ck7m7x3k50000abcd1234efgh";
+    const formData = new FormData();
+    formData.append("files[]", new File([], "empty.pdf", { type: "application/pdf" }));
+
+    const response = await POST(new Request(`http://localhost/api/routines/folders/${folderId}/files`, { method: "POST", body: formData }), {
+      params: Promise.resolve({ folderId }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body).toMatchObject({
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+      },
+    });
+    expect(uploadFilesAppendMock).not.toHaveBeenCalled();
+    expect(uploadFileMock).not.toHaveBeenCalled();
   });
 
   it("returns 400 when replaceFileId is not a valid cuid", async () => {

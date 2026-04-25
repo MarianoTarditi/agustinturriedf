@@ -313,6 +313,97 @@ describe("RoutinesService permissions and business rules", () => {
     });
   });
 
+  it("uploads files in append mode without replacement heuristics", async () => {
+    findFolderWithOwnershipByIdMock.mockResolvedValue({
+      id: "folder-1",
+      studentProfileId: "sp-1",
+      displayName: "Rutinas",
+      storageKey: "student:demo@demo.com",
+      studentProfile: { userId: "student-1" },
+      files: [
+        {
+          id: "file-existing",
+          originalName: "plan.pdf",
+          normalizedName: "plan.pdf",
+          extension: "pdf",
+          relativePath: "sp-1/plan--file-existing.pdf",
+          sizeBytes: 111,
+          observations: null,
+          uploadedAt: new Date("2026-04-19T08:00:00.000Z"),
+        },
+      ],
+    });
+
+    createFileMock
+      .mockResolvedValueOnce({
+        id: "file-a",
+        folderId: "folder-1",
+        originalName: "plan.pdf",
+        normalizedName: "plan.pdf",
+        extension: "pdf",
+        relativePath: "pending",
+        sizeBytes: 3,
+        observations: null,
+        uploadedAt: new Date("2026-04-24T12:00:00.000Z"),
+      })
+      .mockResolvedValueOnce({
+        id: "file-b",
+        folderId: "folder-1",
+        originalName: "tabla.xlsx",
+        normalizedName: "tabla.xlsx",
+        extension: "xlsx",
+        relativePath: "pending",
+        sizeBytes: 4,
+        observations: null,
+        uploadedAt: new Date("2026-04-24T12:00:01.000Z"),
+      });
+
+    updateFileStorageMock
+      .mockResolvedValueOnce({
+        id: "file-a",
+        originalName: "plan.pdf",
+        extension: "pdf",
+        relativePath: "sp-1/plan--file-a.pdf",
+        sizeBytes: 3,
+        observations: null,
+        uploadedAt: new Date("2026-04-24T12:00:00.000Z"),
+      })
+      .mockResolvedValueOnce({
+        id: "file-b",
+        originalName: "tabla.xlsx",
+        extension: "xlsx",
+        relativePath: "sp-1/tabla--file-b.xlsx",
+        sizeBytes: 4,
+        observations: null,
+        uploadedAt: new Date("2026-04-24T12:00:01.000Z"),
+      });
+
+    const result = await routinesService.uploadFilesAppend(
+      { id: "trainer-1", role: "TRAINER" },
+      {
+        folderId: "folder-1",
+        files: [
+          {
+            originalName: "plan.pdf",
+            sizeBytes: 3,
+            content: Buffer.from("abc"),
+          },
+          {
+            originalName: "tabla.xlsx",
+            sizeBytes: 4,
+            content: Buffer.from("abcd"),
+          },
+        ],
+      }
+    );
+
+    expect(updateFileMetadataMock).not.toHaveBeenCalled();
+    expect(createFileMock).toHaveBeenCalledTimes(2);
+    expect(result).toHaveLength(2);
+    expect(result[0]).toMatchObject({ id: "file-a", name: "plan.pdf" });
+    expect(result[1]).toMatchObject({ id: "file-b", name: "tabla.xlsx" });
+  });
+
   it("replaces by file type when there is a single same-type candidate", async () => {
     findFolderWithOwnershipByIdMock.mockResolvedValue({
       id: "folder-1",

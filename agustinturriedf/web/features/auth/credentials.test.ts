@@ -32,6 +32,7 @@ describe("authorizeCredentials", () => {
       email: "admin@example.com",
       role: "ADMIN",
       passwordHash: "hash",
+      passwordUpdatedAt: new Date("2026-01-01T10:00:00.000Z"),
       studentProfile: null,
     });
     compareMock.mockResolvedValue(true);
@@ -45,6 +46,7 @@ describe("authorizeCredentials", () => {
       id: "admin-1",
       email: "admin@example.com",
       role: "ADMIN",
+      passwordUpdatedAt: "2026-01-01T10:00:00.000Z",
     });
   });
 
@@ -102,6 +104,27 @@ describe("authorizeCredentials", () => {
     const result = await authorizeCredentials({
       email: "student@example.com",
       password: "123456789",
+    });
+
+    expect(result).toBeNull();
+  });
+
+  it("rejects login when password no longer matches stored hash", async () => {
+    findUniqueMock.mockResolvedValue({
+      id: "user-1",
+      firstName: "Nue",
+      lastName: "Pass",
+      email: "user@example.com",
+      role: "ADMIN",
+      passwordHash: "new-hash",
+      passwordUpdatedAt: new Date("2026-02-01T10:00:00.000Z"),
+      studentProfile: null,
+    });
+    compareMock.mockResolvedValue(false);
+
+    const result = await authorizeCredentials({
+      email: "user@example.com",
+      password: "old-password",
     });
 
     expect(result).toBeNull();

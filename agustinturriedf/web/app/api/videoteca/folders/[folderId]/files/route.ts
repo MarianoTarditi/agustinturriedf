@@ -9,6 +9,8 @@ type VideotecaFolderFilesRouteContext = {
   }>;
 };
 
+export const runtime = "nodejs";
+
 const resolveVideotecaFolderId = async (context: VideotecaFolderFilesRouteContext) => {
   const params = await context.params;
   const parsedParams = videotecaFolderIdParamSchema.safeParse(params);
@@ -38,13 +40,12 @@ const resolveUploadPayload = async (request: Request) => {
     });
   }
 
-  return Promise.all(
-    files.map(async (file) => ({
-      originalName: file.name,
-      sizeBytes: file.size,
-      content: Buffer.from(await file.arrayBuffer()),
-    }))
-  );
+  return files.map((file) => ({
+    originalName: file.name,
+    sizeBytes: file.size,
+    declaredMimeType: file.type || null,
+    openStream: () => file.stream(),
+  }));
 };
 
 export const POST = async (request: Request, context: VideotecaFolderFilesRouteContext) => {

@@ -1,5 +1,9 @@
-import { mkdir, unlink, writeFile } from "node:fs/promises";
+import { createWriteStream } from "node:fs";
+import { mkdir, rm, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { Readable, Transform } from "node:stream";
+import { pipeline } from "node:stream/promises";
+import type { ReadableStream as NodeReadableStream } from "node:stream/web";
 
 import type { VideotecaFileType } from "@/lib/validation/videoteca";
 
@@ -38,8 +42,67 @@ export const writeVideotecaFileToDisk = async (absolutePath: string, content: Bu
   await writeFile(absolutePath, content);
 };
 
+export class VideotecaStorageSizeError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "VideotecaStorageSizeError";
+  }
+}
+
+export const writeVideotecaFileStreamToDisk = async (
+  absolutePath: string,
+  contentStream: ReadableStream<Uint8Array>,
+  options: {
+    maxSizeBytes: number;
+    expectedSizeBytes: number;
+  }
+) => {
+  await mkdir(path.dirname(absolutePath), { recursive: true });
+
+  let bytesWritten = 0;
+
+  const sizeGuard = new Transform({
+    transform(chunk, _encoding, callback) {
+      const chunkSize = Buffer.isBuffer(chunk) ? chunk.length : Buffer.byteLength(String(chunk));
+      bytesWritten += chunkSize;
+
+      if (bytesWritten > options.maxSizeBytes) {
+        callback(new VideotecaStorageSizeError("El archivo supera el tamaño máximo permitido"));
+        return;
+      }
+
+      callback(null, chunk);
+    },
+  });
+
+  try {
+    await pipeline(
+      Readable.fromWeb(contentStream as unknown as NodeReadableStream),
+      sizeGuard,
+      createWriteStream(absolutePath)
+    );
+  } catch (error) {
+    await unlink(absolutePath).catch(() => null);
+    throw error;
+  }
+
+  if (bytesWritten <= 0 || bytesWritten !== options.expectedSizeBytes) {
+    await unlink(absolutePath).catch(() => null);
+    throw new VideotecaStorageSizeError("El archivo recibido está corrupto o incompleto");
+  }
+
+  return bytesWritten;
+};
+
 export const removeVideotecaFileFromDisk = async (absolutePath: string) => {
   await unlink(absolutePath);
+};
+
+export const removeVideotecaFolderDirectory = async (folderId: string) => {
+  await rm(getVideotecaFolderDirectory(folderId), {
+    recursive: true,
+    force: true,
+  });
 };
 
 export const buildVideotecaStorageFileName = ({

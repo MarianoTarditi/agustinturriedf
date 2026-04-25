@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 
 import {
+  buildRoutinePreviewUrl,
+  validateRoutineFileForUpload,
+  uploadRoutineFiles,
+  fetchRoutinePreviewBinary,
   fetchRoutineFolderDetail,
   fetchRoutineFolders,
   deleteRoutineFile,
@@ -212,6 +216,141 @@ describe("rutinas runtime", () => {
       "/api/routines/files/file-1",
       expect.objectContaining({ method: "DELETE" })
     );
+  });
+
+  it("builds preview URL for modal flows", () => {
+    expect(buildRoutinePreviewUrl("file 1")).toBe("/api/routines/files/file%201/preview");
+  });
+
+  it("validates allowed routine upload file extensions", () => {
+    expect(validateRoutineFileForUpload(new File(["pdf"], "plan.pdf", { type: "application/pdf" }))).toEqual({ ok: true });
+    expect(validateRoutineFileForUpload(new File(["xls"], "plan.xls", { type: "application/vnd.ms-excel" }))).toEqual({ ok: true });
+    expect(
+      validateRoutineFileForUpload(
+        new File(["xlsx"], "plan.xlsx", {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        })
+      )
+    ).toEqual({ ok: true });
+  });
+
+  it("rejects upload validation for invalid extension or empty files", () => {
+    expect(validateRoutineFileForUpload(new File(["x"], "plan.doc", { type: "application/msword" }))).toEqual({
+      ok: false,
+      error: "Tipo de archivo no soportado. Solo se permiten PDF, XLS y XLSX.",
+    });
+
+    expect(validateRoutineFileForUpload(new File([], "vacio.pdf", { type: "application/pdf" }))).toEqual({
+      ok: false,
+      error: "El archivo no puede estar vacío.",
+    });
+  });
+
+  it("uploads multiple files using files[] payload and returns normalized list", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      status: 201,
+      json: async () => ({
+        success: true,
+        data: [
+          {
+            id: "file-1",
+            name: "plan-a.pdf",
+            type: "pdf",
+            path: "sp-1/plan-a--file-1.pdf",
+            uploadedAt: "2026-04-24T12:00:00.000Z",
+            sizeBytes: 3,
+            observations: null,
+          },
+          {
+            id: "file-2",
+            name: "plan-b.xlsx",
+            type: "xlsx",
+            path: "sp-1/plan-b--file-2.xlsx",
+            uploadedAt: "2026-04-24T12:00:01.000Z",
+            sizeBytes: 4,
+            observations: null,
+          },
+        ],
+      }),
+    });
+
+    const uploaded = await uploadRoutineFiles(fetchMock as unknown as typeof fetch, "folder-1", [
+      new File(["abc"], "plan-a.pdf", { type: "application/pdf" }),
+      new File(["abcd"], "plan-b.xlsx", {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      }),
+    ]);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/routines/folders/folder-1/files");
+    expect((fetchMock.mock.calls[0]?.[1] as RequestInit).method).toBe("POST");
+    const body = (fetchMock.mock.calls[0]?.[1] as RequestInit).body;
+    expect(body).toBeInstanceOf(FormData);
+    const formData = body as FormData;
+    const batchFiles = formData.getAll("files[]");
+    expect(batchFiles).toHaveLength(2);
+    expect((batchFiles[0] as File).name).toBe("plan-a.pdf");
+    expect((batchFiles[1] as File).name).toBe("plan-b.xlsx");
+
+    expect(uploaded).toHaveLength(2);
+    expect(uploaded[0]?.id).toBe("file-1");
+    expect(uploaded[1]?.id).toBe("file-2");
+  });
+
+  it("fetches preview binary from preview endpoint", async () => {
+    const expectedBuffer = new Uint8Array([80, 75, 3, 4]).buffer;
+    const fetchMock = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      arrayBuffer: async () => expectedBuffer,
+    });
+
+    const result = await fetchRoutinePreviewBinary(fetchMock as unknown as typeof fetch, "file-1");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/routines/files/file-1/preview",
+      expect.objectContaining({ method: "GET", cache: "no-store" })
+    );
+    expect(result).toBe(expectedBuffer);
+  });
+
+  it("propagates preview fetch API error message", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      json: async () => ({
+        success: false,
+        error: {
+          message: "No tenés permisos para acceder a este archivo",
+          code: "FORBIDDEN",
+        },
+      }),
+    });
+
+    await expect(fetchRoutinePreviewBinary(fetchMock as unknown as typeof fetch, "file-1")).rejects.toThrow(
+      "No tenés permisos para acceder a este archivo"
+    );
+  });
+
+  it("propagates upload API errors from batch endpoint", async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      json: async () => ({
+        success: false,
+        error: {
+          message: "Tipo de archivo no soportado. Solo se permiten pdf, xls y xlsx",
+          code: "VALIDATION_ERROR",
+        },
+      }),
+    });
+
+    await expect(
+      uploadRoutineFiles(fetchMock as unknown as typeof fetch, "folder-1", [
+        new File(["abc"], "plan.pdf", { type: "application/pdf" }),
+      ])
+    ).rejects.toThrow("Tipo de archivo no soportado. Solo se permiten pdf, xls y xlsx");
   });
 
   it("hides upload/delete/create-folder controls for student view", () => {

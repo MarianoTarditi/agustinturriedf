@@ -23,6 +23,17 @@ type PaymentDashboardRow = {
   daysToExpire: number;
 };
 
+export type RegisterPaymentInput = {
+  studentProfileId: string;
+  amountInCents: number;
+  paymentDate: string;
+};
+
+export type RegisterWarningPayload = RegisterPaymentInput & {
+  fullName: string;
+  daysToExpire: number;
+};
+
 type PaymentsDashboardData = {
   cards: {
     collectedCount: number;
@@ -122,18 +133,76 @@ export const mapDaysToExpireLabel = (daysToExpire: number) => {
 };
 
 export const mapRowStatusLabel = (
-  studentStatus: PaymentDashboardRow["studentStatus"],
+  _studentStatus: PaymentDashboardRow["studentStatus"],
   paymentStatus: PaymentDashboardRow["paymentStatus"]
 ) => {
   if (paymentStatus === "OVERDUE") {
-    return "Bloqueado por pago";
+    return "Vencido";
   }
 
-  if (studentStatus === "INACTIVE" || studentStatus === "BLOCKED") {
-    return "Suspendido";
+  if (paymentStatus === "DUE_SOON") {
+    return "Pronto a vencer";
   }
 
-  return "Activo";
+  return "Al día";
+};
+
+export const shouldShowEarlyPaymentWarning = (input: {
+  paymentStatus: "CURRENT" | "DUE_SOON" | "OVERDUE";
+  daysToExpire: number;
+}) => {
+  return input.paymentStatus === "CURRENT" && input.daysToExpire > 3;
+};
+
+export const buildRegisterWarningPayload = (
+  row: {
+    studentProfileId: string;
+    fullName: string;
+    paymentStatus: "CURRENT" | "DUE_SOON" | "OVERDUE";
+    daysToExpire: number;
+  } | null,
+  input: RegisterPaymentInput
+): RegisterWarningPayload | null => {
+  if (!row) {
+    return null;
+  }
+
+  if (
+    !shouldShowEarlyPaymentWarning({
+      paymentStatus: row.paymentStatus,
+      daysToExpire: row.daysToExpire,
+    })
+  ) {
+    return null;
+  }
+
+  return {
+    studentProfileId: input.studentProfileId,
+    amountInCents: input.amountInCents,
+    paymentDate: input.paymentDate,
+    fullName: row.fullName,
+    daysToExpire: row.daysToExpire,
+  };
+};
+
+export const runRegisterWarningDecision = async (
+  input: {
+    decision: "confirm" | "cancel";
+    warningPayload: RegisterWarningPayload | null;
+  },
+  submitRegisterPayment: (payload: RegisterPaymentInput) => Promise<void>
+) => {
+  if (input.decision !== "confirm" || !input.warningPayload) {
+    return false;
+  }
+
+  await submitRegisterPayment({
+    studentProfileId: input.warningPayload.studentProfileId,
+    amountInCents: input.warningPayload.amountInCents,
+    paymentDate: input.warningPayload.paymentDate,
+  });
+
+  return true;
 };
 
 export const buildInitials = (fullName: string) => {
@@ -184,11 +253,7 @@ export const fetchPaymentsDashboard = async (
 
 export const registerPaymentRuntime = async (
   fetchImpl: typeof fetch,
-  input: {
-    studentProfileId: string;
-    amountInCents: number;
-    paymentDate: string;
-  }
+  input: RegisterPaymentInput
 ) => {
   const response = await fetchImpl("/api/payments/register", {
     method: "POST",

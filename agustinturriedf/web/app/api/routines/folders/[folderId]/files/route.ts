@@ -1,7 +1,13 @@
 import { requireSession } from "@/features/auth/session";
 import { routinesService } from "@/features/routines/service";
 import { ApiError, apiSuccess, handleApiError } from "@/lib/http/api-response";
-import { routineFolderIdParamSchema, routineObservationsSchema, routineReplaceFileIdSchema } from "@/lib/validation/routines";
+import {
+  extractRoutineFileExtension,
+  isAllowedRoutineFileType,
+  routineFolderIdParamSchema,
+  routineObservationsSchema,
+  routineReplaceFileIdSchema,
+} from "@/lib/validation/routines";
 
 type RoutineFolderFilesRouteContext = {
   params: Promise<{
@@ -20,8 +26,7 @@ const resolveRoutineFolderId = async (context: RoutineFolderFilesRouteContext) =
   return parsedParams.data.folderId;
 };
 
-const resolveUploadPayload = async (request: Request) => {
-  const formData = await request.formData();
+const resolveUploadPayload = async (formData: FormData) => {
   const file = formData.get("file");
 
   if (!(file instanceof File)) {
@@ -71,11 +76,60 @@ const resolveUploadPayload = async (request: Request) => {
   };
 };
 
+const parseBatchUploadFile = async (file: File) => {
+  const extension = extractRoutineFileExtension(file.name);
+
+  if (!extension || !isAllowedRoutineFileType(extension)) {
+    throw new ApiError("Tipo de archivo no soportado. Solo se permiten pdf, xls y xlsx", 400, "VALIDATION_ERROR", {
+      fieldErrors: {
+        files: [`${file.name}: tipo de archivo no soportado`],
+      },
+    });
+  }
+
+  if (file.size <= 0) {
+    throw new ApiError("El archivo no puede estar vacío", 400, "VALIDATION_ERROR", {
+      fieldErrors: {
+        files: [`${file.name}: el archivo no puede estar vacío`],
+      },
+    });
+  }
+
+  return {
+    originalName: file.name,
+    sizeBytes: file.size,
+    content: Buffer.from(await file.arrayBuffer()),
+  };
+};
+
+const resolveBatchUploadPayload = async (formData: FormData) => {
+  const filesInput = formData.getAll("files[]");
+  const files = filesInput.filter((entry): entry is File => entry instanceof File);
+
+  if (files.length === 0) {
+    return null;
+  }
+
+  return Promise.all(files.map((file) => parseBatchUploadFile(file)));
+};
+
 export const POST = async (request: Request, context: RoutineFolderFilesRouteContext) => {
   try {
     const actor = await requireSession();
     const folderId = await resolveRoutineFolderId(context);
-    const payload = await resolveUploadPayload(request);
+    const formData = await request.formData();
+    const batchPayload = await resolveBatchUploadPayload(formData);
+
+    if (batchPayload && batchPayload.length > 0) {
+      const uploadedFiles = await routinesService.uploadFilesAppend(actor, {
+        folderId,
+        files: batchPayload,
+      });
+
+      return apiSuccess(uploadedFiles, { status: 201 });
+    }
+
+    const payload = await resolveUploadPayload(formData);
 
     const uploadedFile = await routinesService.uploadFile(actor, {
       folderId,

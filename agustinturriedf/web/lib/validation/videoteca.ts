@@ -11,10 +11,19 @@ export const VIDEOTECA_ALLOWED_EXTENSIONS = [
 
 export const VIDEOTECA_IMAGE_MAX_SIZE_BYTES = 10 * 1024 * 1024;
 export const VIDEOTECA_VIDEO_MAX_SIZE_BYTES = 200 * 1024 * 1024;
+export const VIDEOTECA_ALLOWED_IMAGE_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+export const VIDEOTECA_ALLOWED_VIDEO_MIME_TYPES = ["video/mp4", "video/quicktime", "video/webm"] as const;
+export const VIDEOTECA_ALLOWED_MIME_TYPES = [
+  ...VIDEOTECA_ALLOWED_IMAGE_MIME_TYPES,
+  ...VIDEOTECA_ALLOWED_VIDEO_MIME_TYPES,
+] as const;
 
 const allowedExtensionSet = new Set<string>(VIDEOTECA_ALLOWED_EXTENSIONS);
 const imageExtensionSet = new Set<string>(VIDEOTECA_ALLOWED_IMAGE_EXTENSIONS);
 const videoExtensionSet = new Set<string>(VIDEOTECA_ALLOWED_VIDEO_EXTENSIONS);
+const allowedMimeTypeSet = new Set<string>(VIDEOTECA_ALLOWED_MIME_TYPES);
+const imageMimeTypeSet = new Set<string>(VIDEOTECA_ALLOWED_IMAGE_MIME_TYPES);
+const videoMimeTypeSet = new Set<string>(VIDEOTECA_ALLOWED_VIDEO_MIME_TYPES);
 
 export const videotecaFileTypeSchema = z.enum(VIDEOTECA_ALLOWED_EXTENSIONS);
 export type VideotecaFileType = z.infer<typeof videotecaFileTypeSchema>;
@@ -23,6 +32,19 @@ export type VideotecaMediaType = "image" | "video";
 
 export const videotecaFolderIdParamSchema = z.object({
   folderId: requiredStringSchema.max(255),
+});
+
+export const videotecaFolderPayloadSchema = z.object({
+  name: requiredStringSchema.max(120, "El nombre no puede superar los 120 caracteres"),
+  parentId: requiredStringSchema.max(255).nullable().optional(),
+});
+
+export const videotecaFileIdParamSchema = z.object({
+  fileId: requiredStringSchema.max(255),
+});
+
+export const videotecaFileRenamePayloadSchema = z.object({
+  name: requiredStringSchema.max(255, "El nombre del archivo no puede superar los 255 caracteres"),
 });
 
 export const extractVideotecaExtension = (fileName: string): string | null => {
@@ -54,4 +76,16 @@ export const getVideotecaMediaType = (extension: VideotecaFileType): VideotecaMe
 
 export const getVideotecaMaxSizeByType = (mediaType: VideotecaMediaType) => {
   return mediaType === "image" ? VIDEOTECA_IMAGE_MAX_SIZE_BYTES : VIDEOTECA_VIDEO_MAX_SIZE_BYTES;
+};
+
+export const isAllowedVideotecaMimeType = (mimeType: string) => {
+  return allowedMimeTypeSet.has(mimeType.toLowerCase());
+};
+
+export const isVideotecaMimeCompatibleWithMediaType = (mimeType: string, mediaType: VideotecaMediaType) => {
+  const normalizedMimeType = mimeType.toLowerCase();
+
+  return mediaType === "image"
+    ? imageMimeTypeSet.has(normalizedMimeType)
+    : videoMimeTypeSet.has(normalizedMimeType);
 };

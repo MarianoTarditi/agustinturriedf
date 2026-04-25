@@ -14,11 +14,20 @@ import {
   fetchRoutineFolderDetail,
   getRoutineUiPermissions,
   loadRoutinesViewData,
+  uploadRoutineFiles,
   type RoutineFile,
   type RoutineFolder,
   type RoutinesViewData,
 } from "@/app/(private)/rutinas/runtime";
+import { FilePreviewModal } from "@/app/(private)/rutinas/file-preview-modal";
+import { RoutineUploadModal } from "@/app/(private)/rutinas/routine-upload-modal";
 import { RoutineFilesList, RoutineFolderSummaryCard, formatRoutineSize } from "@/app/(private)/rutinas/view-components";
+import {
+  ROUTINE_FILES_PAGE_SIZE,
+  clampRoutineFilesPage,
+  getRoutineFilePage,
+  getRoutineFilesTotalPages,
+} from "@/app/(private)/rutinas/folder-detail-pagination";
 
 export default function RutinaFolderDetailPage() {
   const routeParams = useParams<{ folderId: string }>();
@@ -28,9 +37,13 @@ export default function RutinaFolderDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadingError, setLoadingError] = useState<string | null>(null);
   const [activeDeleteFile, setActiveDeleteFile] = useState<RoutineFile | null>(null);
+  const [activePreviewFile, setActivePreviewFile] = useState<RoutineFile | null>(null);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const [isDeletingFile, setIsDeletingFile] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [fileActionSuccess, setFileActionSuccess] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const isStudentView = viewData?.role === "STUDENT";
   const routinePermissions = getRoutineUiPermissions(viewData);
@@ -73,6 +86,17 @@ export default function RutinaFolderDetailPage() {
   }, [folderId]);
 
   const files = useMemo(() => folder?.files ?? [], [folder]);
+  const pagination = useMemo(() => getRoutineFilePage(files, currentPage, ROUTINE_FILES_PAGE_SIZE), [files, currentPage]);
+  const hasPrevPage = pagination.currentPage > 1;
+  const hasNextPage = pagination.currentPage < pagination.totalPages;
+
+  useEffect(() => {
+    setCurrentPage((page) => clampRoutineFilesPage(page, getRoutineFilesTotalPages(files.length, ROUTINE_FILES_PAGE_SIZE)));
+  }, [files.length]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [folderId]);
 
   const refreshFolder = async () => {
     if (!folderId) return;
@@ -104,6 +128,54 @@ export default function RutinaFolderDetailPage() {
     }
   };
 
+  const handlePrevPage = () => {
+    setCurrentPage((page) => Math.max(1, page - 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((page) => Math.min(page + 1, pagination.totalPages));
+  };
+
+  const handleUploadFiles = async (filesToUpload: File[]) => {
+    if (!folderId || isUploadingFiles) return;
+
+    try {
+      setIsUploadingFiles(true);
+      setDeleteError(null);
+      setFileActionSuccess(null);
+
+      const uploadedFiles = await uploadRoutineFiles(fetch, folderId, filesToUpload);
+
+      if (uploadedFiles.length > 0) {
+        setFolder((current) => {
+          if (!current) return current;
+
+          const existingById = new Map(current.files.map((file) => [file.id, file]));
+          uploadedFiles.forEach((file) => {
+            existingById.set(file.id, file);
+          });
+
+          return {
+            ...current,
+            files: Array.from(existingById.values()),
+            fileCount: existingById.size,
+          };
+        });
+      }
+
+      setIsUploadModalOpen(false);
+      setFileActionSuccess(
+        uploadedFiles.length === 1
+          ? "Archivo subido correctamente."
+          : `${uploadedFiles.length} archivos subidos correctamente.`
+      );
+    } catch (error) {
+      setDeleteError(error instanceof Error ? error.message : "No se pudieron subir los archivos.");
+    } finally {
+      setIsUploadingFiles(false);
+    }
+  };
+
   return (
     <section className={styles.page}>
       <PrivateBreadcrumb current="Detalle de Rutinas" />
@@ -118,14 +190,31 @@ export default function RutinaFolderDetailPage() {
 
         {!isLoading && !loadingError && folder ? (
           <>
-            <Link href="/rutinas" className={styles.backToRoutinesLink}>
-              <MaterialSymbol name="arrow_back" className={styles.backToRoutinesIcon} weight={500} opticalSize={20} />
-              Volver a rutinas
-            </Link>
-
             <section className={styles.libraryColumn}>
-              <header className={styles.libraryHeader}>
-                <h2>{folder.displayName}</h2>
+              <header className={styles.detailHeaderRow}>
+                <div className={styles.detailHeaderMain}>
+                  <Link href="/rutinas" className={styles.detailBackButton}>
+                    <MaterialSymbol name="arrow_back" className={styles.detailBackIcon} weight={500} opticalSize={18} />
+                    Volver a rutinas
+                  </Link>
+                </div>
+
+                <div className={styles.detailHeaderActions}>
+                  {routinePermissions.canUploadFiles ? (
+                    <button
+                      type="button"
+                      className={styles.detailHeaderUploadButton}
+                      onClick={() => {
+                        setDeleteError(null);
+                        setFileActionSuccess(null);
+                        setIsUploadModalOpen(true);
+                      }}
+                    >
+                      <MaterialSymbol name="upload_file" className={styles.detailHeaderUploadButtonIcon} fill={1} weight={500} opticalSize={20} />
+                      Subir archivo
+                    </button>
+                  ) : null}
+                </div>
               </header>
 
               <RoutineFolderSummaryCard folder={folder} />
@@ -134,8 +223,13 @@ export default function RutinaFolderDetailPage() {
               {deleteError ? <p className={styles.feedbackError}>{deleteError}</p> : null}
 
               <RoutineFilesList
-                files={files}
+                files={pagination.visibleFiles}
                 canDeleteFiles={routinePermissions.canDeleteFiles}
+                onPreview={(file) => {
+                  setDeleteError(null);
+                  setFileActionSuccess(null);
+                  setActivePreviewFile(file);
+                }}
                 onDelete={(file) => {
                   setDeleteError(null);
                   setActiveDeleteFile(file);
@@ -144,6 +238,33 @@ export default function RutinaFolderDetailPage() {
                   isStudentView ? "Todavía no tenés rutinas cargadas." : "Esta carpeta todavía no tiene archivos."
                 }
               />
+
+              {pagination.totalPages > 1 ? (
+                <footer className={styles.detailPagination} aria-label="Paginación de archivos de rutina">
+                  <p className={styles.detailPaginationStatus}>
+                    Página {pagination.currentPage} de {pagination.totalPages}
+                  </p>
+
+                  <div className={styles.detailPaginationControls}>
+                    <button
+                      type="button"
+                      className={styles.detailPaginationButton}
+                      onClick={handlePrevPage}
+                      disabled={!hasPrevPage}
+                    >
+                      Anterior
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.detailPaginationButton}
+                      onClick={handleNextPage}
+                      disabled={!hasNextPage}
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                </footer>
+              ) : null}
             </section>
           </>
         ) : null}
@@ -179,6 +300,26 @@ export default function RutinaFolderDetailPage() {
               </em>
             </>
           }
+        />
+      ) : null}
+
+      {activePreviewFile ? (
+        <FilePreviewModal
+          file={activePreviewFile}
+          onClose={() => {
+            setActivePreviewFile(null);
+          }}
+        />
+      ) : null}
+
+      {isUploadModalOpen && routinePermissions.canUploadFiles ? (
+        <RoutineUploadModal
+          isSubmitting={isUploadingFiles}
+          onClose={() => {
+            if (isUploadingFiles) return;
+            setIsUploadModalOpen(false);
+          }}
+          onSubmit={handleUploadFiles}
         />
       ) : null}
     </section>

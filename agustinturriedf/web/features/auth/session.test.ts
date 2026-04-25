@@ -77,6 +77,7 @@ describe("requireSession", () => {
     findUniqueMock.mockResolvedValue({
       id: "student-2",
       role: "STUDENT",
+      passwordUpdatedAt: new Date("2026-02-01T10:00:00.000Z"),
       studentProfile: {
         id: "profile-2",
         trainerId: "trainer-1",
@@ -92,6 +93,7 @@ describe("requireSession", () => {
     expect(result).toMatchObject({
       id: "student-2",
       paymentStatus: "CURRENT",
+      passwordUpdatedAt: "2026-02-01T10:00:00.000Z",
       accessBlockReason: undefined,
     });
   });
