@@ -5,7 +5,7 @@ export default function ResetPasswordPage() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    console.log('Reset password request:', { email });
+    // TODO: implement reset password API call
   };
 
   return (

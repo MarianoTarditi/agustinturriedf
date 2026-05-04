@@ -7,7 +7,22 @@ export default function LoginPage() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    console.log('Login attempt:', { email, password });
+
+    // Dispatch global loader event for Astro
+    window.dispatchEvent(
+      new CustomEvent('global-loader:show', {
+        detail: { id: 'astro-login', text: 'Iniciando sesión...' },
+      })
+    );
+
+    // Simulate async login - in real implementation this would call an API
+    setTimeout(() => {
+      window.dispatchEvent(
+        new CustomEvent('global-loader:hide', {
+          detail: { id: 'astro-login' },
+        })
+      );
+    }, 1500);
   };
 
   return (

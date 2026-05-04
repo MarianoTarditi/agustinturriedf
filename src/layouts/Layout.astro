@@ -1,5 +1,7 @@
 ---
 import '../styles/global.css';
+import AstroGlobalLoader from '../components/react/global-loader.tsx';
+import AstroToastIsland from '../components/react/toast-container.tsx';
 
 interface Props {
   title: string;
@@ -41,5 +43,7 @@ const { title } = Astro.props;
   </head>
   <body class="bg-background text-on-surface font-body selection:bg-primary-container selection:text-white">
     <slot />
+    <AstroGlobalLoader client:load />
+    <AstroToastIsland client:load />
   </body>
 </html>
