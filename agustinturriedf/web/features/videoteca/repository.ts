@@ -8,6 +8,7 @@ type CreateVideotecaFileRepositoryInput = {
   extension: string;
   mediaType: "image" | "video";
   relativePath: string;
+  thumbnailPath?: string;
   sizeBytes: number;
   orderIndex: number;
 };
@@ -15,6 +16,10 @@ type CreateVideotecaFileRepositoryInput = {
 type UpdateVideotecaFileMetadataRepositoryInput = {
   originalName: string;
   normalizedName: string;
+};
+
+type UpdateVideotecaFileThumbnailRepositoryInput = {
+  thumbnailPath: string;
 };
 
 const videotecaFolderSummarySelect = {
@@ -30,6 +35,11 @@ const videotecaFolderSummarySelect = {
 } satisfies Prisma.VideotecaFolderSelect;
 
 const videotecaFolderParentSelect = {
+  id: true,
+  name: true,
+} satisfies Prisma.VideotecaFolderSelect;
+
+const videotecaFolderBreadcrumbSelect = {
   id: true,
   name: true,
 } satisfies Prisma.VideotecaFolderSelect;
@@ -100,6 +110,32 @@ export class VideotecaRepository {
     });
   }
 
+  async getFolderAncestors(folderId: string): Promise<Array<{ id: string; name: string }>> {
+    const ancestors: Array<{ id: string; name: string }> = [];
+    let currentId: string | null = folderId;
+
+    while (currentId) {
+      const folder: { id: string; name: string; parentId: string | null } | null = await prisma.videotecaFolder.findUnique({
+        where: { id: currentId },
+        select: {
+          id: true,
+          name: true,
+          parentId: true,
+        } as Prisma.VideotecaFolderSelect,
+      });
+
+      if (!folder) break;
+
+      if (folder.id !== folderId) {
+        ancestors.unshift({ id: folder.id, name: folder.name });
+      }
+
+      currentId = folder.parentId;
+    }
+
+    return ancestors;
+  }
+
   async findFolderSummaryById(folderId: string) {
     return prisma.videotecaFolder.findUnique({
       where: { id: folderId },
@@ -127,16 +163,29 @@ export class VideotecaRepository {
         extension: input.extension,
         mediaType: input.mediaType,
         relativePath: input.relativePath,
+        thumbnailPath: input.thumbnailPath,
         sizeBytes: input.sizeBytes,
         orderIndex: input.orderIndex,
       },
     });
   }
 
-  async updateFileStorage(fileId: string, relativePath: string) {
+  async updateFileStorage(fileId: string, relativePath: string, thumbnailPath?: string) {
     return prisma.videotecaFile.update({
       where: { id: fileId },
-      data: { relativePath },
+      data: {
+        relativePath,
+        ...(thumbnailPath ? { thumbnailPath } : {}),
+      },
+    });
+  }
+
+  async updateFileThumbnail(fileId: string, input: UpdateVideotecaFileThumbnailRepositoryInput) {
+    return prisma.videotecaFile.update({
+      where: { id: fileId },
+      data: {
+        thumbnailPath: input.thumbnailPath,
+      },
     });
   }
 

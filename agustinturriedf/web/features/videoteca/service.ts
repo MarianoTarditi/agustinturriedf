@@ -5,10 +5,14 @@ import { videotecaRepository } from "@/features/videoteca/repository";
 import {
   buildVideotecaRelativePath,
   buildVideotecaStorageFileName,
+  buildVideotecaThumbnailAbsolutePath,
+  buildVideotecaThumbnailRelativePath,
   ensureVideotecaFolderDirectory,
+  generateThumbnailForFile,
   getVideotecaAbsolutePath,
   removeVideotecaFolderDirectory,
   removeVideotecaFileFromDisk,
+  removeVideotecaThumbnailFromDisk,
   VideotecaStorageSizeError,
   writeVideotecaFileStreamToDisk,
 } from "@/features/videoteca/storage";
@@ -44,6 +48,8 @@ type VideotecaFileDTO = {
   updatedAt: string;
   sizeBytes: number;
   orderIndex: number;
+  viewUrl: string;
+  thumbnailUrl: string | null;
 };
 
 type VideotecaFolderDTO = {
@@ -56,6 +62,7 @@ type VideotecaFolderDTO = {
   parent: VideotecaFolderParentSummaryDTO | null;
   childFolders: VideotecaFolderSummaryDTO[];
   files: VideotecaFileDTO[];
+  breadcrumb: Array<{ id: string; name: string }>;
 };
 
 type VideotecaFolderSummaryDTO = {
@@ -242,6 +249,7 @@ const mapVideotecaFile = (file: {
   sizeBytes: number;
   orderIndex: number;
   updatedAt: Date;
+  thumbnailPath?: string | null;
 }): VideotecaFileDTO => ({
   id: file.id,
   folderId: file.folderId,
@@ -252,37 +260,42 @@ const mapVideotecaFile = (file: {
   updatedAt: formatDateEsAr(file.updatedAt),
   sizeBytes: file.sizeBytes,
   orderIndex: file.orderIndex,
+  viewUrl: `/api/videoteca/files/${file.id}/view`,
+  thumbnailUrl: file.thumbnailPath ? `/api/videoteca/files/${file.id}/thumbnail` : null,
 });
 
-const mapVideotecaFolder = (folder: {
-  id: string;
-  name: string;
-  parentId: string | null;
-  updatedAt: Date;
-  parent: {
-    id: string;
-    name: string;
-  } | null;
-  children: Array<{
+const mapVideotecaFolder = (
+  folder: {
     id: string;
     name: string;
     parentId: string | null;
     updatedAt: Date;
-    _count: {
-      files: number;
-    };
-  }>;
-  files: Array<{
-    id: string;
-    folderId: string;
-    originalName: string;
-    mediaType: string;
-    extension: string;
-    sizeBytes: number;
-    orderIndex: number;
-    updatedAt: Date;
-  }>;
-}): VideotecaFolderDTO => ({
+    parent: {
+      id: string;
+      name: string;
+    } | null;
+    children: Array<{
+      id: string;
+      name: string;
+      parentId: string | null;
+      updatedAt: Date;
+      _count: {
+        files: number;
+      };
+    }>;
+    files: Array<{
+      id: string;
+      folderId: string;
+      originalName: string;
+      mediaType: string;
+      extension: string;
+      sizeBytes: number;
+      orderIndex: number;
+      updatedAt: Date;
+    }>;
+  },
+  breadcrumb: Array<{ id: string; name: string }>,
+): VideotecaFolderDTO => ({
   id: folder.id,
   name: folder.name,
   parentId: folder.parentId,
@@ -292,6 +305,7 @@ const mapVideotecaFolder = (folder: {
   parent: folder.parent ? { id: folder.parent.id, name: folder.parent.name } : null,
   childFolders: folder.children.map(mapVideotecaFolderSummary),
   files: folder.files.map(mapVideotecaFile),
+  breadcrumb,
 });
 
 const mapVideotecaFolderSummary = (folder: {
@@ -397,7 +411,9 @@ export class VideotecaService {
       throw new ApiError("Carpeta de videoteca no encontrada", 404, "NOT_FOUND");
     }
 
-    return mapVideotecaFolder(folder);
+    const ancestors = await videotecaRepository.getFolderAncestors(folderId);
+
+    return mapVideotecaFolder(folder, ancestors);
   }
 
   async uploadFiles(actor: AuthenticatedUser, input: UploadVideotecaBatchInput) {
@@ -489,7 +505,31 @@ export class VideotecaService {
           currentRecord.relativePath = relativePath;
         }
 
-        uploadedFiles.push(mapVideotecaFile(persistedFile));
+        let thumbnailPath: string | null = null;
+
+        try {
+          const thumbnailAbsolutePath = buildVideotecaThumbnailAbsolutePath(folder.id, createdFile.id);
+          const generatedThumbnailPath = await generateThumbnailForFile(
+            absolutePath,
+            thumbnailAbsolutePath,
+            parsed.mediaType
+          );
+
+          if (generatedThumbnailPath) {
+            thumbnailPath = buildVideotecaThumbnailRelativePath(folder.id, createdFile.id);
+            await videotecaRepository.updateFileThumbnail(createdFile.id, { thumbnailPath });
+          }
+        } catch {
+          // Thumbnail generation failure is non-fatal — log and continue
+          console.warn(`[videoteca] Thumbnail generation failed for file ${createdFile.id}: continuing without thumbnail`);
+        }
+
+        const fileForMap = {
+          ...persistedFile,
+          thumbnailPath,
+        };
+
+        uploadedFiles.push(mapVideotecaFile(fileForMap));
       }
 
       await videotecaRepository.touchFolder(folder.id);
@@ -562,6 +602,7 @@ export class VideotecaService {
 
     const absolutePath = getVideotecaAbsolutePath(file.relativePath);
     await removeVideotecaFileFromDisk(absolutePath).catch(() => null);
+    await removeVideotecaThumbnailFromDisk(file.folderId, fileId).catch(() => null);
 
     await videotecaRepository.touchFolder(file.folderId);
 
@@ -581,6 +622,16 @@ export class VideotecaService {
       ...mapVideotecaFile(file),
       path: file.relativePath,
     };
+  }
+
+  async getFileRaw(fileId: string) {
+    const file = await videotecaRepository.findFileById(fileId);
+
+    if (!file) {
+      throw new ApiError("Archivo de videoteca no encontrado", 404, "NOT_FOUND");
+    }
+
+    return file;
   }
 }
 

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "@/app/(private)/videoteca/videoteca.module.css";
+import { useLoading } from "@/components/use-loading";
 import { DestructiveConfirmationModal } from "@/components/destructive-confirmation-modal";
 import { MaterialSymbol } from "@/components/material-symbol";
 import { PrivateBreadcrumb } from "@/components/private-breadcrumb";
@@ -14,6 +15,13 @@ import {
   normalizeFolderName,
   renameVideotecaFolder,
 } from "@/app/(private)/videoteca/videoteca.service";
+import { useToast } from "@/components/use-toast";
+import {
+  VIDEOTECA_PAGE_SIZE,
+  clampVideotecaPage,
+  getVideotecaPage,
+  getVideotecaTotalPages,
+} from "@/app/(private)/videoteca/videoteca-pagination";
 
 type FolderCard = {
   id: string;
@@ -31,6 +39,8 @@ type FolderContextMenuState = {
 
 export default function VideotecaPage() {
   const router = useRouter();
+  const { showLoader, hideLoader } = useLoading();
+  const { showToast } = useToast();
   const [folders, setFolders] = useState<FolderCard[]>([]);
   const [isFoldersLoading, setIsFoldersLoading] = useState(true);
   const [foldersLoadError, setFoldersLoadError] = useState<string | null>(null);
@@ -47,6 +57,8 @@ export default function VideotecaPage() {
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [isRenamingFolder, setIsRenamingFolder] = useState(false);
   const [isDeletingFolder, setIsDeletingFolder] = useState(false);
+  const [sortCriterion, setSortCriterion] = useState<"Más recientes" | "A-Z" | "Más archivos" | "Menos archivos">("Más recientes");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const editingFolder = editingFolderId
     ? (folders.find((folder) => folder.id === editingFolderId) ?? null)
@@ -55,6 +67,36 @@ export default function VideotecaPage() {
   const activeContextMenuFolder = folderContextMenu
     ? (folders.find((folder) => folder.id === folderContextMenu.folderId) ?? null)
     : null;
+
+  const sortedFolders = useMemo(() => {
+    return [...folders].sort((a, b) => {
+      switch (sortCriterion) {
+        case "Más recientes":
+          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+        case "A-Z":
+          return a.name.localeCompare(b.name);
+        case "Más archivos":
+          return b.fileCount - a.fileCount;
+        case "Menos archivos":
+          return a.fileCount - b.fileCount;
+      }
+    });
+  }, [folders, sortCriterion]);
+
+  const folderIds = useMemo(() => sortedFolders.map((f) => f.id), [sortedFolders]);
+
+  const pagination = useMemo(
+    () => getVideotecaPage(folderIds, currentPage, VIDEOTECA_PAGE_SIZE),
+    [folderIds, currentPage],
+  );
+
+  const visibleFolders = useMemo(
+    () => sortedFolders.filter((folder) => pagination.visibleFolders.includes(folder.id)),
+    [sortedFolders, pagination.visibleFolders],
+  );
+
+  const hasPrevPage = pagination.currentPage > 1;
+  const hasNextPage = pagination.currentPage < pagination.totalPages;
 
   const closeFolderContextMenu = () => {
     setFolderContextMenu(null);
@@ -112,6 +154,8 @@ export default function VideotecaPage() {
     setIsFoldersLoading(true);
     setFoldersLoadError(null);
 
+    showLoader("videoteca-folders-load", { text: "Cargando videoteca..." });
+
     void fetchVideotecaFolders(fetch)
       .then((backendFolders) => {
         if (!isMounted) return;
@@ -121,14 +165,11 @@ export default function VideotecaPage() {
         if (!isMounted) return;
 
         setFolders([]);
-        setFoldersLoadError(
-          error instanceof Error
-            ? error.message
-            : "No se pudieron cargar las carpetas de videoteca.",
-        );
+        showToast('error', error instanceof Error ? error.message : "No se pudieron cargar las carpetas de videoteca.");
       })
       .finally(() => {
         if (!isMounted) return;
+        hideLoader("videoteca-folders-load");
         setIsFoldersLoading(false);
       });
 
@@ -184,6 +225,16 @@ export default function VideotecaPage() {
     }
   }, [folders, folderContextMenu]);
 
+  useEffect(() => {
+    setCurrentPage((page) =>
+      clampVideotecaPage(page, getVideotecaTotalPages(sortedFolders.length, VIDEOTECA_PAGE_SIZE)),
+    );
+  }, [sortedFolders.length]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sortCriterion]);
+
   const openEditModal = (folder: FolderCard) => {
     closeFolderContextMenu();
     setFolderMutationError(null);
@@ -203,9 +254,9 @@ export default function VideotecaPage() {
     if (!editingFolderId || !nextName) return;
 
     setFolderMutationError(null);
-    setIsRenamingFolder(true);
 
     try {
+      showLoader("videoteca-folder-rename", { text: "Renombrando carpeta..." });
       const updatedFolder = await renameVideotecaFolder(fetch, editingFolderId, {
         name: nextName,
       });
@@ -216,13 +267,12 @@ export default function VideotecaPage() {
         ),
       );
 
+      showToast('success', 'Carpeta renombrada correctamente.');
       closeEditModal(true);
-    } catch (error) {
-      setFolderMutationError(
-        error instanceof Error ? error.message : "No se pudo editar la carpeta.",
-      );
+} catch (error) {
+      showToast('error', error instanceof Error ? error.message : "No se pudo editar la carpeta.");
     } finally {
-      setIsRenamingFolder(false);
+      hideLoader("videoteca-folder-rename");
     }
   };
 
@@ -242,20 +292,19 @@ export default function VideotecaPage() {
     if (!activeDeleteFolder) return;
 
     setFolderMutationError(null);
-    setIsDeletingFolder(true);
 
     try {
+      showLoader("videoteca-folder-delete", { text: "Eliminando carpeta..." });
       await deleteVideotecaFolder(fetch, activeDeleteFolder.id);
       setFolders((currentFolders) =>
         currentFolders.filter((folder) => folder.id !== activeDeleteFolder.id),
       );
+      showToast('success', 'Carpeta eliminada correctamente.');
       closeDeleteModal(true);
-    } catch (error) {
-      setFolderMutationError(
-        error instanceof Error ? error.message : "No se pudo eliminar la carpeta.",
-      );
+} catch (error) {
+      showToast('error', error instanceof Error ? error.message : "No se pudo eliminar la carpeta.");
     } finally {
-      setIsDeletingFolder(false);
+      hideLoader("videoteca-folder-delete");
     }
   };
 
@@ -278,19 +327,18 @@ export default function VideotecaPage() {
     if (!folderName) return;
 
     setFolderMutationError(null);
-    setIsCreatingFolder(true);
 
     try {
+      showLoader("videoteca-folder-create", { text: "Creando carpeta..." });
       const createdFolder = await createVideotecaFolder(fetch, { name: folderName });
 
       setFolders((currentFolders) => [createdFolder, ...currentFolders]);
+      showToast('success', 'Carpeta creada correctamente.');
       closeCreateModal(true);
-    } catch (error) {
-      setFolderMutationError(
-        error instanceof Error ? error.message : "No se pudo crear la carpeta.",
-      );
+} catch (error) {
+      showToast('error', error instanceof Error ? error.message : "No se pudo crear la carpeta.");
     } finally {
-      setIsCreatingFolder(false);
+      hideLoader("videoteca-folder-create");
     }
   };
 
@@ -313,12 +361,18 @@ export default function VideotecaPage() {
             <div className={styles.filtersWrap}>
               <label className={styles.sortWrap}>
                 <select
-                  defaultValue="Más recientes"
-                  aria-label="Ordenar carpeta"
+                  value={sortCriterion}
+                  onChange={(event) =>
+                    setSortCriterion(
+                      event.target.value as typeof sortCriterion,
+                    )
+                  }
+                  aria-label="Ordenar carpetas"
                 >
                   <option>Más recientes</option>
                   <option>A-Z</option>
                   <option>Más archivos</option>
+                  <option>Menos archivos</option>
                 </select>
                 <MaterialSymbol
                   name="expand_more"
@@ -327,16 +381,6 @@ export default function VideotecaPage() {
                   opticalSize={18}
                 />
               </label>
-
-              <button type="button" className={styles.filterButton}>
-                <MaterialSymbol
-                  name="filter_alt"
-                  className={styles.filterIcon}
-                  weight={500}
-                  opticalSize={18}
-                />
-                Filtrar
-              </button>
             </div>
 
             <div
@@ -442,8 +486,8 @@ export default function VideotecaPage() {
               </button>
             </div>
           ) : (
-            <>
-              {folders.map((folder) => (
+            <div className={styles.folderGridInner}>
+              {visibleFolders.map((folder) => (
                 <article
                   key={folder.id}
                   className={styles.folderCard}
@@ -452,7 +496,7 @@ export default function VideotecaPage() {
                     event.preventDefault();
                     openFolderContextMenu(folder.id, event.clientX, event.clientY);
                   }}
-                  onDoubleClick={() => openFolder(folder.id)}
+                  onClick={() => openFolder(folder.id)}
                 >
                   <div className={styles.cardHead}>
                     <span className={styles.folderIconWrap}>
@@ -491,7 +535,6 @@ export default function VideotecaPage() {
                       <button
                         type="button"
                         className={styles.folderNameButton}
-                        onClick={() => openFolder(folder.id)}
                         aria-label={`Abrir carpeta ${folder.name}`}
                       >
                         {folder.name}
@@ -521,24 +564,55 @@ export default function VideotecaPage() {
                 </article>
               ))}
 
-              <button
-                type="button"
-                className={styles.addCard}
-                onClick={openCreateModal}
-                aria-label="Crear carpeta"
-              >
-                <span className={styles.addCardIconWrap}>
-                  <MaterialSymbol
-                    name="create_new_folder"
-                    className={styles.addCardIcon}
-                    weight={500}
-                    opticalSize={24}
-                  />
-                </span>
-                <p>Crear carpeta</p>
-              </button>
-            </>
+              {pagination.currentPage === 1 ? (
+                <button
+                  type="button"
+                  className={styles.addCard}
+                  onClick={openCreateModal}
+                  aria-label="Crear carpeta"
+                >
+                  <span className={styles.addCardIconWrap}>
+                    <MaterialSymbol
+                      name="create_new_folder"
+                      className={styles.addCardIcon}
+                      weight={500}
+                      opticalSize={24}
+                    />
+                  </span>
+                  <p>Crear carpeta</p>
+                </button>
+              ) : null}
+            </div>
           )}
+
+          {folders.length > VIDEOTECA_PAGE_SIZE ? (
+            <div className={styles.paginationWrap}>
+              <footer className={styles.paginationFooter} aria-label="Paginación de carpetas">
+                <p className={styles.paginationStatus}>
+                  PÁGINA {pagination.currentPage} DE {pagination.totalPages}
+                </p>
+
+                <div className={styles.paginationControls}>
+                  <button
+                    type="button"
+                    className={styles.paginationButton}
+                    onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                    disabled={!hasPrevPage}
+                  >
+                    Anterior
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.paginationButton}
+                    onClick={() => setCurrentPage((page) => Math.min(pagination.totalPages, page + 1))}
+                    disabled={!hasNextPage}
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              </footer>
+            </div>
+          ) : null}
         </section>
 
         <section className={styles.featuredSection}>
@@ -711,8 +785,7 @@ export default function VideotecaPage() {
               <button
                 type="button"
                 className={styles.modalCancelGhostButton}
-                onClick={() => closeEditModal()}
-                disabled={isRenamingFolder}
+                onClick={() => closeCreateModal()}
               >
                 Cancelar
               </button>
@@ -721,7 +794,7 @@ export default function VideotecaPage() {
                 type="button"
                 className={styles.modalConfirmButton}
                 onClick={handleConfirmEdit}
-                disabled={!normalizeFolderName(draftFolderName) || isRenamingFolder}
+                disabled={!normalizeFolderName(draftFolderName)}
               >
                 <MaterialSymbol
                   name="save"
@@ -730,7 +803,7 @@ export default function VideotecaPage() {
                   weight={500}
                   opticalSize={18}
                 />
-                {isRenamingFolder ? "Guardando..." : "Guardar cambios"}
+                Guardar cambios
               </button>
             </footer>
           </div>
@@ -792,7 +865,6 @@ export default function VideotecaPage() {
                 type="button"
                 className={styles.modalCancelGhostButton}
                 onClick={() => closeCreateModal()}
-                disabled={isCreatingFolder}
               >
                 Cancelar
               </button>
@@ -801,7 +873,7 @@ export default function VideotecaPage() {
                 type="button"
                 className={styles.modalConfirmButton}
                 onClick={handleConfirmCreate}
-                disabled={!normalizeFolderName(newFolderName) || isCreatingFolder}
+                disabled={!normalizeFolderName(newFolderName)}
               >
                 <MaterialSymbol
                   name="create_new_folder"
@@ -810,7 +882,7 @@ export default function VideotecaPage() {
                   weight={500}
                   opticalSize={18}
                 />
-                {isCreatingFolder ? "Creando..." : "Crear carpeta"}
+                Crear carpeta
               </button>
             </footer>
           </div>
@@ -818,7 +890,7 @@ export default function VideotecaPage() {
       ) : null}
 
       {activeDeleteFolder ? (
-        <DestructiveConfirmationModal
+      <DestructiveConfirmationModal
           ariaLabel={`Eliminar carpeta ${activeDeleteFolder.name}`}
           title="¿Eliminar carpeta?"
           description="Esta acción elimina la carpeta de esta videoteca y no se puede deshacer desde esta vista."
@@ -826,7 +898,7 @@ export default function VideotecaPage() {
           density="compact"
           confirmLabel="Eliminar carpeta"
           errorMessage={folderMutationError}
-          isPending={isDeletingFolder}
+          isPending={false}
           pendingConfirmLabel="Eliminando..."
           onConfirm={handleConfirmDelete}
           onCancel={closeDeleteModal}
@@ -839,7 +911,6 @@ export default function VideotecaPage() {
 
               <em>
                 {activeDeleteFolder.fileCount} archivos
-              
               </em>
             </>
           }

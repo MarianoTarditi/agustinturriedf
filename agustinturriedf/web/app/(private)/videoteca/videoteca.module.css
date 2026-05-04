@@ -188,6 +188,10 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.folderGridInner {
+  display: contents;
+}
+
 .folderGridState {
   grid-column: 1 / -1;
   min-height: 14rem;
@@ -325,6 +329,7 @@
   border-color: rgba(76, 67, 83, 0.35);
   box-shadow: 0 20px 40px rgba(123, 44, 191, 0.1);
   transform: translateY(-2px);
+  cursor: pointer;
 }
 
 .folderCard:hover::after {
@@ -981,6 +986,56 @@
   filter: blur(84px);
 }
 
+.paginationWrap {
+  width: 100%;
+  padding-top: 0.15rem;
+}
+
+.paginationFooter {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.paginationStatus {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.62rem;
+  color: rgba(207, 194, 213, 0.52);
+  font-weight: 700;
+}
+
+.paginationControls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+}
+
+.paginationButton {
+  border: 0;
+  background: transparent;
+  color: rgba(207, 194, 213, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.62rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.paginationButton:hover {
+  color: var(--primary);
+}
+
+.paginationButton:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
 @media (max-width: 1200px) {
   .folderGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1005,6 +1060,7 @@
   .folderGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
 }
 
 @media (max-width: 640px) {
@@ -1020,6 +1076,19 @@
 
   .folderGrid {
     grid-template-columns: 1fr;
+  }
+
+  .paginationFooter {
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .paginationStatus {
+    font-size: 0.58rem;
+  }
+
+  .paginationControls {
+    gap: 0.6rem;
   }
 
   .controlsRow {

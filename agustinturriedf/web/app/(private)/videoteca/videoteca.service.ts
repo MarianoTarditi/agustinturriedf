@@ -57,12 +57,15 @@ export type VideotecaFile = {
   sizeLabel: string;
   sizeBytes: number;
   orderIndex: number;
+  viewUrl: string;
+  thumbnailUrl: string | null;
 };
 
 export type VideotecaFolderDetail = VideotecaFolder & {
   parent: VideotecaFolderParentSummary | null;
   childFolders: VideotecaFolder[];
   files: VideotecaFile[];
+  breadcrumb: Array<{ id: string; name: string }>;
 };
 
 export type UploadProgressInput = {
@@ -107,9 +110,13 @@ const mapApiFileToVideotecaFile = (file: {
   updatedAt: string;
   sizeBytes: number;
   orderIndex: number;
+  viewUrl?: string;
+  thumbnailUrl?: string | null;
 }): VideotecaFile => ({
   ...file,
   sizeLabel: formatVideotecaSize(file.sizeBytes),
+  viewUrl: file.viewUrl ?? `/api/videoteca/files/${file.id}/view`,
+  thumbnailUrl: file.thumbnailUrl ?? null,
 });
 
 export const fetchVideotecaFolderDetail = async (
@@ -135,6 +142,10 @@ export const fetchVideotecaFolderDetail = async (
       id: string;
       name: string;
     } | null;
+    breadcrumb: Array<{
+      id: string;
+      name: string;
+    }>;
     childFolders: Array<{
       id: string;
       name: string;
@@ -152,6 +163,7 @@ export const fetchVideotecaFolderDetail = async (
       updatedAt: string;
       sizeBytes: number;
       orderIndex: number;
+      viewUrl?: string;
     }>;
   }>(response);
 

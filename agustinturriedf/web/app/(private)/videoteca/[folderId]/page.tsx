@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import styles from "@/app/(private)/videoteca/[folderId]/folder-detail.module.css";
+import { useLoading } from "@/components/use-loading";
 import {
   createVideotecaFolder,
   deleteVideotecaFolder,
@@ -25,6 +26,7 @@ import { DestructiveConfirmationModal } from "@/components/destructive-confirmat
 import { MaterialSymbol } from "@/components/material-symbol";
 import { PrivateBreadcrumb } from "@/components/private-breadcrumb";
 import { PrivateTopbar } from "@/components/private-topbar";
+import { useToast } from "@/components/use-toast";
 
 function getFileVisual(type: VideotecaFile["type"]) {
   if (type === "image") {
@@ -53,6 +55,8 @@ function inferMediaTypeFromFile(file: File): VideotecaFile["type"] {
 export default function VideotecaFolderPage() {
   const router = useRouter();
   const routeParams = useParams<{ folderId: string }>();
+  const { showLoader, hideLoader, updateProgress } = useLoading();
+  const { showToast } = useToast();
   const folderId = routeParams?.folderId ?? "";
   const [folder, setFolder] = useState<VideotecaFolderDetail | null>(null);
   const [childFolders, setChildFolders] = useState<VideotecaFolder[]>([]);
@@ -72,9 +76,6 @@ export default function VideotecaFolderPage() {
   const [isRenamingFile, setIsRenamingFile] = useState(false);
   const [isDeletingFile, setIsDeletingFile] = useState(false);
   const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
-  const [uploadFeedbackError, setUploadFeedbackError] = useState<string | null>(null);
-  const [uploadFeedbackSuccess, setUploadFeedbackSuccess] = useState<string | null>(null);
-  const [folderMutationError, setFolderMutationError] = useState<string | null>(null);
   const [folderContextMenu, setFolderContextMenu] = useState<{
     folderId: string;
     x: number;
@@ -104,6 +105,8 @@ export default function VideotecaFolderPage() {
     }>
   >([]);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState<"recientes" | "az">("recientes");
 
   const editingFile = useMemo(
     () =>
@@ -155,6 +158,36 @@ export default function VideotecaFolderPage() {
 
   const isNotFoundError =
     loadingError?.toLocaleLowerCase("es-AR").includes("no encontrada") ?? false;
+
+  const filteredAndSortedFolders = useMemo(() => {
+    const q = searchQuery.trim().toLocaleLowerCase("es-AR");
+    const base = q ? childFolders.filter((f) => f.name.toLocaleLowerCase("es-AR").includes(q)) : childFolders;
+
+    if (sortOrder === "az") {
+      return [...base].sort((a, b) => a.name.localeCompare(b.name, "es-AR"));
+    }
+    return [...base].sort((a, b) => {
+      const dateA = new Date(a.updatedAt).getTime() || 0;
+      const dateB = new Date(b.updatedAt).getTime() || 0;
+      return dateB - dateA;
+    });
+  }, [childFolders, searchQuery, sortOrder]);
+
+  const filteredAndSortedFiles = useMemo(() => {
+    const q = searchQuery.trim().toLocaleLowerCase("es-AR");
+    let result = q ? files.filter((f) => f.name.toLocaleLowerCase("es-AR").includes(q)) : files;
+
+    if (sortOrder === "az") {
+      result = result.sort((a, b) => a.name.localeCompare(b.name, "es-AR"));
+    } else {
+      result = result.sort((a, b) => {
+        const dateA = new Date(a.updatedAt).getTime() || 0;
+        const dateB = new Date(b.updatedAt).getTime() || 0;
+        return dateB - dateA;
+      });
+    }
+    return result;
+  }, [files, searchQuery, sortOrder]);
 
   function closeFileContextMenu() {
     setFileContextMenu(null);
@@ -239,6 +272,8 @@ export default function VideotecaFolderPage() {
 
     let cancelled = false;
 
+    showLoader("videoteca-folder-contents-load", { text: "Cargando contenido..." });
+
     const loadFolder = async () => {
       try {
         setIsLoading(true);
@@ -261,6 +296,7 @@ export default function VideotecaFolderPage() {
         );
       } finally {
         if (!cancelled) {
+          hideLoader("videoteca-folder-contents-load");
           setIsLoading(false);
         }
       }
@@ -273,9 +309,6 @@ export default function VideotecaFolderPage() {
     setEditingFileId(null);
     setDraftFileName("");
     setActiveDeleteFileId(null);
-    setUploadFeedbackError(null);
-    setUploadFeedbackSuccess(null);
-    setFolderMutationError(null);
     setFolderContextMenu(null);
     setEditingFolderId(null);
     setDraftFolderName("");
@@ -402,15 +435,15 @@ export default function VideotecaFolderPage() {
 
   const selectedCount = selectedFileIds.length;
   const allSelected = files.length > 0 && selectedCount === files.length;
-  const backNavigation = folder?.parent
+  const hasParent = Boolean(folder?.parent);
+  const parentNavigation = folder?.parent
     ? {
         href: `/videoteca/${folder.parent.id}`,
         label: `Volver a ${folder.parent.name}`,
       }
-    : {
-        href: "/videoteca",
-        label: "Volver a videoteca",
-      };
+    : null;
+
+  const breadcrumbAncestors = folder?.breadcrumb ?? [];
 
   function toggleFileSelection(fileId: string) {
     setSelectedFileIds((prevSelectedIds) => {
@@ -456,9 +489,9 @@ export default function VideotecaFolderPage() {
     if (!editingFileId || !nextName || isRenamingFile) return;
 
     try {
-      setIsRenamingFile(true);
       setActionError(null);
 
+      showLoader("videoteca-file-rename", { text: "Renombrando archivo..." });
       const renamedFile = await renameVideotecaFile(fetch, editingFileId, { name: nextName });
 
       setFiles((currentFiles) =>
@@ -478,8 +511,9 @@ export default function VideotecaFolderPage() {
       setDraftFileName("");
       setActionError(null);
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : "No se pudo renombrar el archivo.");
+      showToast('error', error instanceof Error ? error.message : "No se pudo renombrar el archivo.");
     } finally {
+      hideLoader("videoteca-file-rename");
       setIsRenamingFile(false);
     }
   }
@@ -501,9 +535,9 @@ export default function VideotecaFolderPage() {
     if (!activeDeleteFileId || isDeletingFile) return;
 
     try {
-      setIsDeletingFile(true);
       setActionError(null);
 
+      showLoader("videoteca-file-delete", { text: "Eliminando archivo..." });
       const deletedFile = await deleteVideotecaFile(fetch, activeDeleteFileId);
 
       setFiles((currentFiles) => currentFiles.filter((file) => file.id !== activeDeleteFileId));
@@ -522,9 +556,11 @@ export default function VideotecaFolderPage() {
 
       setActiveDeleteFileId(null);
       setActionError(null);
+      showToast('success', 'Archivo eliminado correctamente.');
     } catch (error) {
       setActionError(error instanceof Error ? error.message : "No se pudo eliminar el archivo.");
     } finally {
+      hideLoader("videoteca-file-delete");
       setIsDeletingFile(false);
     }
   }
@@ -537,7 +573,7 @@ export default function VideotecaFolderPage() {
       setDownloadingFileId(file.id);
       await downloadVideotecaFile(fetch, file);
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : "No se pudo descargar el archivo.");
+      showToast('error', error instanceof Error ? error.message : "No se pudo descargar el archivo.");
     } finally {
       setDownloadingFileId(null);
     }
@@ -587,7 +623,7 @@ export default function VideotecaFolderPage() {
   }
 
   function openCreateModal() {
-    setFolderMutationError(null);
+    
     setIsCreateModalOpen(true);
     setNewFolderName("");
   }
@@ -597,7 +633,7 @@ export default function VideotecaFolderPage() {
 
     setIsCreateModalOpen(false);
     setNewFolderName("");
-    setFolderMutationError(null);
+    
   }
 
   async function handleConfirmCreateFolder() {
@@ -607,25 +643,27 @@ export default function VideotecaFolderPage() {
     if (!folderName || isCreatingFolder) return;
 
     try {
-      setFolderMutationError(null);
-      setIsCreatingFolder(true);
+      
 
+      showLoader("videoteca-subfolder-create", { text: "Creando subcarpeta..." });
       const createdFolder = await createVideotecaFolder(fetch, {
         name: folderName,
         parentId: folder.id,
       });
 
       setChildFolders((currentFolders) => [createdFolder, ...currentFolders]);
+      showToast('success', 'Subcarpeta creada correctamente.');
       closeCreateModal(true);
     } catch (error) {
-      setFolderMutationError(error instanceof Error ? error.message : "No se pudo crear la carpeta.");
+      showToast('error', error instanceof Error ? error.message : "No se pudo crear la carpeta.");
     } finally {
+      hideLoader("videoteca-subfolder-create");
       setIsCreatingFolder(false);
     }
   }
 
   function openRenameFolderModal(folderEntry: VideotecaFolder) {
-    setFolderMutationError(null);
+    
     setEditingFolderId(folderEntry.id);
     setDraftFolderName(folderEntry.name);
     closeFolderContextMenu();
@@ -636,7 +674,7 @@ export default function VideotecaFolderPage() {
 
     setEditingFolderId(null);
     setDraftFolderName("");
-    setFolderMutationError(null);
+    
   }
 
   async function handleConfirmRenameFolder() {
@@ -645,9 +683,9 @@ export default function VideotecaFolderPage() {
     if (!editingFolderId || !nextName || isRenamingFolder) return;
 
     try {
-      setFolderMutationError(null);
-      setIsRenamingFolder(true);
+      
 
+      showLoader("videoteca-subfolder-rename", { text: "Guardando cambios..." });
       const renamedFolder = await renameVideotecaFolder(fetch, editingFolderId, {
         name: nextName,
       });
@@ -655,17 +693,18 @@ export default function VideotecaFolderPage() {
       setChildFolders((currentFolders) =>
         currentFolders.map((subfolder) => (subfolder.id === editingFolderId ? renamedFolder : subfolder)),
       );
-
+      showToast('success', 'Subcarpeta renombrada correctamente.');
       closeRenameFolderModal(true);
     } catch (error) {
-      setFolderMutationError(error instanceof Error ? error.message : "No se pudo editar la carpeta.");
+      showToast('error', error instanceof Error ? error.message : "No se pudo editar la carpeta.");
     } finally {
+      hideLoader("videoteca-subfolder-rename");
       setIsRenamingFolder(false);
     }
   }
 
   function openDeleteFolderModal(folderEntry: VideotecaFolder) {
-    setFolderMutationError(null);
+    
     setActiveDeleteFolderId(folderEntry.id);
     closeFolderContextMenu();
   }
@@ -674,25 +713,27 @@ export default function VideotecaFolderPage() {
     if (isDeletingFolder && !force) return;
 
     setActiveDeleteFolderId(null);
-    setFolderMutationError(null);
+    
   }
 
   async function handleConfirmDeleteFolder() {
     if (!activeDeleteFolderId || isDeletingFolder) return;
 
     try {
-      setFolderMutationError(null);
-      setIsDeletingFolder(true);
+      
 
+      showLoader("videoteca-subfolder-delete", { text: "Eliminando subcarpeta..." });
       await deleteVideotecaFolder(fetch, activeDeleteFolderId);
 
       setChildFolders((currentFolders) =>
         currentFolders.filter((subfolder) => subfolder.id !== activeDeleteFolderId),
       );
+      showToast('success', 'Subcarpeta eliminada correctamente.');
       closeDeleteFolderModal(true);
     } catch (error) {
-      setFolderMutationError(error instanceof Error ? error.message : "No se pudo eliminar la carpeta.");
+      showToast('error', error instanceof Error ? error.message : "No se pudo eliminar la carpeta.");
     } finally {
+      hideLoader("videoteca-subfolder-delete");
       setIsDeletingFolder(false);
     }
   }
@@ -758,15 +799,11 @@ export default function VideotecaFolderPage() {
 
     if (acceptedEntries.length > 0) {
       setQueuedUploads((current) => [...current, ...acceptedEntries]);
-      setUploadFeedbackSuccess(
-        `${acceptedEntries.length} archivo${acceptedEntries.length === 1 ? "" : "s"} listo${acceptedEntries.length === 1 ? "" : "s"} para subir.`,
-      );
+      showToast('success', `${acceptedEntries.length} archivo${acceptedEntries.length === 1 ? "" : "s"} listo${acceptedEntries.length === 1 ? "" : "s"} para subir.`);
     }
 
     if (rejectedMessages.length > 0) {
-      setUploadFeedbackError(rejectedMessages.join(" "));
-    } else {
-      setUploadFeedbackError(null);
+      showToast('error', rejectedMessages.join(" "));
     }
 
     event.currentTarget.value = "";
@@ -776,130 +813,132 @@ export default function VideotecaFolderPage() {
     if (!folder || queuedUploads.length === 0 || isUploadingBatch) return;
 
     setIsUploadingBatch(true);
-    setUploadFeedbackError(null);
-    setUploadFeedbackSuccess(null);
+    
     setOverallUploadProgress(0);
 
-    const initialUploadIds = queuedUploads.map((item) => item.id);
-    const totalBytes = queuedUploads.reduce((sum, item) => sum + item.file.size, 0);
-    let uploadedBytesBeforeCurrent = 0;
-    const uploadedFilesBatch: VideotecaFile[] = [];
-    const failedFiles: string[] = [];
+    showLoader('videoteca-upload', { text: 'Subiendo archivos...' });
 
-    for (const queuedItem of queuedUploads) {
-      setQueuedUploads((current) =>
-        current.map((item) =>
-          item.id === queuedItem.id
-            ? { ...item, status: "uploading", progress: 0, uploadedBytes: 0, errorMessage: null }
-            : item,
-        ),
-      );
+    try {
+      const initialUploadIds = queuedUploads.map((item) => item.id);
+      const totalBytes = queuedUploads.reduce((sum, item) => sum + item.file.size, 0);
+      let uploadedBytesBeforeCurrent = 0;
+      const uploadedFilesBatch: VideotecaFile[] = [];
+      const failedFiles: string[] = [];
 
-      try {
-        const uploadedFile = await uploadVideotecaFile(folder.id, queuedItem.file, {
-          onProgress: ({ loaded, total }) => {
-            const safeTotal = total > 0 ? total : queuedItem.file.size;
-            const safeLoaded = Math.min(loaded, safeTotal);
-            const progress = safeTotal > 0 ? Math.round((safeLoaded / safeTotal) * 100) : 0;
-
-            setQueuedUploads((current) =>
-              current.map((item) =>
-                item.id === queuedItem.id
-                  ? { ...item, uploadedBytes: safeLoaded, progress }
-                  : item,
-              ),
-            );
-
-            const overall =
-              totalBytes > 0
-                ? Math.min(100, Math.round(((uploadedBytesBeforeCurrent + safeLoaded) / totalBytes) * 100))
-                : 0;
-
-            setOverallUploadProgress(overall);
-          },
-        });
-
-        uploadedBytesBeforeCurrent += queuedItem.file.size;
-        uploadedFilesBatch.push(uploadedFile);
-
+      for (const queuedItem of queuedUploads) {
         setQueuedUploads((current) =>
           current.map((item) =>
             item.id === queuedItem.id
-              ? {
-                  ...item,
-                  status: "uploaded",
-                  progress: 100,
-                  uploadedBytes: queuedItem.file.size,
-                }
+              ? { ...item, status: "uploading", progress: 0, uploadedBytes: 0, errorMessage: null }
               : item,
           ),
         );
-      } catch (error) {
-        failedFiles.push(queuedItem.file.name);
 
-        setQueuedUploads((current) =>
-          current.map((item) =>
-            item.id === queuedItem.id
-              ? {
-                  ...item,
-                  status: "error",
-                  errorMessage:
-                    error instanceof Error ? error.message : "No se pudo subir el archivo.",
-                }
-              : item,
-          ),
+        try {
+          const uploadedFile = await uploadVideotecaFile(folder.id, queuedItem.file, {
+            onProgress: ({ loaded, total }) => {
+              const safeTotal = total > 0 ? total : queuedItem.file.size;
+              const safeLoaded = Math.min(loaded, safeTotal);
+              const progress = safeTotal > 0 ? Math.round((safeLoaded / safeTotal) * 100) : 0;
+
+              setQueuedUploads((current) =>
+                current.map((item) =>
+                  item.id === queuedItem.id
+                    ? { ...item, uploadedBytes: safeLoaded, progress }
+                    : item,
+                ),
+              );
+
+              const overall =
+                totalBytes > 0
+                  ? Math.min(100, Math.round(((uploadedBytesBeforeCurrent + safeLoaded) / totalBytes) * 100))
+                  : 0;
+
+              setOverallUploadProgress(overall);
+              updateProgress('videoteca-upload', overall);
+            },
+          });
+
+          uploadedBytesBeforeCurrent += queuedItem.file.size;
+          uploadedFilesBatch.push(uploadedFile);
+
+          setQueuedUploads((current) =>
+            current.map((item) =>
+              item.id === queuedItem.id
+                ? {
+                    ...item,
+                    status: "uploaded",
+                    progress: 100,
+                    uploadedBytes: queuedItem.file.size,
+                  }
+                : item,
+            ),
+          );
+        } catch (error) {
+          failedFiles.push(queuedItem.file.name);
+
+          setQueuedUploads((current) =>
+            current.map((item) =>
+              item.id === queuedItem.id
+                ? {
+                    ...item,
+                    status: "error",
+                    errorMessage:
+                      error instanceof Error ? error.message : "No se pudo subir el archivo.",
+                  }
+                : item,
+            ),
+          );
+        }
+      }
+
+      if (uploadedFilesBatch.length > 0) {
+        setFiles((currentFiles) => [...currentFiles, ...uploadedFilesBatch]);
+        setFolder((currentFolder) =>
+          currentFolder
+            ? {
+                ...currentFolder,
+                fileCount: currentFolder.fileCount + uploadedFilesBatch.length,
+                updatedAt: new Date().toLocaleDateString("es-AR", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                }),
+              }
+            : currentFolder,
         );
       }
-    }
 
-    if (uploadedFilesBatch.length > 0) {
-      setFiles((currentFiles) => [...currentFiles, ...uploadedFilesBatch]);
-      setFolder((currentFolder) =>
-        currentFolder
-          ? {
-              ...currentFolder,
-              fileCount: currentFolder.fileCount + uploadedFilesBatch.length,
-              updatedAt: new Date().toLocaleDateString("es-AR", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              }),
-            }
-          : currentFolder,
-      );
-    }
+      setQueuedUploads((current) => {
+        current.forEach((item) => {
+          if (initialUploadIds.includes(item.id) && item.status !== "error" && item.previewUrl) {
+            URL.revokeObjectURL(item.previewUrl);
+          }
+        });
 
-    setQueuedUploads((current) => {
-      current.forEach((item) => {
-        if (initialUploadIds.includes(item.id) && item.status !== "error" && item.previewUrl) {
-          URL.revokeObjectURL(item.previewUrl);
-        }
+        return current.filter((item) => !initialUploadIds.includes(item.id) || item.status === "error");
       });
 
-      return current.filter((item) => !initialUploadIds.includes(item.id) || item.status === "error");
-    });
+      setOverallUploadProgress(100);
+      updateProgress('videoteca-upload', 100);
 
-    setOverallUploadProgress(100);
+      if (failedFiles.length > 0) {
+        showToast('error', `No se pudieron subir ${failedFiles.length} archivos.`);
+      }
 
-    if (failedFiles.length > 0) {
-      setUploadFeedbackError(
-        `No se pudieron subir ${failedFiles.length} archivo${failedFiles.length === 1 ? "" : "s"}: ${failedFiles.join(", ")}`,
-      );
+      if (uploadedFilesBatch.length > 0) {
+        showToast('success', `${uploadedFilesBatch.length} archivo${uploadedFilesBatch.length === 1 ? "" : "s"} subido${uploadedFilesBatch.length === 1 ? "" : "s"} correctamente.`);
+      }
+    } finally {
+      hideLoader('videoteca-upload');
+      setIsUploadingBatch(false);
     }
-
-    if (uploadedFilesBatch.length > 0) {
-      setUploadFeedbackSuccess(
-        `Subida completada: ${uploadedFilesBatch.length} archivo${uploadedFilesBatch.length === 1 ? "" : "s"} agregado${uploadedFilesBatch.length === 1 ? "" : "s"}.`,
-      );
-    }
-
-    setIsUploadingBatch(false);
   }
 
   if (isLoading && !folder) {
     return (
       <section className={styles.page}>
-        <PrivateBreadcrumb current="Detalle de carpeta" />
+        <PrivateBreadcrumb current="Detalle de carpeta" root={{ label: "Videoteca", href: "/videoteca" }} />
         <PrivateTopbar title="Cargando carpeta" subtitle="Estamos trayendo el contenido de videoteca." />
 
         <div className={styles.content}>
@@ -920,7 +959,7 @@ export default function VideotecaFolderPage() {
   if (!folder && !isLoading) {
     return (
       <section className={styles.page}>
-        <PrivateBreadcrumb current="Detalle de carpeta" />
+        <PrivateBreadcrumb current="Carpeta no encontrada" root={{ label: "Videoteca", href: "/videoteca" }} />
         <PrivateTopbar
           title={isNotFoundError ? "Carpeta no encontrada" : "No se pudo cargar la carpeta"}
           subtitle={
@@ -965,7 +1004,15 @@ export default function VideotecaFolderPage() {
 
   return (
     <section className={styles.page}>
-      <PrivateBreadcrumb current="Detalle de carpeta" />
+      <PrivateBreadcrumb
+        current={folder.name}
+        root={{ label: "Videoteca", href: "/videoteca" }}
+        ancestors={breadcrumbAncestors.map((a) => ({
+          id: a.id,
+          name: a.name,
+          href: `/videoteca/${a.id}`,
+        }))}
+      />
       <PrivateTopbar
         title={folder.name}
         subtitle="Explorá y administrá los archivos de esta carpeta sin salir del flujo de Videoteca."
@@ -974,15 +1021,38 @@ export default function VideotecaFolderPage() {
       <div className={styles.content}>
         <section className={styles.controlsRow}>
           <div className={styles.controlsMain}>
-            <Link href={backNavigation.href} className={styles.filterButton}>
-              <MaterialSymbol
-                name="arrow_back"
-                className={styles.filterIcon}
-                weight={500}
-                opticalSize={18}
-              />
-              {backNavigation.label}
-            </Link>
+            {hasParent && parentNavigation ? (
+              <>
+                <Link href={parentNavigation.href} className={styles.filterButton}>
+                  <MaterialSymbol
+                    name="arrow_back"
+                    className={styles.filterIcon}
+                    weight={500}
+                    opticalSize={18}
+                  />
+                  {parentNavigation.label}
+                </Link>
+                <Link href="/videoteca" className={styles.filterButton}>
+                  <MaterialSymbol
+                    name="video_library"
+                    className={styles.filterIcon}
+                    weight={500}
+                    opticalSize={18}
+                  />
+                  Volver a videoteca
+                </Link>
+              </>
+            ) : (
+              <Link href="/videoteca" className={styles.filterButton}>
+                <MaterialSymbol
+                  name="arrow_back"
+                  className={styles.filterIcon}
+                  weight={500}
+                  opticalSize={18}
+                />
+                Volver a videoteca
+              </Link>
+            )}
           </div>
 
           <div className={styles.controlsActions}>
@@ -1030,10 +1100,7 @@ export default function VideotecaFolderPage() {
           </div>
         </section>
 
-        {uploadFeedbackError ? <p className={styles.feedbackError}>{uploadFeedbackError}</p> : null}
-        {uploadFeedbackSuccess ? <p className={styles.feedbackSuccess}>{uploadFeedbackSuccess}</p> : null}
-        {actionError ? <p className={styles.feedbackError}>{actionError}</p> : null}
-        {folderMutationError ? <p className={styles.feedbackError}>{folderMutationError}</p> : null}
+        
 
         {queuedUploads.length > 0 ? (
           <article className={`${styles.folderCard} ${styles.uploadQueueCard}`}>
@@ -1132,58 +1199,44 @@ export default function VideotecaFolderPage() {
           </article>
         ) : null}
 
-        <article className={`${styles.folderCard} ${styles.folderSummaryCard}`}>
-          <div className={styles.cardHead}>
-            <span className={styles.folderIconWrap}>
-              <MaterialSymbol
-                name="folder"
-                className={styles.folderIcon}
-                fill={1}
-                weight={500}
-                opticalSize={22}
-              />
-            </span>
+        <div className={styles.searchSortRow}>
+          <label className={styles.searchLabel}>
+            <MaterialSymbol
+              name="search"
+              className={styles.searchIcon}
+              weight={500}
+              opticalSize={18}
+            />
+            <input
+              type="search"
+              className={styles.searchInput}
+              placeholder="Buscar archivos..."
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              aria-label="Buscar archivos por nombre"
+            />
+          </label>
 
-            <span className={styles.tag}>Actualizado {folder.updatedAt}</span>
-          </div>
+          <label className={styles.sortLabel}>
+            <span>Ordenar por</span>
+            <select
+              className={styles.sortSelect}
+              value={sortOrder}
+              onChange={(event) => setSortOrder(event.target.value as "recientes" | "az")}
+              aria-label="Ordenar subcarpetas y archivos"
+            >
+              <option value="recientes">Más recientes</option>
+              <option value="az">A-Z</option>
+            </select>
+          </label>
+        </div>
 
-          <div className={styles.cardBody}>
-            <h3>{folder.name}</h3>
-            <div className={styles.cardFooter}>
-              <span className={styles.filesCount}>
-                <MaterialSymbol
-                  name="video_library"
-                  className={styles.filesIcon}
-                  weight={500}
-                  opticalSize={16}
-                />
-                {files.length} archivos
-              </span>
+        {childFolders.length > 0 && (
+          <section className={styles.featuredSection}>
+            <h2>Subcarpetas</h2>
 
-              <div className={styles.tags}>
-                {folder.tags.map((tag) => (
-                  <span key={`${folder.id}-${tag}`} className={styles.tag}>
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </article>
-
-        <section className={styles.featuredSection}>
-          <h2>Subcarpetas</h2>
-
-          <div className={styles.subfolderGrid}>
-            {childFolders.length === 0 ? (
-              <article className={`${styles.folderCard} ${styles.folderGridState}`}>
-                <div className={styles.cardBody}>
-                  <h3>No hay subcarpetas todavía</h3>
-                  <p className={styles.cardMeta}>Creá una carpeta para empezar a organizar contenido por niveles.</p>
-                </div>
-              </article>
-            ) : (
-              childFolders.map((subfolder) => (
+            <div className={styles.subfolderGrid}>
+              {filteredAndSortedFolders.map((subfolder) => (
                 <article
                   key={subfolder.id}
                   className={`${styles.folderCard} ${styles.subfolderCard}`}
@@ -1262,13 +1315,22 @@ export default function VideotecaFolderPage() {
                     </div>
                   </div>
                 </article>
-              ))
-            )}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className={styles.featuredSection}>
-          <h2>Archivos de la carpeta</h2>
+          <h2>
+            Archivos de la carpeta
+            {searchQuery.trim() ? (
+              <span className={styles.sectionCount}>
+                {filteredAndSortedFiles.length} de {files.length}
+              </span>
+            ) : (
+              <span className={styles.sectionCount}>{files.length}</span>
+            )}
+          </h2>
 
           {selectedCount > 0 ? (
             <section className={styles.selectionToolbar} aria-live="polite">
@@ -1321,7 +1383,7 @@ export default function VideotecaFolderPage() {
           ) : null}
 
           <div className={styles.folderFilesGrid}>
-            {files.map((file) => {
+            {filteredAndSortedFiles.map((file) => {
               const visual = getFileVisual(file.type);
               const mediaToneClass =
                 visual.cardTone === "image"
@@ -1342,16 +1404,40 @@ export default function VideotecaFolderPage() {
                 >
                   <div className={styles.fileMedia}>
                     <div className={`${styles.fileMediaSurface} ${mediaToneClass}`}>
-                      <div className={styles.fileMediaPreview}>
-                        <MaterialSymbol
-                          name={visual.icon}
-                          className={styles.fileMediaIcon}
-                          fill={1}
-                          weight={500}
-                          opticalSize={28}
+                      {file.thumbnailUrl ? (
+                        <img
+                          src={file.thumbnailUrl}
+                          alt={file.name}
+                          className={styles.fileMediaPreviewImage}
                         />
-                        <span className={styles.fileMediaType}>{visual.label}</span>
-                      </div>
+                      ) : file.viewUrl ? (
+                        file.type === "image" ? (
+                          <img
+                            src={file.viewUrl}
+                            alt={file.name}
+                            className={styles.fileMediaPreviewImage}
+                          />
+                        ) : (
+                          <video
+                            src={file.viewUrl}
+                            className={styles.fileMediaPreviewVideo}
+                            muted
+                            playsInline
+                            preload="metadata"
+                          />
+                        )
+                      ) : (
+                        <div className={styles.fileMediaPreview}>
+                          <MaterialSymbol
+                            name={visual.icon}
+                            className={styles.fileMediaIcon}
+                            fill={1}
+                            weight={500}
+                            opticalSize={28}
+                          />
+                          <span className={styles.fileMediaType}>{visual.label}</span>
+                        </div>
+                      )}
 
                       <div className={styles.fileMediaOverlay}>
                         <div className={`${styles.cardBody} ${styles.fileCardBody}`}>
@@ -1577,7 +1663,6 @@ export default function VideotecaFolderPage() {
                 type="button"
                 className={styles.modalCancelGhostButton}
                 onClick={() => closeRenameFolderModal()}
-                disabled={isRenamingFolder}
               >
                 Cancelar
               </button>
@@ -1586,7 +1671,7 @@ export default function VideotecaFolderPage() {
                 type="button"
                 className={styles.modalConfirmButton}
                 onClick={handleConfirmRenameFolder}
-                disabled={!normalizeFolderName(draftFolderName) || isRenamingFolder}
+                disabled={!normalizeFolderName(draftFolderName)}
               >
                 <MaterialSymbol
                   name="save"
@@ -1595,7 +1680,7 @@ export default function VideotecaFolderPage() {
                   weight={500}
                   opticalSize={18}
                 />
-                {isRenamingFolder ? "Guardando..." : "Guardar cambios"}
+                Guardar cambios
               </button>
             </footer>
           </div>
@@ -1651,7 +1736,6 @@ export default function VideotecaFolderPage() {
                 type="button"
                 className={styles.modalCancelGhostButton}
                 onClick={() => closeCreateModal()}
-                disabled={isCreatingFolder}
               >
                 Cancelar
               </button>
@@ -1660,7 +1744,7 @@ export default function VideotecaFolderPage() {
                 type="button"
                 className={styles.modalConfirmButton}
                 onClick={handleConfirmCreateFolder}
-                disabled={!normalizeFolderName(newFolderName) || isCreatingFolder}
+                disabled={!normalizeFolderName(newFolderName)}
               >
                 <MaterialSymbol
                   name="create_new_folder"
@@ -1669,7 +1753,7 @@ export default function VideotecaFolderPage() {
                   weight={500}
                   opticalSize={18}
                 />
-                {isCreatingFolder ? "Creando..." : "Crear carpeta"}
+                Crear carpeta
               </button>
             </footer>
           </div>
@@ -1732,7 +1816,7 @@ export default function VideotecaFolderPage() {
                 type="button"
                 className={styles.modalConfirmButton}
                 onClick={handleConfirmRename}
-                disabled={!draftFileName.trim() || isRenamingFile}
+                disabled={!draftFileName.trim()}
               >
                 <MaterialSymbol
                   name="save"
@@ -1741,7 +1825,7 @@ export default function VideotecaFolderPage() {
                   weight={500}
                   opticalSize={18}
                 />
-                {isRenamingFile ? "Guardando..." : "Guardar nombre"}
+                Guardar nombre
               </button>
             </footer>
           </div>
@@ -1785,7 +1869,7 @@ export default function VideotecaFolderPage() {
           density="compact"
           confirmLabel="Eliminar carpeta"
           pendingConfirmLabel="Eliminando..."
-          errorMessage={folderMutationError}
+          errorMessage={null}
           isPending={isDeletingFolder}
           onConfirm={handleConfirmDeleteFolder}
           onCancel={closeDeleteFolderModal}
