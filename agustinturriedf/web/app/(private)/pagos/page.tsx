@@ -67,11 +67,12 @@ const amountInputToCents = (value: string) => {
 const centsToAmountInput = (valueInCents: number) => String(Math.round(valueInCents / 100));
 
 export default function PagosPage() {
+  const PAGE_SIZE = 4;
   const [rows, setRows] = useState<DashboardRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<PaymentView>("ALL");
-  const [query, setQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [cards, setCards] = useState({
     collectedCount: 0,
@@ -101,14 +102,14 @@ export default function PagosPage() {
   const [globalAmountError, setGlobalAmountError] = useState<string | null>(null);
   const [isSavingGlobalAmount, setIsSavingGlobalAmount] = useState(false);
 
-  const loadDashboard = async (selectedView: PaymentView, selectedQuery: string) => {
+  const loadDashboard = async (selectedView: PaymentView) => {
     try {
       setLoading(true);
       setError(null);
 
       const payload = await fetchPaymentsDashboard(fetch, {
         view: selectedView,
-        query: selectedQuery,
+        query: "",
       });
 
       setCards(payload.cards);
@@ -143,11 +144,21 @@ export default function PagosPage() {
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      void loadDashboard(view, query);
+      void loadDashboard(view);
     }, 250);
 
     return () => clearTimeout(timeoutId);
-  }, [view, query]);
+  }, [view]);
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedRows = rows.slice((safeCurrentPage - 1) * PAGE_SIZE, safeCurrentPage * PAGE_SIZE);
+
+  useEffect(() => {
+    if (currentPage !== safeCurrentPage) {
+      setCurrentPage(safeCurrentPage);
+    }
+  }, [currentPage, safeCurrentPage]);
 
   useEffect(() => {
     let cancelled = false;
@@ -247,7 +258,7 @@ export default function PagosPage() {
       await registerPaymentRuntime(fetch, payload);
 
       closeRegisterModal();
-      await loadDashboard(view, query);
+      await loadDashboard(view);
     } catch (submitError) {
       setRegisterError(submitError instanceof Error ? submitError.message : "No se pudo registrar el pago.");
     } finally {
@@ -361,7 +372,7 @@ export default function PagosPage() {
       });
 
       closeEditModal();
-      await loadDashboard(view, query);
+      await loadDashboard(view);
     } catch (submitError) {
       setEditError(submitError instanceof Error ? submitError.message : "No se pudo editar el pago.");
     } finally {
@@ -470,16 +481,6 @@ export default function PagosPage() {
           </form>
 
           <div className={styles.tableToolbar}>
-            <label className={styles.searchWrap}>
-              <MaterialSymbol name="search" className={styles.searchIcon} weight={420} opticalSize={18} />
-              <input
-                type="search"
-                placeholder="Filtrar por nombre o email..."
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-              />
-            </label>
-
             <div className={styles.tableActions}>
               <div className={`${styles.selectWrap} ${styles.paymentFilterWrap}`}>
                 <select value={view} onChange={(event) => setView(event.target.value as PaymentView)} aria-label="Filtro de pagos">
@@ -528,7 +529,7 @@ export default function PagosPage() {
                       </td>
                     </tr>
                   ) : (
-                    rows.map((row) => (
+                    paginatedRows.map((row) => (
                       <tr key={row.studentProfileId}>
                         <td>
                           <div className={styles.studentWrap}>
@@ -583,6 +584,30 @@ export default function PagosPage() {
                 </tbody>
               </table>
             </div>
+
+            <footer className={styles.pagination}>
+              <p>
+                Página {safeCurrentPage} de {totalPages}
+              </p>
+              <div className={styles.paginationButtons}>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={safeCurrentPage <= 1}
+                  aria-label="Página anterior"
+                >
+                  <MaterialSymbol name="chevron_left" className={styles.paginationIcon} weight={500} opticalSize={20} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={safeCurrentPage >= totalPages}
+                  aria-label="Página siguiente"
+                >
+                  <MaterialSymbol name="chevron_right" className={styles.paginationIcon} weight={500} opticalSize={20} />
+                </button>
+              </div>
+            </footer>
           </div>
         </section>
       </div>
