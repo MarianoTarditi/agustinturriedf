@@ -5,32 +5,37 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { submitResetPasswordRequest } from "@/app/(auth)/reset-password/_components/reset-password-runtime";
+import { useLoading } from "@/components/use-loading";
+import { useToast } from "@/components/use-toast";
 
 export function ResetPasswordRequestForm() {
   const router = useRouter();
+  const { showLoader, hideLoader } = useLoading();
+  const { showToast } = useToast();
   const [email, setEmail] = useState("");
-  const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (submitting) {
-      return;
-    }
+    showLoader("auth-reset-request", { text: "Enviando solicitud de recuperación…" });
 
-    setSubmitting(true);
-    setErrorMessage(null);
+    try {
+      const result = await submitResetPasswordRequest({
+        email,
+        fetchImpl: fetch,
+        routerPush: router.push,
+        onBeforeNavigate: () => hideLoader("auth-reset-request"),
+      });
 
-    const result = await submitResetPasswordRequest({
-      email,
-      fetchImpl: fetch,
-      routerPush: router.push,
-    });
+      if (!result.success) {
+        showToast('error', result.errorMessage ?? 'Ocurrió un error');
+        return;
+      }
 
-    if (!result.success) {
-      setSubmitting(false);
-      setErrorMessage(result.errorMessage);
+      showToast('success', 'Revisá tu email para reestablecer la contraseña.');
+    } finally {
+      hideLoader("auth-reset-request");
     }
   };
 
@@ -66,16 +71,11 @@ export function ResetPasswordRequestForm() {
         />
       </label>
 
-      {errorMessage ? (
-        <p role="alert" style={{ margin: 0, color: "#ffb3c7", fontSize: 13, lineHeight: 1.4 }}>
-          {errorMessage}
-        </p>
-      ) : null}
+      
 
       <button
         type="submit"
         className="login-submit"
-        disabled={submitting}
         style={{
           marginTop: 10,
           display: "inline-flex",
@@ -90,11 +90,10 @@ export function ResetPasswordRequestForm() {
           padding: "0.95rem 1rem",
           background: "linear-gradient(90deg, #7b2cbf 0%, #680eac 100%)",
           border: "none",
-          cursor: submitting ? "wait" : "pointer",
-          opacity: submitting ? 0.85 : 1,
+          cursor: "pointer",
         }}
       >
-        {submitting ? "Enviando..." : "Reestablecer contraseña"}
+        Reestablecer contraseña
       </button>
 
       <Link

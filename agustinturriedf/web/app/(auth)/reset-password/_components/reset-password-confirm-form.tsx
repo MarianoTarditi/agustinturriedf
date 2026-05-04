@@ -4,23 +4,26 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 
 import { submitResetPasswordConfirm } from "@/app/(auth)/reset-password/_components/reset-password-runtime";
+import { useLoading } from "@/components/use-loading";
+import { useToast } from "@/components/use-toast";
 
 export function ResetPasswordConfirmForm({ token }: { token: string }) {
+  const { showLoader, hideLoader } = useLoading();
+  const { showToast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (submitting || isSuccess) {
+    if (isSuccess) {
       return;
     }
 
-    setSubmitting(true);
-    setErrorMessage(null);
+    showLoader("auth-reset-confirm", { text: "Actualizando contraseña…" });
+    setIsSubmitting(true);
 
     const result = await submitResetPasswordConfirm({
       token,
@@ -29,13 +32,15 @@ export function ResetPasswordConfirmForm({ token }: { token: string }) {
       fetchImpl: fetch,
     });
 
-    setSubmitting(false);
+    setIsSubmitting(false);
+    hideLoader("auth-reset-confirm");
 
     if (!result.success) {
-      setErrorMessage(result.errorMessage);
+      showToast('error', result.errorMessage ?? 'Ocurrió un error');
       return;
     }
 
+    showToast('success', 'Contraseña actualizada correctamente.');
     setIsSuccess(true);
   };
 
@@ -105,16 +110,12 @@ export function ResetPasswordConfirmForm({ token }: { token: string }) {
         />
       </label>
 
-      {errorMessage ? (
-        <p role="alert" style={{ margin: 0, color: "#ffb3c7", fontSize: 13, lineHeight: 1.4 }}>
-          {errorMessage}
-        </p>
-      ) : null}
+      
 
       <button
         type="submit"
         className="login-submit"
-        disabled={submitting}
+        disabled={isSubmitting}
         style={{
           marginTop: 10,
           display: "inline-flex",
@@ -129,11 +130,11 @@ export function ResetPasswordConfirmForm({ token }: { token: string }) {
           padding: "0.95rem 1rem",
           background: "linear-gradient(90deg, #7b2cbf 0%, #680eac 100%)",
           border: "none",
-          cursor: submitting ? "wait" : "pointer",
-          opacity: submitting ? 0.85 : 1,
+          cursor: isSubmitting ? "wait" : "pointer",
+          opacity: isSubmitting ? 0.85 : 1,
         }}
       >
-        {submitting ? "Actualizando..." : "Guardar nueva contraseña"}
+        {isSubmitting ? "Actualizando..." : "Guardar nueva contraseña"}
       </button>
     </form>
   );

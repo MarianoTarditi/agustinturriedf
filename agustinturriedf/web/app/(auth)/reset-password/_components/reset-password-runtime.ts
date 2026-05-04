@@ -45,10 +45,12 @@ export const submitResetPasswordRequest = async ({
   email,
   fetchImpl,
   routerPush,
+  onBeforeNavigate,
 }: {
   email: string;
   fetchImpl: typeof fetch;
   routerPush: (href: string) => void;
+  onBeforeNavigate?: () => void;
 }): Promise<RequestResult> => {
   const response = await fetchImpl("/api/password-reset/request", {
     method: "POST",
@@ -76,6 +78,7 @@ export const submitResetPasswordRequest = async ({
     };
   }
 
+  onBeforeNavigate?.();
   routerPush("/reset-password/sent");
 
   return {

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import styles from "@/app/(private)/perfil/perfil.module.css";
+import { useLoading } from "@/components/use-loading";
 import { z } from "zod";
 import {
   buildPatchPayload,
@@ -113,6 +114,7 @@ const formatDisplayDate = (value: string | null) => {
 };
 
 export default function PerfilPage() {
+  const { showLoader, hideLoader } = useLoading();
   const [profile, setProfile] = useState<OwnProfile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
@@ -156,6 +158,8 @@ export default function PerfilPage() {
   useEffect(() => {
     let cancelled = false;
 
+    showLoader("perfil-load", { text: "Cargando perfil..." });
+
     const loadProfile = async () => {
       try {
         setLoadingProfile(true);
@@ -172,6 +176,7 @@ export default function PerfilPage() {
         setProfileError(error instanceof Error ? error.message : "No se pudo cargar tu perfil.");
       } finally {
         if (!cancelled) {
+          hideLoader("perfil-load");
           setLoadingProfile(false);
         }
       }
@@ -256,9 +261,9 @@ export default function PerfilPage() {
     }
 
     try {
-      setIsSaving(true);
       setSaveError(null);
 
+      showLoader("perfil-save", { text: "Guardando perfil..." });
       const updatedProfile = await updateOwnProfile(fetch, payload);
       setProfile(updatedProfile);
       setFormState(mapProfileToFormState(updatedProfile));
@@ -266,6 +271,7 @@ export default function PerfilPage() {
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : "No se pudo guardar tu perfil.");
     } finally {
+      hideLoader("perfil-save");
       setIsSaving(false);
     }
   };
@@ -522,7 +528,7 @@ export default function PerfilPage() {
               </button>
               <button type="submit" form="perfil-edit-form" className={styles.modalConfirmButton} disabled={isSaving}>
                 <MaterialSymbol name="save" className={styles.confirmIcon} fill={1} weight={500} opticalSize={18} />
-                {isSaving ? "Guardando..." : "Guardar cambios"}
+                Guardar cambios
               </button>
             </footer>
           </div>

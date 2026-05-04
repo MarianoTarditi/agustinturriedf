@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { signOut } from "next-auth/react";
 import type { Session } from "next-auth";
 import { MaterialSymbol } from "@/components/material-symbol";
+import { useLoading } from "@/components/use-loading";
 import styles from "@/components/private-navbar.module.css";
 
 type NavItem = {
@@ -86,8 +87,8 @@ function getUserInitials(name: string): string {
 
 export function PrivateNavbar({ currentUser }: PrivateNavbarProps) {
   const pathname = usePathname();
+  const { showLoader, hideLoader } = useLoading();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [loggingOut, setLoggingOut] = useState(false);
   const [profileImageError, setProfileImageError] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const currentRole = currentUser?.role;
@@ -224,16 +225,18 @@ export function PrivateNavbar({ currentUser }: PrivateNavbarProps) {
                 className={`${styles.dropdownItem} ${styles.dropdownItemLogout}`}
                 role="menuitem"
                 tabIndex={profileMenuOpen ? 0 : -1}
-                disabled={loggingOut}
                 style={{ width: "100%", textAlign: "left", background: "none", border: "none", cursor: "pointer" }}
                 onClick={async () => {
-                  if (loggingOut) return;
-                  setLoggingOut(true);
-                  await signOut({ callbackUrl: "/login" });
+                  showLoader("navbar-signout", { text: "Cerrando sesión…" });
+                  try {
+                    await signOut({ callbackUrl: "/login" });
+                  } finally {
+                    hideLoader("navbar-signout");
+                  }
                 }}
               >
                 <MaterialSymbol name="logout" className={styles.dropdownIcon} opticalSize={20} />
-                <span>{loggingOut ? "Cerrando..." : "Cerrar sesión"}</span>
+                <span>Cerrar sesión</span>
               </button>
             </div>
           </div>

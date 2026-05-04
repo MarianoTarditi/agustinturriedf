@@ -31,7 +31,7 @@ describe("reset-password UI structure", () => {
     expect(source).toContain("Volver al login");
   });
 
-  it("renders visible error feedback for request and confirm forms", () => {
+  it("renders toast-compatible forms with showToast hook", () => {
     const requestSource = readFileSync(
       resolveResetPasswordFile("_components", "reset-password-request-form.tsx"),
       "utf8"
@@ -41,7 +41,11 @@ describe("reset-password UI structure", () => {
       "utf8"
     );
 
-    expect(requestSource).toContain('role="alert"');
-    expect(confirmSource).toContain('role="alert"');
+    // Both forms use showToast from useToast hook for error feedback
+    expect(requestSource).toContain("showToast");
+    expect(confirmSource).toContain("showToast");
+    // Fallback error messages are provided for null safety
+    expect(requestSource).toContain("Ocurrió un error");
+    expect(confirmSource).toContain("Ocurrió un error");
   });
 });

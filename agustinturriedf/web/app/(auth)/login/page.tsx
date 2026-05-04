@@ -1,18 +1,22 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { signIn } from "next-auth/react";
 import { AuthCard } from "../_components/auth-card";
+import { useLoading } from "@/components/use-loading";
+import { useToast } from "@/components/use-toast";
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const { showLoader, hideLoader } = useLoading();
+  const { showToast } = useToast();
 
   const callbackUrl = useMemo(() => searchParams.get("callbackUrl") ?? "/dashboard", [searchParams]);
 
@@ -28,29 +32,37 @@ export default function LoginPage() {
 
   const formError = submitError ?? authErrorMessage;
 
+  // Show toast for URL-based auth errors (e.g., callback error)
+  useEffect(() => {
+    if (authErrorMessage) {
+      showToast('error', authErrorMessage);
+    }
+  }, [authErrorMessage, showToast]);
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (submitting) return;
+    showLoader("login", { text: "Ingresando..." });
 
-    setSubmitting(true);
-    setSubmitError(null);
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+        callbackUrl,
+      });
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-      callbackUrl,
-    });
+      if (!result || result.error) {
+        showToast('error', 'Email o contraseña inválidos.');
+        return;
+      }
 
-    if (!result || result.error) {
-      setSubmitting(false);
-      setSubmitError("Email o contraseña inválidos.");
-      return;
+      showToast('success', 'Sesión iniciada correctamente.');
+      router.push(result.url ?? callbackUrl);
+      router.refresh();
+    } finally {
+      hideLoader("login");
     }
-
-    router.push(result.url ?? callbackUrl);
-    router.refresh();
   };
 
   return (
@@ -87,9 +99,7 @@ export default function LoginPage() {
           />
         </label>
 
-        {formError ? (
-          <p style={{ margin: 0, color: "#ffb3c7", fontSize: 13, lineHeight: 1.4 }}>{formError}</p>
-        ) : null}
+        
 
         <Link
           href="/reset-password"
@@ -108,7 +118,6 @@ export default function LoginPage() {
         <button
           type="submit"
           className="login-submit"
-          disabled={submitting}
           style={{
             marginTop: 10,
             display: "inline-flex",
@@ -123,11 +132,10 @@ export default function LoginPage() {
             padding: "0.95rem 1rem",
             background: "linear-gradient(90deg, #7b2cbf 0%, #680eac 100%)",
             border: "none",
-            cursor: submitting ? "wait" : "pointer",
-            opacity: submitting ? 0.85 : 1,
+            cursor: "pointer",
           }}
         >
-          {submitting ? "Ingresando..." : "Ingresar"}
+          Ingresar
         </button>
       </form>
     </AuthCard>
