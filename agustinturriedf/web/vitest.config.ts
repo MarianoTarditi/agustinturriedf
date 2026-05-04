@@ -3,11 +3,13 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    environment: "node",
     include: ["**/*.test.{ts,tsx}"],
     clearMocks: true,
     pool: "threads",
     maxWorkers: 1,
+    environment: "jsdom",
+    setupFiles: ["./test-setup.ts"],
+    globals: true,
   },
   resolve: {
     alias: {
