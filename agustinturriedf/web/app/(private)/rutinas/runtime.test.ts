@@ -361,6 +361,8 @@ describe("rutinas runtime", () => {
       canDeleteFiles: false,
       canCreateFolders: false,
       canDeleteFolders: false,
+      canReplaceFiles: false,
+      canEditFiles: false,
     });
   });
 
@@ -372,6 +374,8 @@ describe("rutinas runtime", () => {
       canDeleteFiles: true,
       canCreateFolders: false,
       canDeleteFolders: false,
+      canReplaceFiles: true,
+      canEditFiles: true,
     });
   });
 });

@@ -57,6 +57,8 @@ export type RoutineUiPermissions = {
   canDeleteFiles: boolean;
   canCreateFolders: boolean;
   canDeleteFolders: boolean;
+  canReplaceFiles: boolean;
+  canEditFiles: boolean;
 };
 
 export type RoutineUploadValidationResult =
@@ -75,6 +77,8 @@ export const getRoutineUiPermissions = (viewData: RoutinesViewData | null): Rout
       canDeleteFiles: false,
       canCreateFolders: false,
       canDeleteFolders: false,
+      canReplaceFiles: false,
+      canEditFiles: false,
     };
   }
 
@@ -84,6 +88,8 @@ export const getRoutineUiPermissions = (viewData: RoutinesViewData | null): Rout
       canDeleteFiles: false,
       canCreateFolders: false,
       canDeleteFolders: false,
+      canReplaceFiles: false,
+      canEditFiles: false,
     };
   }
 
@@ -92,6 +98,8 @@ export const getRoutineUiPermissions = (viewData: RoutinesViewData | null): Rout
     canDeleteFiles: true,
     canCreateFolders: false,
     canDeleteFolders: false,
+    canReplaceFiles: true,
+    canEditFiles: true,
   };
 };
 
@@ -300,6 +308,36 @@ export const uploadRoutineFiles = async (
 
   const uploaded = assertApiSuccess(payload, "No se pudieron subir los archivos.");
   return normalizeUploadResponse(uploaded);
+};
+
+export const replaceRoutineFile = async (
+  fetchImpl: typeof fetch,
+  folderId: string,
+  fileId: string,
+  file: File
+): Promise<RoutineFile> => {
+  const validation = validateRoutineFileForUpload(file);
+
+  if (!validation.ok) {
+    throw new Error(validation.error);
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("replaceFileId", fileId);
+
+  const response = await fetchImpl(`/api/routines/folders/${encodeURIComponent(folderId)}/files`, {
+    method: "POST",
+    body: formData,
+  });
+
+  const payload = await parseApiPayload<RoutineFile>(response);
+
+  if (!response.ok) {
+    throw new Error(payload.success ? "No se pudo reemplazar el archivo." : payload.error.message);
+  }
+
+  return assertApiSuccess(payload, "No se pudo reemplazar el archivo.");
 };
 
 export const fetchRoutinePreviewBinary = async (fetchImpl: typeof fetch, fileId: string): Promise<ArrayBuffer> => {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 
 import styles from "@/app/(private)/rutinas/rutinas.module.css";
 import {
@@ -8,23 +8,89 @@ import {
   type RoutineFileType,
 } from "@/app/(private)/rutinas/runtime";
 import { MaterialSymbol } from "@/components/material-symbol";
-import { parseRoutineWorkbookPreview, type RoutineWorkbookSheet } from "@/app/(private)/rutinas/spreadsheet-preview";
+import {
+  parseRoutineWorkbookPreview,
+  serializeRoutineWorkbook,
+  type RoutineWorkbookSheet,
+  type RoutineEditableWorkbook,
+} from "@/app/(private)/rutinas/spreadsheet-preview";
 
 const isSpreadsheetType = (type: RoutineFileType) => type === "xls" || type === "xlsx";
+
+const cloneRows = (sheets: RoutineWorkbookSheet[]): RoutineEditableWorkbook => ({
+  sheets: sheets.map((sheet) => ({ ...sheet, rows: sheet.rows.map((row) => [...row]) })),
+});
 
 export const FilePreviewModal = ({
   file,
   onClose,
+  onEditSave,
 }: {
   file: RoutineFile;
   onClose: () => void;
+  onEditSave?: (editedBuffer: ArrayBuffer, fileName: string) => void;
 }) => {
   const [isLoadingSpreadsheet, setIsLoadingSpreadsheet] = useState(false);
   const [spreadsheetError, setSpreadsheetError] = useState<string | null>(null);
   const [spreadsheetSheets, setSpreadsheetSheets] = useState<RoutineWorkbookSheet[]>([]);
   const [activeSheetIndex, setActiveSheetIndex] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
+  const [draftWorkbook, setDraftWorkbook] = useState<RoutineEditableWorkbook | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const previewUrl = useMemo(() => buildRoutinePreviewUrl(file.id), [file.id]);
+
+  const isEditable = Boolean(onEditSave) && isSpreadsheetType(file.type);
+
+  const startEditing = useCallback(() => {
+    setDraftWorkbook(cloneRows(spreadsheetSheets));
+    setIsEditing(true);
+  }, [spreadsheetSheets]);
+
+  const cancelEditing = useCallback(() => {
+    setDraftWorkbook(null);
+    setIsEditing(false);
+  }, []);
+
+  const handleCellChange = useCallback(
+    (rowIndex: number, colIndex: number, value: string) => {
+      setDraftWorkbook((prev) => {
+        if (!prev) return prev;
+        const next = {
+          sheets: prev.sheets.map((sheet, si) =>
+            si === activeSheetIndex
+              ? {
+                  ...sheet,
+                  rows: sheet.rows.map((row, ri) =>
+                    ri === rowIndex ? row.map((cell, ci) => (ci === colIndex ? value : cell)) : row
+                  ),
+                }
+              : sheet
+          ),
+        };
+        return next;
+      });
+    },
+    [activeSheetIndex]
+  );
+
+  const handleSaveEdit = useCallback(async () => {
+    if (!draftWorkbook || !onEditSave) return;
+
+    const isLegacy = file.type === "xls";
+    const bookType = isLegacy ? "xls" : "xlsx";
+    const editedBuffer = serializeRoutineWorkbook(draftWorkbook, bookType);
+    const originalName = file.name;
+
+    setIsSaving(true);
+    try {
+      await onEditSave(editedBuffer, originalName);
+      setIsEditing(false);
+      setDraftWorkbook(null);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [draftWorkbook, onEditSave, file.type, file.name]);
 
   useEffect(() => {
     if (!isSpreadsheetType(file.type)) {
@@ -67,6 +133,12 @@ export const FilePreviewModal = ({
     };
   }, [file.id, file.type]);
 
+  // Reset edit state when file changes
+  useEffect(() => {
+    setIsEditing(false);
+    setDraftWorkbook(null);
+  }, [file.id]);
+
   const activeSheet = spreadsheetSheets[activeSheetIndex] ?? null;
 
   return (
@@ -80,7 +152,7 @@ export const FilePreviewModal = ({
       >
         <header className={styles.modalHeader}>
           <div>
-            <h2>Previsualización</h2>
+            <h2>{isEditing ? "Editar" : "Previsualización"}</h2>
             <p>{file.name}</p>
           </div>
 
@@ -105,7 +177,7 @@ export const FilePreviewModal = ({
 
               {!isLoadingSpreadsheet && !spreadsheetError && spreadsheetSheets.length > 0 ? (
                 <>
-                  <div className={styles.previewSheetTabs} role="tablist" aria-label="Hojas del archivo">
+                  <div className={styles.previewSheetTabs}>
                     {spreadsheetSheets.map((sheet, index) => (
                       <button
                         key={sheet.name}
@@ -123,16 +195,60 @@ export const FilePreviewModal = ({
                   <div className={styles.previewSpreadsheetTableWrap}>
                     <table className={styles.previewSpreadsheetTable}>
                       <tbody>
-                        {(activeSheet?.rows ?? []).map((row, rowIndex) => (
-                          <tr key={`row-${rowIndex}`}>
-                            {row.map((cell, columnIndex) => (
-                              <td key={`cell-${rowIndex}-${columnIndex}`}>{cell}</td>
-                            ))}
-                          </tr>
-                        ))}
+                        {(isEditing ? draftWorkbook?.sheets[activeSheetIndex]?.rows ?? [] : activeSheet?.rows ?? []).map(
+                          (row, rowIndex) => (
+                            <tr key={`row-${rowIndex}`}>
+                              {row.map((cell, columnIndex) => (
+                                <td key={`cell-${rowIndex}-${columnIndex}`}>
+                                  {isEditing ? (
+                                    <input
+                                      type="text"
+                                      className={styles.spreadsheetCellInput}
+                                      value={cell}
+                                      onChange={(e) => handleCellChange(rowIndex, columnIndex, e.target.value)}
+                                      aria-label={`Celda ${rowIndex + 1}, ${columnIndex + 1}`}
+                                    />
+                                  ) : (
+                                    cell
+                                  )}
+                                </td>
+                              ))}
+                            </tr>
+                          )
+                        )}
                       </tbody>
                     </table>
                   </div>
+
+                  {isEditing ? (
+                    <div className={styles.editToolbar}>
+                      <button
+                        type="button"
+                        className={styles.modalConfirmButton}
+                        onClick={handleSaveEdit}
+                        disabled={isSaving}
+                      >
+                        {isSaving ? "Guardando..." : "Guardar cambios"}
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.modalCancelGhostButton}
+                        onClick={cancelEditing}
+                        disabled={isSaving}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  ) : (
+                    isEditable ? (
+                      <div className={styles.editToolbar}>
+                        <button type="button" className={styles.editExcelButton} onClick={startEditing}>
+                          <MaterialSymbol name="edit" weight={500} opticalSize={18} />
+                          Editar
+                        </button>
+                      </div>
+                    ) : null
+                  )}
                 </>
               ) : null}
             </div>

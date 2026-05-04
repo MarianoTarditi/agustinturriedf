@@ -114,12 +114,14 @@ export const RoutineFilesList = ({
   canDeleteFiles,
   onPreview,
   onDelete,
+  onReplace,
   emptyMessage,
 }: {
   files: RoutineFile[];
   canDeleteFiles: boolean;
   onPreview?: (file: RoutineFile) => void;
   onDelete?: (file: RoutineFile) => void;
+  onReplace?: (file: RoutineFile) => void;
   emptyMessage: string;
 }) => {
   const handleCardPreview = (event: MouseEvent<HTMLElement>, file: RoutineFile) => {
@@ -181,7 +183,18 @@ export const RoutineFilesList = ({
             </div>
 
             <div className={styles.rowActions}>
-              {onPreview ? (
+              {onReplace ? (
+                <button
+                  type="button"
+                  className={styles.replaceButton}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onReplace(file);
+                  }}
+                >
+                  Reemplazar
+                </button>
+              ) : onPreview ? (
                 <button
                   type="button"
                   className={styles.openButton}

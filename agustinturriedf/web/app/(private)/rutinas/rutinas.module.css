@@ -687,6 +687,28 @@
   border-color: rgba(222, 183, 255, 0.24);
 }
 
+.replaceButton {
+  border: 1px solid rgba(76, 67, 83, 0.24);
+  border-radius: 0.4rem;
+  background: var(--surface-high);
+  color: var(--on-surface);
+  min-height: 2rem;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.replaceButton:hover {
+  background: rgba(76, 67, 83, 0.24);
+  border-color: rgba(222, 183, 255, 0.24);
+}
+
 .iconAction {
   border: 0;
   background: transparent;
@@ -722,6 +744,47 @@
   font-size: 1.1rem;
 }
 
+.detailSearchWrap {
+  position: relative;
+  align-self: flex-end;
+  width: min(100%, 24rem);
+  min-width: min(100%, 16rem);
+}
+
+.detailSearchIcon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(207, 194, 213, 0.55);
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.detailSearchInput {
+  width: 100%;
+  min-height: 2.4rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(76, 67, 83, 0.18);
+  background: var(--surface-low);
+  color: var(--on-surface);
+  padding: 0.66rem 0.9rem 0.66rem 2.35rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition:
+    border-color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.detailSearchInput::placeholder {
+  color: rgba(207, 194, 213, 0.4);
+}
+
+.detailSearchInput:focus {
+  border-color: rgba(222, 183, 255, 0.5);
+  box-shadow: 0 0 0 2px rgba(123, 44, 191, 0.16);
+}
+
 .detailPagination {
   margin-top: 0.15rem;
   display: flex;
@@ -736,7 +799,7 @@
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 0.62rem;
-  color: rgba(207, 194, 213, 0.52);
+  color: #a78bfa;
   font-weight: 700;
 }
 
@@ -780,7 +843,7 @@
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 0.62rem;
-  color: rgba(207, 194, 213, 0.52);
+  color: #a78bfa;
   font-weight: 700;
 }
 
@@ -879,6 +942,72 @@
 .routineUploadModal {
   width: min(100%, 42rem);
   max-height: min(90vh, 42rem);
+}
+
+.routineReplaceModal {
+  width: min(100%, 32rem);
+  max-height: min(88vh, 28rem);
+}
+
+.replaceCurrentFileInfo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  border: 1px solid rgba(76, 67, 83, 0.18);
+  border-radius: 0.55rem;
+  background: var(--surface-low);
+  padding: 0.65rem 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.replaceCurrentFileMeta {
+  min-width: 0;
+}
+
+.replaceCurrentFileMeta strong {
+  display: block;
+  font-size: 0.875rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.replaceCurrentFileMeta p {
+  font-size: 0.75rem;
+  color: rgba(207, 194, 213, 0.6);
+  margin: 0.2rem 0 0;
+}
+
+.replaceSelectedFileInfo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  border: 1px solid rgba(123, 44, 191, 0.3);
+  border-radius: 0.55rem;
+  background: rgba(123, 44, 191, 0.08);
+  padding: 0.65rem 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.replaceSelectedFileMeta {
+  min-width: 0;
+}
+
+.replaceSelectedFileMeta strong {
+  display: block;
+  font-size: 0.875rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--primary);
+}
+
+.replaceSelectedFileMeta p {
+  font-size: 0.75rem;
+  color: rgba(207, 194, 213, 0.6);
+  margin: 0.2rem 0 0;
 }
 
 .routineUploadHeaderActions {
@@ -1047,6 +1176,54 @@
   font-size: 0.75rem;
   color: rgba(232, 228, 236, 0.95);
   white-space: nowrap;
+}
+
+.spreadsheetCellInput {
+  width: 100%;
+  min-width: 5rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.25rem;
+  color: var(--on-surface);
+  font-size: 0.75rem;
+  padding: 0.2rem 0.3rem;
+  outline: none;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.spreadsheetCellInput:focus {
+  border-color: rgba(123, 44, 191, 0.5);
+  background: rgba(123, 44, 191, 0.08);
+}
+
+.editToolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-top: 0.5rem;
+}
+
+.editExcelButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid rgba(76, 67, 83, 0.24);
+  border-radius: 0.4rem;
+  background: var(--surface-high);
+  color: var(--on-surface);
+  min-height: 2rem;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.64rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 220ms cubic-bezier(0.22, 1, 0.36, 1), border-color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.editExcelButton:hover {
+  background: rgba(76, 67, 83, 0.24);
+  border-color: rgba(222, 183, 255, 0.24);
 }
 
 .modalField {

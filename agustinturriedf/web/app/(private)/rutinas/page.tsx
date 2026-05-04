@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import styles from "@/app/(private)/rutinas/rutinas.module.css";
+import { useLoading } from "@/components/use-loading";
 import { MaterialSymbol } from "@/components/material-symbol";
 import { PrivateBreadcrumb } from "@/components/private-breadcrumb";
 import { PrivateTopbar } from "@/components/private-topbar";
@@ -18,6 +19,11 @@ import {
   type RoutineFolderFilter,
   type RoutineFolderSort,
 } from "@/app/(private)/rutinas/page-derived-list";
+import {
+  clampRoutineFoldersListPage,
+  getRoutineFoldersListPage,
+  getRoutineFoldersListTotalPages,
+} from "@/app/(private)/rutinas/folder-list-pagination";
 
 const SORT_OPTIONS: { value: RoutineFolderSort; label: string }[] = [
   { value: "recent", label: "Más recientes" },
@@ -32,6 +38,7 @@ const FILTER_OPTIONS: { value: RoutineFolderFilter; label: string }[] = [
 ];
 
 export default function RutinasPage() {
+  const { showLoader, hideLoader } = useLoading();
   const [viewData, setViewData] = useState<RoutinesViewData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingError, setLoadingError] = useState<string | null>(null);
@@ -39,12 +46,15 @@ export default function RutinasPage() {
   const [filterBy, setFilterBy] = useState<RoutineFolderFilter>("all");
   const [viewMode, setViewMode] = useState<RoutineFolderViewMode>("grid");
   const [query, setQuery] = useState("");
+  const [currentListPage, setCurrentListPage] = useState(1);
 
   const isStudentView = viewData?.role === "STUDENT";
   const isStaffView = viewData?.role === "STAFF";
 
   useEffect(() => {
     let cancelled = false;
+
+    showLoader("rutinas-list-load", { text: "Cargando rutinas..." });
 
     const loadInitialData = async () => {
       try {
@@ -63,6 +73,7 @@ export default function RutinasPage() {
         }
       } finally {
         if (!cancelled) {
+          hideLoader("rutinas-list-load");
           setIsLoading(false);
         }
       }
@@ -81,6 +92,20 @@ export default function RutinasPage() {
   }, [isStaffView, viewData]);
 
   const derivedFolders = useMemo(() => deriveRoutineFolders(folders, { query, sortBy, filterBy }), [filterBy, folders, query, sortBy]);
+  const listPagination = useMemo(() => getRoutineFoldersListPage(derivedFolders, currentListPage), [currentListPage, derivedFolders]);
+  const visibleFolders = viewMode === "list" ? listPagination.visibleFolders : derivedFolders;
+
+  useEffect(() => {
+    setCurrentListPage((page) =>
+      clampRoutineFoldersListPage(page, getRoutineFoldersListTotalPages(derivedFolders.length))
+    );
+  }, [derivedFolders]);
+
+  useEffect(() => {
+    if (viewMode === "grid") {
+      setCurrentListPage(1);
+    }
+  }, [viewMode]);
 
   const studentFolder = isStudentView ? viewData?.folder ?? null : null;
 
@@ -198,7 +223,33 @@ export default function RutinasPage() {
               </p>
             ) : null}
 
-            <RoutineFolderGrid folders={derivedFolders} viewMode={viewMode} />
+            <RoutineFolderGrid folders={visibleFolders} viewMode={viewMode} />
+
+            {viewMode === "list" && listPagination.totalPages > 1 ? (
+              <nav className={styles.detailPagination} aria-label="Paginación de carpetas de rutinas">
+                <span className={styles.detailPaginationMeta}>
+                  Página {listPagination.currentPage} de {listPagination.totalPages}
+                </span>
+                <div className={styles.detailPaginationActions}>
+                  <button
+                    type="button"
+                    className={styles.detailPaginationButton}
+                    onClick={() => setCurrentListPage((page) => Math.max(1, page - 1))}
+                    disabled={listPagination.currentPage === 1}
+                  >
+                    Anterior
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.detailPaginationButton}
+                    onClick={() => setCurrentListPage((page) => Math.min(page + 1, listPagination.totalPages))}
+                    disabled={listPagination.currentPage === listPagination.totalPages}
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              </nav>
+            ) : null}
           </section>
         ) : null}
       </div>

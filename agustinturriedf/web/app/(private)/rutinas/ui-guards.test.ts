@@ -42,6 +42,12 @@ describe("rutinas UI guards", () => {
     expect(listPageSource).toContain("Sin archivos");
     expect(listPageSource).toContain("Vista de grilla");
     expect(listPageSource).toContain("Vista de lista");
+    expect(listPageSource).toContain("getRoutineFoldersListPage");
+    expect(listPageSource).toContain("viewMode === \"list\" && listPagination.totalPages > 1");
+    expect(listPageSource).toContain('aria-label="Paginación de carpetas de rutinas"');
+    expect(listPageSource).toContain("setCurrentListPage");
+    expect(listPageSource).toContain("Math.max(1, page - 1)");
+    expect(listPageSource).toContain("Math.min(page + 1, listPagination.totalPages)");
 
     expect(listPageSource).not.toContain("create_new_folder");
     expect(listPageSource).not.toContain("Crear carpeta");
@@ -53,6 +59,16 @@ describe("rutinas UI guards", () => {
     expect(rutinasStyles).toContain(".searchIcon {");
     expect(rutinasStyles).toContain(".searchWrap input {");
     expect(rutinasStyles).toContain("padding: 0.66rem 0.9rem 0.66rem 2.35rem;");
+  });
+
+  it("gates onReplace prop to RoutineFilesList by canReplaceFiles permission", () => {
+    const detailPageSource = readFileSync(resolveRutinasFile("[folderId]", "page.tsx"), "utf8");
+
+    // Verify the conditional spread pattern for onReplace
+    expect(detailPageSource).toMatch(/\{\.\.\.\(routinePermissions\.canReplaceFiles\s*\?\s*\{/);
+    expect(detailPageSource).toContain("routinePermissions.canReplaceFiles");
+    // onReplace is NOT unconditionally passed — check it's not the old unconditional form
+    expect(detailPageSource).not.toMatch(/onReplace=\{\(file\)\s*=>\s*\{[\s\S]*setActiveReplaceFile/);
   });
 
   it("keeps /rutinas/[folderId] without manual folder CRUD and gates file actions by permissions", () => {
@@ -88,13 +104,24 @@ describe("rutinas UI guards", () => {
     expect(modalSource).toContain("buildRoutinePreviewUrl");
     expect(modalSource).toContain("parseRoutineWorkbookPreview");
     expect(modalSource).toContain("<iframe");
-    expect(modalSource).toContain("role=\"tablist\"");
-    expect(runtimeSource).toContain("buildRoutinePreviewUrl");
+    expect(modalSource).toContain('role="tab"');
+    expect(modalSource).toContain("serializeRoutineWorkbook");
     expect(runtimeSource).toContain("fetchRoutinePreviewBinary");
     expect(runtimeSource).toContain("validateRoutineFileForUpload");
     expect(runtimeSource).toContain("uploadRoutineFiles");
     expect(uploadModalSource).toContain("multiple");
     expect(uploadModalSource).toContain("validateRoutineFileForUpload");
+
+    // File-list search control
+    expect(detailPageSource).toContain("filterRoutineFiles");
+    expect(detailPageSource).toContain("fileQuery");
+    expect(detailPageSource).toContain("filteredFiles");
+    expect(detailPageSource).toContain("detailSearchWrap");
+    expect(detailPageSource).toContain("detailSearchInput");
+    expect(detailPageSource).toContain("Buscar archivo por nombre o tipo...");
+    expect(detailPageSource).toContain('aria-label="Buscar archivo por nombre o tipo"');
+    expect(detailPageSource).toContain('type="search"');
+    expect(detailPageSource).toContain("No hay archivos que coincidan con la búsqueda.");
   });
 
   it("keeps upload/loading animation and preview cursor affordances scoped to previewable cards", () => {
