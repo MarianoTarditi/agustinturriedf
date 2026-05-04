@@ -90,6 +90,31 @@ export type CreateUserApiResponse =
     }
   | UserApiErrorResponse;
 
+export type ApiInvitation = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  trainerId: string;
+  status: "PENDING" | "SENT" | "CONSUMED" | "EXPIRED" | "REVOKED";
+  expiresAt: string | null;
+  createdAt: string;
+};
+
+export type InvitationsApiResponse =
+  | {
+      success: true;
+      data: ApiInvitation[];
+    }
+  | UserApiErrorResponse;
+
+export type CreateInvitationApiResponse =
+  | {
+      success: true;
+      data: ApiInvitation;
+    }
+  | UserApiErrorResponse;
+
 export type DeleteUserApiResponse =
   | {
       success: true;
@@ -224,6 +249,47 @@ export const createStudentRuntime = async (
   }
 
   return mapApiUserToRow(responsePayload.data);
+};
+
+export const fetchInvitationsRuntime = async (fetchImpl: typeof fetch): Promise<ApiInvitation[]> => {
+  const response = await fetchImpl("/api/invitations", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    cache: "no-store",
+  });
+
+  const payload = (await response.json()) as InvitationsApiResponse;
+
+  if (!response.ok || !payload.success) {
+    const message = payload.success ? "No se pudo cargar la lista de invitaciones." : payload.error.message;
+    throw new Error(message);
+  }
+
+  return payload.data;
+};
+
+export const createInvitationRuntime = async (
+  fetchImpl: typeof fetch,
+  payload: CreateStudentPayload
+): Promise<ApiInvitation> => {
+  const response = await fetchImpl("/api/invitations", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const responsePayload = (await response.json()) as CreateInvitationApiResponse;
+
+  if (!response.ok || !responsePayload.success) {
+    const message = responsePayload.success ? "No se pudo crear la invitación." : responsePayload.error.message;
+    throw new Error(message);
+  }
+
+  return responsePayload.data;
 };
 
 export const fetchPaymentConfigRuntime = async (fetchImpl: typeof fetch) => {

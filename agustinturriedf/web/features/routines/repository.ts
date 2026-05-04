@@ -144,8 +144,10 @@ export class RoutinesRepository {
     });
   }
 
-  async ensureFolderForStudent(input: RoutineFolderCreateInput) {
-    return prismaRoutines.routineFolder.upsert({
+  async ensureFolderForStudent(input: RoutineFolderCreateInput, transactionOverride?: any) {
+    const client = transactionOverride ?? prismaRoutines;
+
+    return client.routineFolder.upsert({
       where: {
         studentProfileId: input.studentProfileId,
       },

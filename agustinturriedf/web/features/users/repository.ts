@@ -92,10 +92,10 @@ export class UserRepository {
     });
   }
 
-  async create(input: CreateUserRepositoryInput) {
+  async create(input: CreateUserRepositoryInput, transactionOverride?: any) {
     const prismaUsers = prisma as any;
 
-    return prismaUsers.$transaction(async (transaction: any) => {
+    const runCreate = async (transaction: any) => {
       const createdUser = await transaction.user.create({
         data: {
           firstName: input.firstName,
@@ -152,7 +152,13 @@ export class UserRepository {
       }
 
       return createdUser;
-    });
+    };
+
+    if (transactionOverride) {
+      return runCreate(transactionOverride);
+    }
+
+    return prismaUsers.$transaction(runCreate);
   }
 
   async update(userId: string, input: UpdateUserRepositoryInput) {

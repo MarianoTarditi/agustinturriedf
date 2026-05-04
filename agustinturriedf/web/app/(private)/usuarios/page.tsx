@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, type MouseEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import styles from "@/app/(private)/usuarios/usuarios.module.css";
 import { z } from "zod";
 import { DestructiveConfirmationModal } from "@/components/destructive-confirmation-modal";
@@ -8,7 +8,7 @@ import { MaterialSymbol } from "@/components/material-symbol";
 import { PrivateBreadcrumb } from "@/components/private-breadcrumb";
 import { PrivateTopbar } from "@/components/private-topbar";
 import {
-  createStudentRuntime,
+  createInvitationRuntime,
   deleteUserRuntime,
   fetchPaymentConfigRuntime,
   fetchUsersRuntime,
@@ -229,14 +229,13 @@ function DotIcon() {
 }
 
 export default function UsuariosPage() {
+  const PAGE_SIZE = 4;
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [usersError, setUsersError] = useState<string | null>(null);
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
   const [activeUser, setActiveUser] = useState<UserRow | null>(null);
-  const [openActionsForUser, setOpenActionsForUser] = useState<string | null>(
-    null,
-  );
+  const [currentPage, setCurrentPage] = useState(1);
   const [createStudentForm, setCreateStudentForm] =
     useState<CreateStudentFormState>(createDefaultCreateStudentForm);
   const [createStudentErrors, setCreateStudentErrors] =
@@ -278,7 +277,6 @@ export default function UsuariosPage() {
   ) => {
     setDeleteUserError(null);
     setActiveUser(user);
-    setOpenActionsForUser(null);
     setActiveModal(modal);
   };
 
@@ -296,7 +294,6 @@ export default function UsuariosPage() {
       await deleteUserRuntime(fetch, userId);
 
       setUsers((current) => current.filter((user) => user.id !== userId));
-      setOpenActionsForUser(null);
       setActiveUser(null);
       setActiveModal(null);
     } catch (error) {
@@ -362,7 +359,7 @@ export default function UsuariosPage() {
       setIsCreatingStudent(true);
       setCreateStudentSubmitError(null);
 
-      const createdStudent = await createStudentRuntime(fetch, {
+      await createInvitationRuntime(fetch, {
         firstName: validation.data.firstName.trim(),
         lastName: validation.data.lastName.trim(),
         email: validation.data.email.trim().toLowerCase(),
@@ -387,15 +384,11 @@ export default function UsuariosPage() {
         studentStatus: "ACTIVE",
       });
 
-      setUsers((current) => [
-        createdStudent,
-        ...current.filter((user) => user.id !== createdStudent.id),
-      ]);
       resetCreateStudentModalState();
       setActiveModal(null);
     } catch (error) {
       setCreateStudentSubmitError(
-        error instanceof Error ? error.message : "No se pudo crear el alumno.",
+        error instanceof Error ? error.message : "No se pudo enviar la invitación.",
       );
     } finally {
       setIsCreatingStudent(false);
@@ -455,14 +448,18 @@ export default function UsuariosPage() {
     (user) => user.role === "admin" || user.role === "trainer",
   ).length;
   const totalUsers = users.length;
+  const totalPages = Math.max(1, Math.ceil(users.length / PAGE_SIZE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedUsers = users.slice(
+    (safeCurrentPage - 1) * PAGE_SIZE,
+    safeCurrentPage * PAGE_SIZE,
+  );
 
-  const closeActionsIfClickedOutside = (event: MouseEvent<HTMLElement>) => {
-    const target = event.target as HTMLElement;
-
-    if (!target.closest(`.${styles.rowActionsWrap}`)) {
-      setOpenActionsForUser(null);
+  useEffect(() => {
+    if (currentPage !== safeCurrentPage) {
+      setCurrentPage(safeCurrentPage);
     }
-  };
+  }, [currentPage, safeCurrentPage]);
 
   useEffect(() => {
     if (!activeModal) return;
@@ -476,7 +473,7 @@ export default function UsuariosPage() {
   }, [activeModal, isCreatingStudent, isDeletingUser]);
 
   return (
-    <section className={styles.page} onClick={closeActionsIfClickedOutside}>
+    <section className={styles.page}>
       <PrivateBreadcrumb current="Usuarios" />
       <PrivateTopbar
         title="Gestión de Alumnos"
@@ -564,7 +561,6 @@ export default function UsuariosPage() {
                 type="button"
                 className={styles.createButton}
                 onClick={() => {
-                  setOpenActionsForUser(null);
                   resetCreateStudentModalState();
                   setActiveModal("create");
                 }}
@@ -607,7 +603,7 @@ export default function UsuariosPage() {
                     <td colSpan={6}>No hay usuarios para mostrar.</td>
                   </tr>
                 ) : (
-                  users.map((user) => (
+                  paginatedUsers.map((user) => (
                     <tr key={user.id}>
                       <td>
                         <div
@@ -658,74 +654,31 @@ export default function UsuariosPage() {
                         </span>
                       </td>
                       <td className={styles.alignRight}>
-                        <div className={styles.rowActionsWrap}>
+                        <div className={styles.rowActionsInline}>
                           <button
                             className={styles.moreButton}
                             type="button"
-                            aria-haspopup="menu"
-                            aria-expanded={openActionsForUser === user.id}
-                            aria-label={`Acciones para ${user.name}`}
-                            onClick={() =>
-                              setOpenActionsForUser((current) =>
-                                current === user.id ? null : user.id,
-                              )
-                            }
+                            aria-label={`Ver detalle de ${user.name}`}
+                            onClick={() => openUserModal("detail", user)}
                           >
-                            <MaterialSymbol
-                              name="more_vert"
-                              className={styles.rowActionIcon}
-                              weight={500}
-                              opticalSize={20}
-                            />
+                            <MaterialSymbol name="visibility" className={styles.rowActionIcon} weight={500} opticalSize={20} />
                           </button>
-
-                          {openActionsForUser === user.id ? (
-                            <div
-                              className={styles.rowMenu}
-                              role="menu"
-                              aria-label={`Opciones para ${user.name}`}
-                            >
-                              <button
-                                type="button"
-                                role="menuitem"
-                                onClick={() => openUserModal("detail", user)}
-                              >
-                                <MaterialSymbol
-                                  name="visibility"
-                                  className={styles.rowMenuIcon}
-                                  weight={500}
-                                  opticalSize={18}
-                                />
-                                Ver detalle
-                              </button>
-                              <button
-                                type="button"
-                                role="menuitem"
-                                onClick={() => openUserModal("edit", user)}
-                              >
-                                <MaterialSymbol
-                                  name="edit_note"
-                                  className={styles.rowMenuIcon}
-                                  weight={500}
-                                  opticalSize={18}
-                                />
-                                Editar usuario
-                              </button>
-                              <button
-                                type="button"
-                                role="menuitem"
-                                onClick={() => openUserModal("delete", user)}
-                              >
-                                <MaterialSymbol
-                                  name="delete"
-                                  className={`${styles.rowMenuIcon} ${styles.rowMenuIconDanger}`}
-                                  weight={500}
-                                  opticalSize={18}
-                                />
-                                Eliminar alumno
-                              </button>
-                            </div>
-                          ) : null}
+                          <button
+                            className={styles.moreButton}
+                            type="button"
+                            aria-label={`Editar usuario ${user.name}`}
+                            onClick={() => openUserModal("edit", user)}
+                          >
+                            <MaterialSymbol name="edit_note" className={styles.rowActionIcon} weight={500} opticalSize={20} />
+                          </button>
+                          <button
+                            className={`${styles.moreButton} ${styles.deleteActionButton}`}
+                            type="button"
+                            aria-label={`Eliminar alumno ${user.name}`}
+                            onClick={() => openUserModal("delete", user)}
+                          >
+                            <MaterialSymbol name="delete" className={styles.rowActionIcon} weight={500} opticalSize={20} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -735,9 +688,16 @@ export default function UsuariosPage() {
             </table>
 
             <footer className={styles.pagination}>
-              <p>Página 1 de 1</p>
+              <p>
+                Página {safeCurrentPage} de {totalPages}
+              </p>
               <div>
-                <button type="button" disabled>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={safeCurrentPage <= 1}
+                  aria-label="Página anterior"
+                >
                   <MaterialSymbol
                     name="chevron_left"
                     className={styles.paginationIcon}
@@ -745,7 +705,12 @@ export default function UsuariosPage() {
                     opticalSize={20}
                   />
                 </button>
-                <button type="button">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={safeCurrentPage >= totalPages}
+                  aria-label="Página siguiente"
+                >
                   <MaterialSymbol
                     name="chevron_right"
                     className={styles.paginationIcon}
@@ -779,15 +744,11 @@ export default function UsuariosPage() {
                     <h2 className={styles.modalTitle}>Crear alumno</h2>
                     <p className={styles.modalDescription}>
                       Los usuarios Admin y trainer pueden dar de alta alumnos
-                      desde esta seccion. El usuario accedera al sistema con su
+                      desde esta seccion. El alumno recibirá un email de activación
+                      para definir una contraseña segura con su
                       <span className={styles.modalCodeLabel}>
                         {" "}
                         &quot;Email&quot;{" "}
-                      </span>
-                      y contraseña
-                      <span className={styles.modalCodeLabel}>
-                        {" "}
-                        &quot;123456789&quot;
                       </span>
                       .
                     </p>

@@ -425,6 +425,16 @@
   display: inline-flex;
 }
 
+.rowActionsInline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.deleteActionButton {
+  color: #ffb4ab;
+}
+
 .rowMenu {
   position: absolute;
   top: calc(100% + 0.45rem);
