@@ -61,6 +61,20 @@ describe("Prisma schema foundation", () => {
     expect(schema).toContain("@@index([expiresAt])");
   });
 
+  it("declares invitation model with expected unique constraints and indexes", () => {
+    const schema = readSchema();
+
+    expect(schema).toContain("enum InvitationStatus");
+    expect(schema).toContain("model Invitation");
+    expect(schema).toContain("email                   String           @unique");
+    expect(schema).toContain("tokenHash               String?          @unique");
+    expect(schema).toContain("status                  InvitationStatus @default(PENDING)");
+    expect(schema).toContain("trainer User @relation(fields: [trainerId], references: [id], onDelete: Restrict)");
+    expect(schema).toContain("@@index([trainerId])");
+    expect(schema).toContain("@@index([expiresAt])");
+    expect(schema).toContain("@@index([status])");
+  });
+
   it("contains forgot-password-flow migration with schema updates", () => {
     const migrationsDir = path.resolve(__dirname, "migrations");
     const migrationName = readdirSync(migrationsDir).find((entry) =>

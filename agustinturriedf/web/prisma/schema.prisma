@@ -26,6 +26,14 @@ enum ProfileGender {
   OTHER
 }
 
+enum InvitationStatus {
+  PENDING
+  SENT
+  CONSUMED
+  EXPIRED
+  REVOKED
+}
+
 model User {
   id           String           @id @default(cuid())
   firstName    String
@@ -45,6 +53,7 @@ model User {
 
   studentProfile  StudentProfile?   @relation("StudentUserProfile")
   trainerStudents StudentProfile[]  @relation("TrainerToStudents")
+  invitationsSent Invitation[]
   trainerConfig   TrainerConfig?    @relation("TrainerConfigOwner")
   resetToken      PasswordResetToken?
   recordedPayments PaymentHistory[] @relation("PaymentRecordedByUser")
@@ -62,6 +71,34 @@ model PasswordResetToken {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([expiresAt])
+}
+
+model Invitation {
+  id                      String           @id @default(cuid())
+  email                   String           @unique
+  tokenHash               String?          @unique
+  expiresAt               DateTime?
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+
+  trainerId               String
+  firstName               String
+  lastName                String
+  phone                   String?
+  birthDate               DateTime?
+  gender                  ProfileGender?
+  heightCm                Int?
+  weightKg                Int?
+  initialPaymentStartDate DateTime?
+  status                  InvitationStatus @default(PENDING)
+  consumedAt              DateTime?
+
+  trainer User @relation(fields: [trainerId], references: [id], onDelete: Restrict)
+
+  @@index([email])
+  @@index([trainerId])
+  @@index([expiresAt])
+  @@index([status])
 }
 
 model StudentProfile {
@@ -183,6 +220,7 @@ model VideotecaFile {
   extension    String
   mediaType    String
   relativePath String
+  thumbnailPath String?
   sizeBytes    Int
   orderIndex   Int
   createdAt    DateTime @default(now())
