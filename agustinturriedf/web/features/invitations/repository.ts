@@ -20,7 +20,29 @@ export type CreateInvitationRepositoryInput = {
 
 export class InvitationRepository {
   async create(input: CreateInvitationRepositoryInput) {
-    return prismaInvitations.invitation.create({ data: input });
+    return prismaInvitations.invitation.upsert({
+      where: {
+        email: input.email,
+      },
+      update: {
+        firstName: input.firstName,
+        lastName: input.lastName,
+        trainerId: input.trainerId,
+        phone: input.phone,
+        birthDate: input.birthDate,
+        gender: input.gender,
+        heightCm: input.heightCm,
+        weightKg: input.weightKg,
+        initialPaymentStartDate: input.initialPaymentStartDate,
+        tokenHash: input.tokenHash,
+        expiresAt: input.expiresAt,
+        status: input.status ?? "SENT",
+        consumedAt: null,
+      },
+      create: {
+        ...input,
+      },
+    });
   }
 
   async findByEmail(email: string) {

@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
-  createMock,
+  upsertMock,
   findUniqueMock,
   findManyMock,
   updateMock,
 } = vi.hoisted(() => ({
-  createMock: vi.fn(),
+  upsertMock: vi.fn(),
   findUniqueMock: vi.fn(),
   findManyMock: vi.fn(),
   updateMock: vi.fn(),
@@ -15,7 +15,7 @@ const {
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     invitation: {
-      create: createMock,
+      upsert: upsertMock,
       findUnique: findUniqueMock,
       findMany: findManyMock,
       update: updateMock,
@@ -31,7 +31,7 @@ describe("invitationRepository", () => {
   });
 
   it("creates invitation record", async () => {
-    createMock.mockResolvedValue({ id: "inv-1" });
+    upsertMock.mockResolvedValue({ id: "inv-1" });
 
     await invitationRepository.create({
       email: "student@example.com",
@@ -42,8 +42,12 @@ describe("invitationRepository", () => {
       lastName: "Gomez",
     });
 
-    expect(createMock).toHaveBeenCalledWith(
-      expect.objectContaining({ data: expect.objectContaining({ email: "student@example.com" }) })
+    expect(upsertMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { email: "student@example.com" },
+        create: expect.objectContaining({ email: "student@example.com" }),
+        update: expect.objectContaining({ tokenHash: "hash", status: "SENT" }),
+      })
     );
   });
 

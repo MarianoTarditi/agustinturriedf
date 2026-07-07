@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 
 const { activateMock } = vi.hoisted(() => ({
   activateMock: vi.fn(),
@@ -10,7 +12,8 @@ vi.mock("@/features/invitations/service", () => ({
   },
 }));
 
-import { ACTIVATION_SUCCESS_MESSAGE, POST } from "@/app/api/activations/route";
+import { POST } from "@/app/api/activations/route";
+import { ACTIVATION_SUCCESS_MESSAGE } from "@/app/api/activations/contract";
 
 describe("POST /api/activations", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -57,5 +60,11 @@ describe("POST /api/activations", () => {
       success: false,
       error: { code: "VALIDATION_ERROR", message: "Validation failed" },
     });
+  });
+
+  it("does not export non-handler symbols from route module", () => {
+    const routeSource = readFileSync(path.join(process.cwd(), "app", "api", "activations", "route.ts"), "utf8");
+
+    expect(routeSource).not.toContain("export { ACTIVATION_SUCCESS_MESSAGE }");
   });
 });

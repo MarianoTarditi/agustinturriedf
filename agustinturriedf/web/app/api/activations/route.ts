@@ -3,7 +3,6 @@ import { handleApiError } from "@/lib/http/api-response";
 import { activateInvitationSchema } from "@/lib/validation/invitations";
 
 import {
-  ACTIVATION_SUCCESS_MESSAGE,
   activationSuccessResponse,
   createActivationValidationError,
 } from "@/app/api/activations/contract";
@@ -25,5 +24,3 @@ export const POST = async (request: Request) => {
     return handleApiError(error);
   }
 };
-
-export { ACTIVATION_SUCCESS_MESSAGE };

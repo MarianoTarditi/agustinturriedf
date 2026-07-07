@@ -127,6 +127,31 @@ describe("invitations create -> activate integration flow", () => {
     });
 
     createInvitationMock.mockImplementation(async (input: any) => {
+      const existingByEmail = Array.from(invitationStore.values()).find((entry) => entry.email === input.email);
+
+      if (existingByEmail) {
+        const updated: InvitationRecord = {
+          ...existingByEmail,
+          firstName: input.firstName,
+          lastName: input.lastName,
+          trainerId: input.trainerId,
+          tokenHash: input.tokenHash,
+          expiresAt: input.expiresAt,
+          status: input.status,
+          phone: input.phone,
+          birthDate: input.birthDate,
+          gender: input.gender,
+          heightCm: input.heightCm,
+          weightKg: input.weightKg,
+          initialPaymentStartDate: input.initialPaymentStartDate,
+          consumedAt: null,
+          updatedAt: new Date(),
+        };
+
+        invitationStore.set(updated.id, updated);
+        return updated;
+      }
+
       const record: InvitationRecord = {
         id: `inv-${invitationStore.size + 1}`,
         email: input.email,
@@ -235,5 +260,40 @@ describe("invitations create -> activate integration flow", () => {
         confirmPassword: "Segura123",
       })
     ).rejects.toMatchObject({ status: 400, code: "INVALID_OR_EXPIRED_TOKEN" });
+  });
+
+  it("re-issuing invitation replaces previous token for same email", async () => {
+    const actor = { id: "c123456789012345678901234", role: "TRAINER" } as any;
+
+    await invitationService.create(actor, {
+      firstName: "Ana",
+      lastName: "Gomez",
+      email: "ana@example.com",
+      trainerId: "c123456789012345678901234",
+      initialPaymentStartDate: "2026-05-01",
+    });
+
+    const firstToken = new URL(sentActivationUrls[0]).searchParams.get("token");
+    expect(firstToken).toBeTruthy();
+
+    await invitationService.create(actor, {
+      firstName: "Ana",
+      lastName: "Gomez",
+      email: "ana@example.com",
+      trainerId: "c123456789012345678901234",
+      initialPaymentStartDate: "2026-05-01",
+    });
+
+    const secondToken = new URL(sentActivationUrls[1]).searchParams.get("token");
+    expect(secondToken).toBeTruthy();
+    expect(secondToken).not.toBe(firstToken);
+
+    await expect(
+      invitationService.activate({ token: firstToken, password: "Segura123", confirmPassword: "Segura123" })
+    ).rejects.toMatchObject({ status: 400, code: "INVALID_OR_EXPIRED_TOKEN" });
+
+    await expect(
+      invitationService.activate({ token: secondToken, password: "Segura123", confirmPassword: "Segura123" })
+    ).resolves.toEqual({ message: "Cuenta activada. Ya podés iniciar sesión." });
   });
 });

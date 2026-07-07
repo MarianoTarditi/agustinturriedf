@@ -128,21 +128,34 @@ describe("invitationService", () => {
     expect(result.email).toBe("student@example.com");
   });
 
-  it("rejects creation when email already has active invitation", async () => {
+  it("replaces active invitation when email already has one", async () => {
     findByEmailMock.mockResolvedValue({ id: "inv-existing", status: "SENT" });
+    createMock.mockResolvedValue({
+      id: "inv-existing",
+      email: "student@example.com",
+      firstName: "Ana",
+      lastName: "Gomez",
+      trainerId: "c123456789012345678901234",
+      status: "SENT",
+      expiresAt: new Date(Date.now() + 1000),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
 
-    await expect(
-      invitationService.create(
-        { id: "c123456789012345678901234", role: "TRAINER" } as any,
-        {
-          firstName: "Ana",
-          lastName: "Gomez",
-          email: "student@example.com",
-          trainerId: "c123456789012345678901234",
-          initialPaymentStartDate: "2026-05-01",
-        }
-      )
-    ).rejects.toMatchObject({ status: 409, code: "CONFLICT" });
+    const result = await invitationService.create(
+      { id: "c123456789012345678901234", role: "TRAINER" } as any,
+      {
+        firstName: "Ana",
+        lastName: "Gomez",
+        email: "student@example.com",
+        trainerId: "c123456789012345678901234",
+        initialPaymentStartDate: "2026-05-01",
+      }
+    );
+
+    expect(createMock).toHaveBeenCalledTimes(1);
+    expect(sendActivationEmailMock).toHaveBeenCalledTimes(1);
+    expect(result.id).toBe("inv-existing");
   });
 
   it("resends invitation by rotating token and expiration", async () => {

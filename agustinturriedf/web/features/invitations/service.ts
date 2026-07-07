@@ -54,11 +54,6 @@ export class InvitationService {
     }
 
     const email = normalizeEmail(parsedInput.email);
-    const existingInvitation = await invitationRepository.findByEmail(email);
-
-    if (existingInvitation && (existingInvitation.status === "PENDING" || existingInvitation.status === "SENT")) {
-      throw new ApiError("Ya existe una invitación activa para este email", 409, "CONFLICT");
-    }
 
     const rawToken = generateToken();
     const expiresAt = addHours(new Date(), TOKEN_EXPIRATION_HOURS);

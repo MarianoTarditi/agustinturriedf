@@ -8,12 +8,13 @@ const resolveActivationToken = (token: string | string[] | undefined) => {
   return token.trim().length > 0 ? token.trim() : null;
 };
 
-export default function ActivationPage({
+export default async function ActivationPage({
   searchParams,
 }: {
-  searchParams?: { token?: string | string[] | undefined };
+  searchParams?: Promise<{ token?: string | string[] | undefined }>;
 }) {
-  const token = resolveActivationToken(searchParams?.token);
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const token = resolveActivationToken(resolvedSearchParams?.token);
 
   return (
     <AuthCard>

@@ -13,6 +13,7 @@ describe("activation UI structure", () => {
     expect(source).toContain("resolveActivationToken");
     expect(source).toContain("searchParams");
     expect(source).toContain("ActivationForm");
+    expect(source).toContain("Promise<{ token?: string | string[] | undefined }>");
   });
 
   it("shows invalid link message when token is missing", () => {
