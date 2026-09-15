@@ -15,6 +15,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate:dev": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:reconcile:admin-users": "prisma db execute --file prisma/reconciliation/admin-users-foundation.sql --schema prisma/schema.prisma",
     "routines:backfill": "tsx scripts/backfill-routine-folders.ts",
     "payments:backfill": "tsx scripts/backfill-current-payments.ts",
     "prisma:studio": "prisma studio",

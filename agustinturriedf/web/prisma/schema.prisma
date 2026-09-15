@@ -34,6 +34,38 @@ enum InvitationStatus {
   REVOKED
 }
 
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+  ARCHIVED
+}
+
+enum InvitationDeliveryStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum ProvisioningStatus {
+  PENDING
+  READY
+  FAILED
+}
+
+enum OutboxStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum AuditActorType {
+  USER
+  SYSTEM
+  SUBJECT
+}
+
 model User {
   id           String           @id @default(cuid())
   firstName    String
@@ -48,6 +80,12 @@ model User {
   passwordHash String
   passwordUpdatedAt DateTime?
   role         Role
+  status       AccountStatus @default(ACTIVE)
+  version      Int           @default(1)
+  authVersion  Int           @default(1)
+  archivedAt   DateTime?
+  archivedByUserId String?
+  archiveReason String?
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
 
@@ -57,8 +95,13 @@ model User {
   trainerConfig   TrainerConfig?    @relation("TrainerConfigOwner")
   resetToken      PasswordResetToken?
   recordedPayments PaymentHistory[] @relation("PaymentRecordedByUser")
+  archivedUsers User[] @relation("ArchivedUsers")
+  archivedByUser User? @relation("ArchivedUsers", fields: [archivedByUserId], references: [id], onDelete: SetNull)
+  auditEventsAsSubject AuditEvent[] @relation("AuditSubject")
+  auditEventsAsActor AuditEvent[] @relation("AuditActor")
 
   @@index([role])
+  @@index([status])
 }
 
 model PasswordResetToken {
@@ -75,13 +118,15 @@ model PasswordResetToken {
 
 model Invitation {
   id                      String           @id @default(cuid())
-  email                   String           @unique
+  email                   String
+  role                    Role             @default(STUDENT)
+  version                 Int              @default(1)
   tokenHash               String?          @unique
   expiresAt               DateTime?
   createdAt               DateTime         @default(now())
   updatedAt               DateTime         @updatedAt
 
-  trainerId               String
+  trainerId               String?
   firstName               String
   lastName                String
   phone                   String?
@@ -91,14 +136,18 @@ model Invitation {
   weightKg                Int?
   initialPaymentStartDate DateTime?
   status                  InvitationStatus @default(PENDING)
+  deliveryStatus          InvitationDeliveryStatus @default(PENDING)
   consumedAt              DateTime?
 
-  trainer User @relation(fields: [trainerId], references: [id], onDelete: Restrict)
+  trainer User? @relation(fields: [trainerId], references: [id], onDelete: Restrict)
+  activationSessions ActivationSession[]
+  auditEvents AuditEvent[]
 
   @@index([email])
   @@index([trainerId])
   @@index([expiresAt])
   @@index([status])
+  @@index([role])
 }
 
 model StudentProfile {
@@ -106,6 +155,7 @@ model StudentProfile {
   userId    String        @unique
   trainerId String
   status    StudentStatus @default(ACTIVE)
+  provisioningStatus ProvisioningStatus @default(PENDING)
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
@@ -117,6 +167,70 @@ model StudentProfile {
 
   @@index([trainerId])
   @@index([status])
+}
+
+model ActivationSession {
+  id          String   @id @default(cuid())
+  invitationId String
+  sessionHash String   @unique
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  invitation Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  @@index([invitationId])
+  @@index([expiresAt])
+}
+
+model AuditEvent {
+  id            String         @id @default(cuid())
+  eventType     String
+  subjectUserId String?
+  invitationId  String?
+  actorType     AuditActorType
+  actorUserId   String?
+  reason        String?
+  summary       Json
+  createdAt     DateTime       @default(now())
+
+  subjectUser User? @relation("AuditSubject", fields: [subjectUserId], references: [id], onDelete: Restrict)
+  invitation  Invitation? @relation(fields: [invitationId], references: [id], onDelete: Restrict)
+  actorUser   User? @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@index([subjectUserId, createdAt])
+  @@index([invitationId, createdAt])
+}
+
+model OutboxMessage {
+  id             String      @id @default(cuid())
+  messageType    String
+  resourceType   String
+  resourceId     String
+  idempotencyKey String      @unique
+  payloadEncrypted String?
+  status         OutboxStatus @default(PENDING)
+  attempts       Int         @default(0)
+  availableAt    DateTime    @default(now())
+  leaseExpiresAt DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([status, availableAt])
+}
+
+model ThrottleBucket {
+  id        String   @id @default(cuid())
+  scope     String
+  subject   String
+  count     Int      @default(0)
+  resetAt   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([scope, subject])
+  @@index([resetAt])
 }
 
 model TrainerConfig {
