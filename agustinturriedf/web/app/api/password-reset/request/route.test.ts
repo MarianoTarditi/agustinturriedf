@@ -13,8 +13,8 @@ vi.mock("@/features/auth/password-reset/service", () => ({
 import {
   PASSWORD_RESET_GENERIC_SUCCESS_MESSAGE,
   PASSWORD_RESET_REQUEST_MIN_DURATION_MS,
-  POST,
-} from "@/app/api/password-reset/request/route";
+} from "@/app/api/password-reset/contract";
+import { POST } from "@/app/api/password-reset/request/route";
 
 describe("POST /api/password-reset/request", () => {
   beforeEach(() => {

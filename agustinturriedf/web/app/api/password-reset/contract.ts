@@ -2,6 +2,7 @@ import { ApiError, apiSuccess } from "@/lib/http/api-response";
 
 export const PASSWORD_RESET_GENERIC_SUCCESS_MESSAGE = "Si el email existe, te enviamos instrucciones.";
 export const PASSWORD_RESET_CONFIRM_SUCCESS_MESSAGE = "Contraseña actualizada.";
+export const PASSWORD_RESET_REQUEST_MIN_DURATION_MS = 250;
 
 export const createValidationError = (details: unknown) =>
   new ApiError("Validation failed", 400, "VALIDATION_ERROR", details);

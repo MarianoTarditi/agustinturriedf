@@ -5,10 +5,9 @@ import { requestPasswordResetSchema } from "@/lib/validation/password-reset";
 import {
   createValidationError,
   PASSWORD_RESET_GENERIC_SUCCESS_MESSAGE,
+  PASSWORD_RESET_REQUEST_MIN_DURATION_MS,
   passwordResetGenericSuccessResponse,
 } from "@/app/api/password-reset/contract";
-
-export const PASSWORD_RESET_REQUEST_MIN_DURATION_MS = 250;
 
 const waitForMinimumResponseDuration = async (startedAtMs: number) => {
   const elapsedMs = Date.now() - startedAtMs;
@@ -42,5 +41,3 @@ export const POST = async (request: Request) => {
     return handleApiError(error);
   }
 };
-
-export { PASSWORD_RESET_GENERIC_SUCCESS_MESSAGE };

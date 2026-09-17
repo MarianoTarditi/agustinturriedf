@@ -203,10 +203,8 @@ vi.mock("next-auth/providers/credentials", () => ({
 }));
 
 import { POST as confirmPasswordReset } from "@/app/api/password-reset/confirm/route";
-import {
-  PASSWORD_RESET_GENERIC_SUCCESS_MESSAGE,
-  POST as requestPasswordReset,
-} from "@/app/api/password-reset/request/route";
+import { PASSWORD_RESET_GENERIC_SUCCESS_MESSAGE } from "@/app/api/password-reset/contract";
+import { POST as requestPasswordReset } from "@/app/api/password-reset/request/route";
 import { authConfig } from "@/auth";
 import { authorizeCredentials } from "@/features/auth/credentials";
 
