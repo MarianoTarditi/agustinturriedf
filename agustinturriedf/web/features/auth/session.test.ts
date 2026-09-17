@@ -45,6 +45,7 @@ describe("requireSession", () => {
     findUniqueMock.mockResolvedValue({
       id: "student-1",
       role: "STUDENT",
+      status: "ACTIVE",
       studentProfile: {
         id: "profile-1",
         trainerId: "trainer-1",
@@ -77,6 +78,7 @@ describe("requireSession", () => {
     findUniqueMock.mockResolvedValue({
       id: "student-2",
       role: "STUDENT",
+      status: "ACTIVE",
       passwordUpdatedAt: new Date("2026-02-01T10:00:00.000Z"),
       studentProfile: {
         id: "profile-2",

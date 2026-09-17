@@ -7,6 +7,7 @@ const {
   findByEmailMock,
   createMock,
   findByIdMock,
+  updateMock,
   deleteMock,
   ensureFolderForStudentMock,
   ensureStudentRoutineDirectoryMock,
@@ -18,6 +19,7 @@ const {
   findByEmailMock: vi.fn(),
   createMock: vi.fn(),
   findByIdMock: vi.fn(),
+  updateMock: vi.fn(),
   deleteMock: vi.fn(),
   ensureFolderForStudentMock: vi.fn(),
   ensureStudentRoutineDirectoryMock: vi.fn(),
@@ -32,6 +34,7 @@ vi.mock("@/features/users/repository", () => ({
     findByEmail: findByEmailMock,
     create: createMock,
     findById: findByIdMock,
+    update: updateMock,
     delete: deleteMock,
   },
 }));
@@ -54,14 +57,14 @@ describe("UserService.listUsers", () => {
     vi.clearAllMocks();
   });
 
-  it("allows TRAINER role and returns mapped users", async () => {
+  it("allows TRAINER role and returns mapped student users", async () => {
     listMock.mockResolvedValue([
       {
         id: "u-1",
         firstName: "Ana",
-        lastName: "Trainer",
+        lastName: "Student",
         email: "ana@example.com",
-        role: "TRAINER",
+        role: "STUDENT",
         createdAt: new Date("2026-01-01T00:00:00.000Z"),
         updatedAt: new Date("2026-01-01T00:00:00.000Z"),
         studentProfile: null,
@@ -74,7 +77,7 @@ describe("UserService.listUsers", () => {
     expect(result[0]).toMatchObject({
       id: "u-1",
       email: "ana@example.com",
-      role: "TRAINER",
+      role: "STUDENT",
       studentProfile: null,
     });
   });
@@ -85,6 +88,43 @@ describe("UserService.listUsers", () => {
       code: "FORBIDDEN",
     });
     expect(listMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("UserService.updateUser", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it.each(["ADMIN", "TRAINER"] as const)("rejects a trainer update targeting a %s account", async (role) => {
+    findByIdMock.mockResolvedValue({
+      id: "team-1",
+      role,
+      studentProfile: null,
+    });
+
+    await expect(
+      userService.updateUser({ id: "trainer-1", role: "TRAINER" }, "team-1", { firstName: "Changed" })
+    ).rejects.toMatchObject({
+      status: 403,
+      code: "FORBIDDEN",
+    });
+
+    expect(updateMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a role-injection payload before updating the target", async () => {
+    findByIdMock.mockResolvedValue({ id: "student-1", role: "STUDENT", studentProfile: { trainerId: "trainer-1" } });
+
+    await expect(
+      userService.updateUser(
+        { id: "admin-1", role: "ADMIN" },
+        "student-1",
+        { firstName: "Changed", role: "ADMIN" } as never
+      )
+    ).rejects.toMatchObject({ name: "ZodError" });
+
+    expect(updateMock).not.toHaveBeenCalled();
   });
 });
 

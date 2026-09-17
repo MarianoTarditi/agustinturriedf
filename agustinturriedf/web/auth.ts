@@ -8,6 +8,7 @@ import {
   toPasswordUpdatedAtIso,
 } from "@/features/auth/password-updated-at";
 import { prisma } from "@/lib/prisma";
+import { isActiveAccount } from "@/features/users/policy";
 
 export const authConfig = {
   ...edgeAuthConfig,
@@ -35,8 +36,12 @@ export const authConfig = {
       const prismaAuth = prisma as any;
       const authUser = (await prismaAuth.user.findUnique({
         where: { id: edgeToken.sub },
-        select: { passwordUpdatedAt: true },
-      })) as { passwordUpdatedAt?: Date | null } | null;
+        select: { passwordUpdatedAt: true, status: true },
+      })) as { passwordUpdatedAt?: Date | null; status: "ACTIVE" | "INACTIVE" | "BLOCKED" | "ARCHIVED" } | null;
+
+      if (!authUser || !isActiveAccount(authUser.status)) {
+        return null;
+      }
 
       const passwordUpdatedAtIso = toPasswordUpdatedAtIso(authUser?.passwordUpdatedAt);
 

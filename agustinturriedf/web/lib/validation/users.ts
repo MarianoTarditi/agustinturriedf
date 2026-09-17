@@ -163,10 +163,10 @@ export const updateUserSchema = z
     firstName: requiredStringSchema.optional(),
     lastName: requiredStringSchema.optional(),
     email: emailSchema.optional(),
-    role: roleSchema.optional(),
     trainerId: cuidSchema.optional(),
     studentStatus: studentStatusSchema.optional(),
   })
+  .strict()
   .refine((value) => Object.keys(value).length > 0, {
     message: "Debe enviarse al menos un campo para actualizar",
   });

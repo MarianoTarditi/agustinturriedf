@@ -53,13 +53,5 @@ export const PATCH = async (request: Request, context: UserRouteContext) => {
 };
 
 export const DELETE = async (_request: Request, context: UserRouteContext) => {
-  try {
-    const actor = await requireSession();
-    const userId = await resolveUserId(context);
-    const deletedUser = await userService.deleteUser(actor, userId);
-
-    return apiSuccess(deletedUser);
-  } catch (error) {
-    return handleApiError(error);
-  }
+  return new Response(null, { status: 405, headers: { Allow: "GET, PATCH" } });
 };

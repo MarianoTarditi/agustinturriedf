@@ -44,7 +44,6 @@ export type UpdateUserRepositoryInput = {
   firstName?: string;
   lastName?: string;
   email?: string;
-  role?: Role;
   passwordHash?: string;
   studentProfile?: StudentProfileUpdateAction;
 };
@@ -167,7 +166,6 @@ export class UserRepository {
         firstName: input.firstName,
         lastName: input.lastName,
         email: input.email,
-        role: input.role,
         passwordHash: input.passwordHash,
       }),
     };

@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { evaluatePaymentAccess } from "@/features/auth/payment-access";
 import { toPasswordUpdatedAtIso } from "@/features/auth/password-updated-at";
 import { type AuthenticatedUser } from "@/features/auth/authorization";
+import { isActiveAccount } from "@/features/users/policy";
 import { ApiError } from "@/lib/http/api-response";
 import { prisma } from "@/lib/prisma";
 
@@ -29,6 +30,7 @@ export const requireSession = async (): Promise<AuthenticatedUser> => {
     | {
         id: string;
         role: "ADMIN" | "TRAINER" | "STUDENT";
+        status: "ACTIVE" | "INACTIVE" | "BLOCKED" | "ARCHIVED";
         passwordUpdatedAt?: Date | null;
         studentProfile?: {
           id: string;
@@ -43,6 +45,10 @@ export const requireSession = async (): Promise<AuthenticatedUser> => {
 
   if (!currentUser) {
     throw new ApiError("Sesión inválida", 401, "UNAUTHORIZED");
+  }
+
+  if (!isActiveAccount(currentUser.status)) {
+    throw new ApiError("Cuenta bloqueada", 403, "FORBIDDEN");
   }
 
   const paymentAccess = evaluatePaymentAccess({
@@ -63,6 +69,7 @@ export const requireSession = async (): Promise<AuthenticatedUser> => {
     ...session.user,
     id: currentUser.id,
     role: currentUser.role,
+    accountStatus: currentUser.status,
     passwordUpdatedAt:
       toPasswordUpdatedAtIso(currentUser.passwordUpdatedAt) ??
       toPasswordUpdatedAtIso(session.user.passwordUpdatedAt),

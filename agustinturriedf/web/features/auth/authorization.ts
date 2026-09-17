@@ -8,6 +8,7 @@ type Role = "ADMIN" | "TRAINER" | "STUDENT";
 export type AuthenticatedUser = Session["user"] & {
   id: string;
   role: Role;
+  accountStatus?: "ACTIVE" | "INACTIVE" | "BLOCKED" | "ARCHIVED";
   studentStatus?: "ACTIVE" | "INACTIVE" | "BLOCKED";
   studentProfileId?: string;
   trainerId?: string;

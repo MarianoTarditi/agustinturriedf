@@ -1,10 +1,15 @@
 import { hash } from "bcryptjs";
 
 import {
-  canAccessUserResource,
   requireRole,
   type AuthenticatedUser,
 } from "@/features/auth/authorization";
+import { type UserDTO } from "@/features/users/dto";
+import {
+  requireUserDirectoryAccess,
+  requireUserMutationAccess,
+  requireUserReadAccess,
+} from "@/features/users/policy";
 import {
   routinesRepository,
 } from "@/features/routines/repository";
@@ -32,26 +37,7 @@ import {
 
 const DEFAULT_BOOTSTRAP_PASSWORD = "123456789";
 
-export type UserDTO = {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string | null;
-  photoUrl: string | null;
-  birthDate: Date | null;
-  gender: "MALE" | "FEMALE" | "NON_BINARY" | "OTHER" | null;
-  heightCm: number | null;
-  weightKg: number | null;
-  role: "ADMIN" | "TRAINER" | "STUDENT";
-  createdAt: Date;
-  updatedAt: Date;
-  studentProfile: {
-    id: string;
-    trainerId: string;
-    status: "ACTIVE" | "INACTIVE" | "BLOCKED";
-  } | null;
-};
+export type { UserDTO } from "@/features/users/dto";
 
 type SelfProfileRecord = {
   firstName: string;
@@ -77,6 +63,7 @@ const mapToUserDTO = (user: Awaited<ReturnType<typeof userRepository.create>>): 
   heightCm: user.heightCm,
   weightKg: user.weightKg,
   role: user.role,
+  status: user.status,
   createdAt: user.createdAt,
   updatedAt: user.updatedAt,
   studentProfile: user.studentProfile
@@ -195,22 +182,22 @@ export class UserService {
   }
 
   async listUsers(actor: AuthenticatedUser) {
-    requireRole(actor, ["ADMIN", "TRAINER"], "Solo ADMIN y TRAINER pueden listar usuarios");
+    requireUserDirectoryAccess(actor);
 
     const users = await userRepository.list();
-    return users.map(mapToUserDTO);
+    return users
+      .filter((user) => actor.role === "ADMIN" || user.role === "STUDENT")
+      .map(mapToUserDTO);
   }
 
   async getUserById(actor: AuthenticatedUser, userId: string) {
-    if (!canAccessUserResource(actor, userId)) {
-      throw new ApiError("No tenés permisos para ver este usuario", 403, "FORBIDDEN");
-    }
-
     const user = await userRepository.findById(userId);
 
     if (!user) {
       throw new ApiError("Usuario no encontrado", 404, "NOT_FOUND");
     }
+
+    requireUserReadAccess(actor, user);
 
     return mapToUserDTO(user);
   }
@@ -291,14 +278,13 @@ export class UserService {
       throw new ApiError("Usuario no encontrado", 404, "NOT_FOUND");
     }
 
-    const parsedInput = updateUserSchema.parse(input);
-    const nextRole = parsedInput.role ?? currentUser.role;
+    requireUserMutationAccess(actor, currentUser);
 
+    const parsedInput = updateUserSchema.parse(input);
     const repositoryInput: UpdateUserRepositoryInput = {
       firstName: parsedInput.firstName,
       lastName: parsedInput.lastName,
       email: parsedInput.email ? normalizeEmail(parsedInput.email) : undefined,
-      role: parsedInput.role,
     };
 
     if (repositoryInput.email) {
@@ -309,7 +295,7 @@ export class UserService {
       }
     }
 
-    if (nextRole === "STUDENT") {
+    if (currentUser.role === "STUDENT") {
       const trainerId = parsedInput.trainerId ?? currentUser.studentProfile?.trainerId;
 
       if (!trainerId) {

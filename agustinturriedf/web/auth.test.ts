@@ -36,6 +36,7 @@ describe("authConfig callbacks", () => {
   it("invalidates active jwt sessions when iat is older than passwordUpdatedAt", async () => {
     findUniqueMock.mockResolvedValue({
       passwordUpdatedAt: new Date("2026-01-01T10:00:00.000Z"),
+      status: "ACTIVE",
     });
 
     const jwtCallback = authConfig.callbacks?.jwt;
@@ -53,6 +54,7 @@ describe("authConfig callbacks", () => {
   it("keeps jwt session valid when iat is newer than passwordUpdatedAt", async () => {
     findUniqueMock.mockResolvedValue({
       passwordUpdatedAt: new Date("2026-01-01T10:00:00.000Z"),
+      status: "ACTIVE",
     });
 
     const token = {

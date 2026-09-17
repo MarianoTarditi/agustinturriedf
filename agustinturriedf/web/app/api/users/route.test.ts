@@ -2,10 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "@/lib/http/api-response";
 
-const { requireSessionMock, listUsersMock, createUserMock } = vi.hoisted(() => ({
+const { requireSessionMock, listUsersMock } = vi.hoisted(() => ({
   requireSessionMock: vi.fn(),
   listUsersMock: vi.fn(),
-  createUserMock: vi.fn(),
 }));
 
 vi.mock("@/features/auth/session", () => ({
@@ -15,7 +14,6 @@ vi.mock("@/features/auth/session", () => ({
 vi.mock("@/features/users/service", () => ({
   userService: {
     listUsers: listUsersMock,
-    createUser: createUserMock,
   },
 }));
 
@@ -64,56 +62,10 @@ describe("POST /api/users", () => {
     vi.clearAllMocks();
   });
 
-  it("returns 400 when payload fails Zod validation", async () => {
-    requireSessionMock.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+  it("returns 405 and advertises GET as the only supported method", async () => {
+    const response = await POST(new Request("http://localhost/api/users", { method: "POST" }));
 
-    const request = new Request("http://localhost/api/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
-    });
-
-    const response = await POST(request);
-    const body = await response.json();
-
-    expect(response.status).toBe(400);
-    expect(body).toMatchObject({
-      success: false,
-      error: {
-        code: "VALIDATION_ERROR",
-        message: "Validation failed",
-      },
-    });
-    expect(createUserMock).not.toHaveBeenCalled();
-  });
-
-  it("returns 400 when STUDENT payload omits initialPaymentStartDate", async () => {
-    requireSessionMock.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
-
-    const request = new Request("http://localhost/api/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        firstName: "Ana",
-        lastName: "Gomez",
-        email: "ana@example.com",
-        phone: "+54 9 11 1111 1111",
-        role: "STUDENT",
-        trainerId: "cm1111111111111111111111",
-      }),
-    });
-
-    const response = await POST(request);
-    const body = await response.json();
-
-    expect(response.status).toBe(400);
-    expect(body).toMatchObject({
-      success: false,
-      error: {
-        code: "VALIDATION_ERROR",
-        message: "Validation failed",
-      },
-    });
-    expect(createUserMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(405);
+    expect(response.headers.get("Allow")).toBe("GET");
   });
 });

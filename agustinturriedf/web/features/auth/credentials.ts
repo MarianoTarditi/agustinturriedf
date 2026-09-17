@@ -2,6 +2,7 @@ import { compare } from "bcryptjs";
 
 import { evaluatePaymentAccess } from "@/features/auth/payment-access";
 import { toPasswordUpdatedAtIso } from "@/features/auth/password-updated-at";
+import { isActiveAccount } from "@/features/users/policy";
 import { prisma } from "@/lib/prisma";
 
 type RawCredentials = Partial<Record<"email" | "password", unknown>> | undefined;
@@ -35,6 +36,7 @@ export const authorizeCredentials = async (credentials: RawCredentials) => {
         passwordHash: string;
         passwordUpdatedAt?: Date | null;
         role: "ADMIN" | "TRAINER" | "STUDENT";
+        status: "ACTIVE" | "INACTIVE" | "BLOCKED" | "ARCHIVED";
         studentProfile?: {
           id: string;
           trainerId: string;
@@ -47,6 +49,10 @@ export const authorizeCredentials = async (credentials: RawCredentials) => {
     | null;
 
   if (!user) {
+    return null;
+  }
+
+  if (!isActiveAccount(user.status)) {
     return null;
   }
 

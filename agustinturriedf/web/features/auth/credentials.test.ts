@@ -31,6 +31,7 @@ describe("authorizeCredentials", () => {
       lastName: "Root",
       email: "admin@example.com",
       role: "ADMIN",
+      status: "ACTIVE",
       passwordHash: "hash",
       passwordUpdatedAt: new Date("2026-01-01T10:00:00.000Z"),
       studentProfile: null,
@@ -57,6 +58,7 @@ describe("authorizeCredentials", () => {
       lastName: "Hoy",
       email: "student@example.com",
       role: "STUDENT",
+      status: "ACTIVE",
       passwordHash: "hash",
       photoUrl: null,
       studentProfile: {
@@ -88,6 +90,7 @@ describe("authorizeCredentials", () => {
       lastName: "User",
       email: "student@example.com",
       role: "STUDENT",
+      status: "ACTIVE",
       passwordHash: "hash",
       photoUrl: null,
       studentProfile: {
@@ -116,6 +119,7 @@ describe("authorizeCredentials", () => {
       lastName: "Pass",
       email: "user@example.com",
       role: "ADMIN",
+      status: "ACTIVE",
       passwordHash: "new-hash",
       passwordUpdatedAt: new Date("2026-02-01T10:00:00.000Z"),
       studentProfile: null,
@@ -129,4 +133,22 @@ describe("authorizeCredentials", () => {
 
     expect(result).toBeNull();
   });
+  it.each(["INACTIVE", "BLOCKED", "ARCHIVED"] as const)(
+    "rejects valid credentials for a %s account",
+    async (status) => {
+      findUniqueMock.mockResolvedValue({
+        id: "admin-1",
+        firstName: "Admin",
+        lastName: "Root",
+        email: "admin@example.com",
+        role: "ADMIN",
+        status,
+        passwordHash: "hash",
+        studentProfile: null,
+      });
+      compareMock.mockResolvedValue(true);
+
+      await expect(authorizeCredentials({ email: "admin@example.com", password: "123456789" })).resolves.toBeNull();
+    }
+  );
 });
