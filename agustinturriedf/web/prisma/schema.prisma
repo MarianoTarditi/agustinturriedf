@@ -213,11 +213,15 @@ model OutboxMessage {
   attempts       Int         @default(0)
   availableAt    DateTime    @default(now())
   leaseExpiresAt DateTime?
+  fencingToken   String?
+  failureCategory String?
+  failureSummary String?
   completedAt    DateTime?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
   @@index([status, availableAt])
+  @@index([status, leaseExpiresAt])
 }
 
 model ThrottleBucket {
