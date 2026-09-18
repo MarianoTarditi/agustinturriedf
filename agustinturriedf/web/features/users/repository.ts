@@ -1,10 +1,14 @@
 import { prisma } from "@/lib/prisma";
 
+import { auditRepository } from "@/features/audit/repository";
+import { buildAuditEvent } from "@/features/audit/event-factory";
 import { addDays, normalizeToBuenosAiresDay } from "@/features/payments/timezone";
+import { ApiError } from "@/lib/http/api-response";
 
 type Role = "ADMIN" | "TRAINER" | "STUDENT";
 type StudentStatus = "ACTIVE" | "INACTIVE" | "BLOCKED";
 type ProfileGender = "MALE" | "FEMALE" | "NON_BINARY" | "OTHER";
+type AccountStatus = "ACTIVE" | "INACTIVE" | "BLOCKED" | "ARCHIVED";
 const DEFAULT_MONTHLY_AMOUNT_IN_CENTS = 3_000_000;
 
 const userWithProfileInclude = {
@@ -59,8 +63,26 @@ export type UpdateSelfProfileRepositoryInput = {
   weightKg?: number | null;
 };
 
+export type LifecycleTransitionRepositoryInput = {
+  userId: string;
+  actorId: string;
+  targetStatus: AccountStatus;
+  expectedVersion: number;
+  reason: string;
+};
+
 const removeUndefined = <T extends Record<string, unknown>>(value: T) =>
   Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined));
+
+const allowedTransitions: Record<AccountStatus, readonly AccountStatus[]> = {
+  ACTIVE: ["INACTIVE", "BLOCKED", "ARCHIVED"],
+  INACTIVE: ["ACTIVE", "BLOCKED", "ARCHIVED"],
+  BLOCKED: ["ACTIVE", "ARCHIVED"],
+  ARCHIVED: ["INACTIVE"],
+};
+
+const isRetryableTransactionError = (error: unknown) =>
+  typeof error === "object" && error !== null && "code" in error && error.code === "P2034";
 
 export class UserRepository {
   async list() {
@@ -213,6 +235,71 @@ export class UserRepository {
       }),
       include: userWithProfileInclude,
     });
+  }
+
+  async transition(input: LifecycleTransitionRepositoryInput) {
+    const prismaUsers = prisma as any;
+
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        return await prismaUsers.$transaction(
+          async (transaction: any) => {
+            const currentUser = await transaction.user.findUnique({
+              where: { id: input.userId },
+              include: userWithProfileInclude,
+            });
+            if (!currentUser) throw new ApiError("Usuario no encontrado", 404, "NOT_FOUND");
+            const fromStatus = currentUser.status as AccountStatus;
+            if (!allowedTransitions[fromStatus].includes(input.targetStatus)) {
+              throw new ApiError("Invalid account lifecycle transition", 409, "INVALID_TRANSITION");
+            }
+            if (currentUser.role === "ADMIN" && input.targetStatus === "ARCHIVED" && input.actorId === currentUser.id) {
+              throw new ApiError("Administrators cannot archive themselves", 403, "FORBIDDEN");
+            }
+
+            const removesActiveAdmin = currentUser.role === "ADMIN" && currentUser.status === "ACTIVE" && input.targetStatus !== "ACTIVE";
+            if (removesActiveAdmin) {
+              const activeAdminCount = await transaction.user.count({ where: { role: "ADMIN", status: "ACTIVE" } });
+              if (activeAdminCount <= 1) {
+                throw new ApiError("At least one active administrator must remain", 409, "LAST_ACTIVE_ADMIN");
+              }
+            }
+
+            const archivalUpdate = input.targetStatus === "ARCHIVED"
+              ? { archivedAt: new Date(), archivedByUserId: input.actorId, archiveReason: input.reason }
+              : fromStatus === "ARCHIVED"
+                ? { archivedAt: null, archivedByUserId: null, archiveReason: null }
+                : {};
+            const mutation = await transaction.user.updateMany({
+              where: { id: input.userId, version: input.expectedVersion, status: currentUser.status },
+              data: { status: input.targetStatus, version: { increment: 1 }, authVersion: { increment: 1 }, ...archivalUpdate },
+            });
+            if (mutation.count !== 1) throw new ApiError("Account version is stale", 409, "VERSION_CONFLICT");
+
+            const updatedUser = await transaction.user.findUnique({
+              where: { id: input.userId },
+              include: userWithProfileInclude,
+            });
+            await auditRepository.append(
+              buildAuditEvent({
+                eventType: input.targetStatus === "ARCHIVED" ? "ACCOUNT_ARCHIVED" : fromStatus === "ARCHIVED" ? "ACCOUNT_RESTORED" : "ACCOUNT_LIFECYCLE_TRANSITION",
+                subjectUserId: input.userId,
+                actor: { type: "USER", userId: input.actorId },
+                reason: input.reason,
+                summary: { fromStatus, toStatus: input.targetStatus },
+              }),
+              transaction
+            );
+            return updatedUser;
+          },
+          { isolationLevel: "Serializable" }
+        );
+      } catch (error) {
+        if (!isRetryableTransactionError(error) || attempt === 2) throw error;
+      }
+    }
+
+    throw new ApiError("Lifecycle transition retry limit exceeded", 409, "VERSION_CONFLICT");
   }
 
   async delete(userId: string) {

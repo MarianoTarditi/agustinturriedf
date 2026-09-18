@@ -19,6 +19,7 @@ import {
 } from "@/features/routines/storage";
 import {
   type CreateUserRepositoryInput,
+  type LifecycleTransitionRepositoryInput,
   type UpdateSelfProfileRepositoryInput,
   userRepository,
   type UpdateUserRepositoryInput,
@@ -330,6 +331,28 @@ export class UserService {
     }
 
     const updatedUser = await userRepository.update(userId, repositoryInput);
+    return mapToUserDTO(updatedUser);
+  }
+
+  async transitionUser(
+    actor: AuthenticatedUser,
+    userId: string,
+    input: Omit<LifecycleTransitionRepositoryInput, "userId" | "actorId">
+  ) {
+    const currentUser = await userRepository.findById(userId);
+
+    if (!currentUser) {
+      throw new ApiError("Usuario no encontrado", 404, "NOT_FOUND");
+    }
+
+    requireUserMutationAccess(actor, currentUser);
+
+    const updatedUser = await userRepository.transition({
+      ...input,
+      userId,
+      actorId: actor.id,
+    });
+
     return mapToUserDTO(updatedUser);
   }
 
