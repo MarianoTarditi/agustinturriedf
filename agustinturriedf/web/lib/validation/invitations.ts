@@ -11,6 +11,7 @@ const normalizeNullableString = (value: unknown) => {
 };
 
 const profileGenderSchema = z.enum(["MALE", "FEMALE", "NON_BINARY", "OTHER"]);
+const invitationRoleSchema = z.enum(["ADMIN", "TRAINER", "STUDENT"]);
 
 const nullablePhoneSchema = z.preprocess(
   normalizeNullableString,
@@ -67,21 +68,28 @@ export const createInvitationSchema = z
     firstName: requiredStringSchema,
     lastName: requiredStringSchema,
     email: emailSchema,
+    role: invitationRoleSchema.default("STUDENT"),
     phone: nullablePhoneSchema.optional(),
     birthDate: nullableBirthDateSchema.optional(),
     gender: profileGenderSchema.nullable().optional(),
     heightCm: nullableHeightSchema.optional(),
     weightKg: nullableWeightSchema.optional(),
-    trainerId: cuidSchema,
+    trainerId: cuidSchema.optional(),
     initialPaymentStartDate: nullableInitialPaymentStartDateSchema.optional(),
   })
   .superRefine((value, context) => {
-    if (!value.initialPaymentStartDate) {
+    if (value.role === "STUDENT" && !value.trainerId) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["trainerId"], message: "trainerId is required for STUDENT invitations" });
+    }
+    if (value.role === "STUDENT" && !value.initialPaymentStartDate) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["initialPaymentStartDate"],
         message: "initialPaymentStartDate es obligatorio para invitaciones STUDENT",
       });
+    }
+    if (value.role !== "STUDENT" && (value.trainerId || value.initialPaymentStartDate || value.birthDate || value.gender || value.heightCm || value.weightKg)) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["role"], message: "Student data is not allowed for team invitations" });
     }
   });
 

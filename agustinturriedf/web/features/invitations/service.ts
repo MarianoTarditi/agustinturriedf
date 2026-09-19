@@ -3,12 +3,16 @@ import { createHash, randomBytes } from "node:crypto";
 import { hash } from "bcryptjs";
 
 import { type AuthenticatedUser, requireRole } from "@/features/auth/authorization";
+import { buildAuditEvent } from "@/features/audit/event-factory";
+import { auditRepository } from "@/features/audit/repository";
 import { sendActivationEmail } from "@/features/invitations/email";
 import { invitationLogger } from "@/features/invitations/logger";
 import { invitationRepository } from "@/features/invitations/repository";
 import { routinesRepository } from "@/features/routines/repository";
 import { ensureStudentRoutineDirectory } from "@/features/routines/storage";
 import { userRepository } from "@/features/users/repository";
+import { encryptPayload } from "@/features/outbox/crypto";
+import { outboxRepository } from "@/features/outbox/repository";
 import { ApiError } from "@/lib/http/api-response";
 import { prisma } from "@/lib/prisma";
 import {
@@ -29,9 +33,17 @@ const normalizeIsoDateToUtcMidnight = (dateValue: string) => {
   const [yearRaw, monthRaw, dayRaw] = dateValue.split("-");
   return new Date(Date.UTC(Number(yearRaw), Number(monthRaw) - 1, Number(dayRaw)));
 };
+const normalizeOptionalDate = (dateValue: string | Date | null | undefined) =>
+  typeof dateValue === "string" ? normalizeIsoDateToUtcMidnight(dateValue) : dateValue;
 
 const activationBaseUrl = () => process.env.NEXTAUTH_URL?.trim() || "http://localhost:3010";
 const buildActivationUrl = (token: string) => `${activationBaseUrl()}/activation?token=${encodeURIComponent(token)}`;
+const outboxKey = () => {
+  const value = process.env.OUTBOX_ENCRYPTION_KEY?.trim();
+  const id = process.env.OUTBOX_ENCRYPTION_KEY_ID?.trim() || "current";
+  if (!value) throw new ApiError("Outbox encryption is not configured", 500, "OUTBOX_CONFIG_MISSING");
+  return { id, value };
+};
 
 const ensureTrainerCanManage = (actor: AuthenticatedUser, trainerId: string) => {
   if (actor.role === "ADMIN") return;
@@ -42,61 +54,42 @@ const ensureTrainerCanManage = (actor: AuthenticatedUser, trainerId: string) => 
 const isExpired = (expiresAt: Date | null, now: Date) => !expiresAt || expiresAt.getTime() <= now.getTime();
 
 export class InvitationService {
-  async create(actor: AuthenticatedUser, input: CreateInvitationInput) {
+  async create(actor: AuthenticatedUser, input: Omit<CreateInvitationInput, "role"> & { role?: CreateInvitationInput["role"] }) {
     requireRole(actor, ["ADMIN", "TRAINER"], "Solo ADMIN y TRAINER pueden crear invitaciones");
 
     const parsedInput = createInvitationSchema.parse(input);
-    ensureTrainerCanManage(actor, parsedInput.trainerId);
+    if (actor.role === "TRAINER" && (parsedInput.role !== "STUDENT" || parsedInput.trainerId !== actor.id)) {
+      throw new ApiError("Trainers may issue only their own STUDENT invitations", 403, "FORBIDDEN");
+    }
 
-    const trainer = await userRepository.findById(parsedInput.trainerId);
-    if (!trainer || trainer.role !== "TRAINER") {
-      throw new ApiError("trainerId debe pertenecer a un usuario TRAINER", 400, "VALIDATION_ERROR");
+    if (parsedInput.role === "STUDENT") {
+      const trainer = await userRepository.findById(parsedInput.trainerId!);
+      if (!trainer || trainer.role !== "TRAINER" || trainer.status !== "ACTIVE") {
+        throw new ApiError("trainerId must belong to an active TRAINER", 400, "VALIDATION_ERROR");
+      }
     }
 
     const email = normalizeEmail(parsedInput.email);
+    if (await userRepository.findByEmail(email)) throw new ApiError("Email is reserved", 409, "CONFLICT");
+    if (await invitationRepository.findByEmail(email)) throw new ApiError("Invitation already exists", 409, "CONFLICT");
 
     const rawToken = generateToken();
     const expiresAt = addHours(new Date(), TOKEN_EXPIRATION_HOURS);
 
-    const createdInvitation = await invitationRepository.create({
-      firstName: parsedInput.firstName,
-      lastName: parsedInput.lastName,
-      email,
-      phone: parsedInput.phone,
-      birthDate:
-        parsedInput.birthDate === undefined
-          ? undefined
-          : parsedInput.birthDate === null
-            ? null
-            : normalizeIsoDateToUtcMidnight(parsedInput.birthDate),
-      gender: parsedInput.gender,
-      heightCm: parsedInput.heightCm,
-      weightKg: parsedInput.weightKg,
-      trainerId: parsedInput.trainerId,
-      tokenHash: hashToken(rawToken),
-      expiresAt,
-      status: "SENT",
-      initialPaymentStartDate:
-        parsedInput.initialPaymentStartDate === undefined
-          ? undefined
-          : parsedInput.initialPaymentStartDate === null
-            ? null
-            : normalizeIsoDateToUtcMidnight(parsedInput.initialPaymentStartDate),
+    const createdInvitation = await prisma.$transaction(async (transaction) => {
+      const invitation = await invitationRepository.create({
+        firstName: parsedInput.firstName, lastName: parsedInput.lastName, email, role: parsedInput.role,
+        phone: parsedInput.phone, birthDate: normalizeOptionalDate(parsedInput.birthDate),
+        gender: parsedInput.gender, heightCm: parsedInput.heightCm, weightKg: parsedInput.weightKg,
+        trainerId: parsedInput.role === "STUDENT" ? parsedInput.trainerId : null, tokenHash: hashToken(rawToken), expiresAt, status: "PENDING",
+        initialPaymentStartDate: normalizeOptionalDate(parsedInput.initialPaymentStartDate),
+      }, transaction);
+      await auditRepository.append(buildAuditEvent({ eventType: "INVITATION_ISSUED", invitationId: invitation.id, actor: { type: "USER", userId: actor.id }, summary: { changedFields: ["role"], deliveryStatus: "PENDING" } }), transaction as any);
+      await outboxRepository.enqueue({ messageType: "EMAIL", resourceType: "INVITATION", resourceId: invitation.id, idempotencyKey: `invitation:${invitation.id}:issue`, payloadEncrypted: encryptPayload({ to: email, activationUrl: buildActivationUrl(rawToken), expiresAt: expiresAt.toISOString() }, outboxKey()) }, transaction as any);
+      return invitation;
     });
 
-    await sendActivationEmail({
-      to: email,
-      activationUrl: buildActivationUrl(rawToken),
-      expiresAt,
-    });
-
-    await invitationLogger.created({
-      invitationId: createdInvitation.id,
-      email: createdInvitation.email,
-      trainerId: createdInvitation.trainerId,
-    });
-
-    return createdInvitation;
+    return this.toSafeDTO(createdInvitation);
   }
 
   async resend(invitationId: string, actor: AuthenticatedUser) {
@@ -241,7 +234,12 @@ export class InvitationService {
 
   async listForActor(actor: AuthenticatedUser) {
     requireRole(actor, ["ADMIN", "TRAINER"], "Solo ADMIN y TRAINER pueden listar invitaciones");
-    return actor.role === "ADMIN" ? invitationRepository.listAll() : invitationRepository.listByTrainer(actor.id);
+    const invitations = await invitationRepository.list(actor.role === "ADMIN" ? {} : { trainerId: actor.id, role: "STUDENT" });
+    return invitations.map((invitation: any) => this.toSafeDTO(invitation));
+  }
+
+  private toSafeDTO(invitation: any) {
+    return { id: invitation.id, email: invitation.email, role: invitation.role, trainerId: invitation.trainerId, status: invitation.status, deliveryStatus: invitation.deliveryStatus, expiresAt: invitation.expiresAt, createdAt: invitation.createdAt, version: invitation.version };
   }
 }
 

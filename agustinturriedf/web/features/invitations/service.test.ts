@@ -17,6 +17,10 @@ const {
   createUserMock,
   ensureFolderForStudentMock,
   ensureStudentRoutineDirectoryMock,
+  findUserByEmailMock,
+  appendAuditMock,
+  enqueueOutboxMock,
+  encryptPayloadMock,
 } = vi.hoisted(() => ({
   findByEmailMock: vi.fn(),
   createMock: vi.fn(),
@@ -34,6 +38,10 @@ const {
   createUserMock: vi.fn(),
   ensureFolderForStudentMock: vi.fn(),
   ensureStudentRoutineDirectoryMock: vi.fn(),
+  findUserByEmailMock: vi.fn(),
+  appendAuditMock: vi.fn(),
+  enqueueOutboxMock: vi.fn(),
+  encryptPayloadMock: vi.fn(),
 }));
 
 vi.mock("bcryptjs", () => ({ hash: hashMock }));
@@ -50,6 +58,7 @@ vi.mock("@/features/invitations/repository", () => ({
     markRevoked: markRevokedMock,
     listByTrainer: listByTrainerMock,
     listAll: listAllMock,
+    list: listAllMock,
   },
 }));
 
@@ -60,8 +69,21 @@ vi.mock("@/features/invitations/email", () => ({
 vi.mock("@/features/users/repository", () => ({
   userRepository: {
     findById: findTrainerByIdMock,
+    findByEmail: findUserByEmailMock,
     create: createUserMock,
   },
+}));
+
+vi.mock("@/features/audit/repository", () => ({
+  auditRepository: { append: appendAuditMock },
+}));
+
+vi.mock("@/features/outbox/repository", () => ({
+  outboxRepository: { enqueue: enqueueOutboxMock },
+}));
+
+vi.mock("@/features/outbox/crypto", () => ({
+  encryptPayload: encryptPayloadMock,
 }));
 
 vi.mock("@/features/routines/repository", () => ({
@@ -83,6 +105,8 @@ vi.mock("@/lib/prisma", () => ({
         currentPayment: {},
         routineFolder: {},
         invitation: {},
+        outboxMessage: {},
+        auditEvent: {},
       }),
   },
 }));
@@ -93,13 +117,16 @@ describe("invitationService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.NEXTAUTH_URL = "http://localhost:3010";
+    process.env.OUTBOX_ENCRYPTION_KEY = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
     hashMock.mockResolvedValue("hashed-password");
     markConsumedIfTokenMatchesMock.mockResolvedValue(true);
+    findUserByEmailMock.mockResolvedValue(null);
+    encryptPayloadMock.mockReturnValue("encrypted-payload");
   });
 
-  it("creates invitation and sends activation email", async () => {
+  it("atomically issues a student invitation without creating a user or exposing its bearer", async () => {
     findByEmailMock.mockResolvedValue(null);
-    findTrainerByIdMock.mockResolvedValue({ id: "c123456789012345678901234", role: "TRAINER" });
+    findTrainerByIdMock.mockResolvedValue({ id: "c123456789012345678901234", role: "TRAINER", status: "ACTIVE" });
     createMock.mockResolvedValue({
       id: "inv-1",
       email: "student@example.com",
@@ -107,6 +134,9 @@ describe("invitationService", () => {
       lastName: "Gomez",
       trainerId: "c123456789012345678901234",
       status: "SENT",
+      role: "STUDENT",
+      deliveryStatus: "PENDING",
+      version: 1,
       expiresAt: new Date(Date.now() + 1000),
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -123,39 +153,56 @@ describe("invitationService", () => {
       }
     );
 
-    expect(createMock).toHaveBeenCalledWith(expect.objectContaining({ email: "student@example.com" }));
-    expect(sendActivationEmailMock).toHaveBeenCalledTimes(1);
-    expect(result.email).toBe("student@example.com");
+    expect(createMock).toHaveBeenCalledWith(expect.objectContaining({ email: "student@example.com", role: "STUDENT" }), expect.any(Object));
+    expect(appendAuditMock).toHaveBeenCalledWith(expect.objectContaining({ eventType: "INVITATION_ISSUED" }), expect.any(Object));
+    expect(enqueueOutboxMock).toHaveBeenCalledWith(expect.objectContaining({ messageType: "EMAIL", payloadEncrypted: "encrypted-payload" }), expect.any(Object));
+    expect(sendActivationEmailMock).not.toHaveBeenCalled();
+    expect(createUserMock).not.toHaveBeenCalled();
+    expect(result).not.toHaveProperty("tokenHash");
   });
 
-  it("replaces active invitation when email already has one", async () => {
+  it("rejects an email with an existing invitation instead of replacing it", async () => {
     findByEmailMock.mockResolvedValue({ id: "inv-existing", status: "SENT" });
-    createMock.mockResolvedValue({
-      id: "inv-existing",
-      email: "student@example.com",
-      firstName: "Ana",
-      lastName: "Gomez",
-      trainerId: "c123456789012345678901234",
-      status: "SENT",
-      expiresAt: new Date(Date.now() + 1000),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
+    await expect(invitationService.create(
+      { id: "c123456789012345678901234", role: "TRAINER" } as any,
+      { firstName: "Ana", lastName: "Gomez", email: "student@example.com", trainerId: "c123456789012345678901234", initialPaymentStartDate: "2026-05-01" }
+    )).rejects.toMatchObject({ status: 409, code: "CONFLICT" });
+
+    expect(createMock).not.toHaveBeenCalled();
+    expect(sendActivationEmailMock).not.toHaveBeenCalled();
+  });
+
+  it("allows trainers to issue only student invitations in their own scope", async () => {
+    await expect(
+      invitationService.create(
+        { id: "c123456789012345678901234", role: "TRAINER" } as any,
+        { firstName: "Ana", lastName: "Gomez", email: "team@example.com", role: "ADMIN" } as any
+      )
+    ).rejects.toMatchObject({ status: 403, code: "FORBIDDEN" });
+
+    expect(createMock).not.toHaveBeenCalled();
+  });
+
+  it("allows an admin to issue a team invitation without student data", async () => {
+    findByEmailMock.mockResolvedValue(null);
+    createMock.mockResolvedValue({ id: "inv-team", email: "team@example.com", role: "TRAINER", trainerId: null, status: "PENDING", deliveryStatus: "PENDING", expiresAt: new Date(), createdAt: new Date(), version: 1 });
 
     const result = await invitationService.create(
-      { id: "c123456789012345678901234", role: "TRAINER" } as any,
-      {
-        firstName: "Ana",
-        lastName: "Gomez",
-        email: "student@example.com",
-        trainerId: "c123456789012345678901234",
-        initialPaymentStartDate: "2026-05-01",
-      }
+      { id: "admin-1", role: "ADMIN" } as any,
+      { firstName: "Team", lastName: "Member", email: "team@example.com", role: "TRAINER" } as any
     );
 
-    expect(createMock).toHaveBeenCalledTimes(1);
-    expect(sendActivationEmailMock).toHaveBeenCalledTimes(1);
-    expect(result.id).toBe("inv-existing");
+    expect(createMock).toHaveBeenCalledWith(expect.objectContaining({ role: "TRAINER", trainerId: null }), expect.any(Object));
+    expect(result).not.toHaveProperty("tokenHash");
+  });
+
+  it("returns trainer-scoped safe queue DTOs", async () => {
+    listAllMock.mockResolvedValue([{ id: "inv-1", email: "student@example.com", role: "STUDENT", trainerId: "trainer-1", status: "PENDING", deliveryStatus: "PENDING", expiresAt: new Date(), createdAt: new Date(), version: 1, tokenHash: "not-for-dto" }]);
+
+    const result = await invitationService.listForActor({ id: "trainer-1", role: "TRAINER" } as any);
+
+    expect(listAllMock).toHaveBeenCalledWith({ trainerId: "trainer-1", role: "STUDENT" });
+    expect(result[0]).not.toHaveProperty("tokenHash");
   });
 
   it("resends invitation by rotating token and expiration", async () => {

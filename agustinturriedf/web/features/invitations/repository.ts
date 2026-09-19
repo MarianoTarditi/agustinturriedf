@@ -4,9 +4,10 @@ const prismaInvitations = prisma as any;
 
 export type CreateInvitationRepositoryInput = {
   email: string;
+  role?: "ADMIN" | "TRAINER" | "STUDENT";
   tokenHash: string;
   expiresAt: Date;
-  trainerId: string;
+  trainerId?: string | null;
   firstName: string;
   lastName: string;
   phone?: string | null;
@@ -19,34 +20,12 @@ export type CreateInvitationRepositoryInput = {
 };
 
 export class InvitationRepository {
-  async create(input: CreateInvitationRepositoryInput) {
-    return prismaInvitations.invitation.upsert({
-      where: {
-        email: input.email,
-      },
-      update: {
-        firstName: input.firstName,
-        lastName: input.lastName,
-        trainerId: input.trainerId,
-        phone: input.phone,
-        birthDate: input.birthDate,
-        gender: input.gender,
-        heightCm: input.heightCm,
-        weightKg: input.weightKg,
-        initialPaymentStartDate: input.initialPaymentStartDate,
-        tokenHash: input.tokenHash,
-        expiresAt: input.expiresAt,
-        status: input.status ?? "SENT",
-        consumedAt: null,
-      },
-      create: {
-        ...input,
-      },
-    });
+  async create(input: CreateInvitationRepositoryInput, transaction = prismaInvitations) {
+    return transaction.invitation.create({ data: input });
   }
 
   async findByEmail(email: string) {
-    return prismaInvitations.invitation.findUnique({ where: { email } });
+    return prismaInvitations.invitation.findFirst({ where: { email } });
   }
 
   async findByTokenHash(tokenHash: string) {
@@ -67,6 +46,14 @@ export class InvitationRepository {
   async listAll() {
     return prismaInvitations.invitation.findMany({
       orderBy: { createdAt: "desc" },
+    });
+  }
+
+  async list(input: { trainerId?: string; role?: "ADMIN" | "TRAINER" | "STUDENT"; status?: CreateInvitationRepositoryInput["status"] } = {}) {
+    return prismaInvitations.invitation.findMany({
+      where: { ...(input.trainerId ? { trainerId: input.trainerId } : {}), ...(input.role ? { role: input.role } : {}), ...(input.status ? { status: input.status } : {}) },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      select: { id: true, email: true, role: true, trainerId: true, status: true, deliveryStatus: true, expiresAt: true, createdAt: true, version: true },
     });
   }
 
