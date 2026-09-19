@@ -14,7 +14,7 @@ type AuditEventInput = {
   summary?: Record<string, unknown>;
 };
 
-const summaryFields = new Set(["changedFields", "fromStatus", "toStatus", "deliveryStatus", "resourceType"]);
+const summaryFields = new Set(["changedFields", "fromStatus", "toStatus", "deliveryStatus", "resourceType", "resourceRef"]);
 const maxReasonLength = 500;
 const sensitiveValuePattern = /(?:[?&](?:(?:token|password|secret|authorization)(?:hash)?|bearer)=[^&\s]+|(?:(?:token|password|secret|authorization)(?:hash)?|bearer)\s*(?:=|:)|authorization\s+bearer\b)/i;
 

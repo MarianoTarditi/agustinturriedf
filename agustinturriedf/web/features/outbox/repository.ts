@@ -4,8 +4,11 @@ import { prisma } from "@/lib/prisma";
 
 type OutboxWrite = { messageType: string; resourceType: string; resourceId: string; idempotencyKey: string; payloadEncrypted: string };
 type Update = { count: number };
-export type OutboxTransaction = { outboxMessage: { create: (input: { data: OutboxWrite }) => Promise<unknown> } };
-type OutboxClient = OutboxTransaction & { outboxMessage: OutboxTransaction["outboxMessage"] & { findFirst: (input: any) => Promise<any>; updateMany: (input: any) => Promise<Update> } };
+export type SettlementResult = "STALE" | "COMPLETED" | "RETRY_SCHEDULED" | "FAILED";
+export type RedriveResult = { kind: "APPLIED" } | { kind: "PAYLOAD_PURGED" } | { kind: "NOT_REDRIVABLE" };
+export type OutboxTransaction = { outboxMessage: { create: (input: { data: OutboxWrite }) => Promise<unknown>; findFirst?: (input: any) => Promise<any>; updateMany?: (input: any) => Promise<Update> }; auditEvent?: { create: (input: { data: unknown }) => Promise<unknown> } };
+export type OutboxStateTransaction = OutboxTransaction & { outboxMessage: Required<OutboxTransaction["outboxMessage"]> };
+type OutboxClient = OutboxStateTransaction & { $transaction?: <T>(operation: (transaction: OutboxStateTransaction) => Promise<T>) => Promise<T> };
 
 const safeText = (value: string, limit: number) => value.replace(/(?:bearer\s+|token|password|secret|hash)\S*/gi, "[redacted]").replace(/\s+/g, " ").trim().slice(0, limit);
 
@@ -31,17 +34,34 @@ export class OutboxRepository {
     return result.count ? { ...row, attempts: row.attempts + 1, fencingToken, leaseExpiresAt } : null;
   }
 
-  complete(id: string, fencingToken: string, now = new Date()) { return this.settle(id, fencingToken, { status: "COMPLETED", completedAt: now, leaseExpiresAt: null, fencingToken: null }); }
-  fail(id: string, fencingToken: string, category: string, summary: string, now = new Date()) { return this.settle(id, fencingToken, { status: "FAILED", completedAt: now, leaseExpiresAt: null, fencingToken: null, ...this.failure(category, summary) }); }
+  inTransaction<T>(operation: (transaction: OutboxStateTransaction) => Promise<T>) { return this.client.$transaction ? this.client.$transaction(operation) : operation(this.client); }
 
-  async retry(id: string, fencingToken: string, category: string, summary: string, now = new Date()) {
-    const row = await this.client.outboxMessage.findFirst({ where: { id, status: "PROCESSING", fencingToken } });
-    if (!row) return false;
-    if (row.attempts >= this.maxAttempts) return this.fail(id, fencingToken, category, summary, now);
-    return this.settle(id, fencingToken, { status: "PENDING", availableAt: new Date(now.getTime() + Math.min(300_000, this.baseRetryMs * 2 ** row.attempts)), leaseExpiresAt: null, fencingToken: null, ...this.failure(category, summary) });
+  complete(id: string, fencingToken: string, transaction: OutboxStateTransaction, now = new Date()) { return this.settle(id, fencingToken, { status: "COMPLETED", completedAt: now, leaseExpiresAt: null, fencingToken: null, payloadEncrypted: null }, "COMPLETED", transaction); }
+  fail(id: string, fencingToken: string, category: string, summary: string, transaction: OutboxStateTransaction, now = new Date(), purgePayload = true) { return this.settle(id, fencingToken, { status: "FAILED", completedAt: now, leaseExpiresAt: null, fencingToken: null, ...(purgePayload ? { payloadEncrypted: null } : {}), ...this.failure(category, summary) }, "FAILED", transaction); }
+
+  async retry(id: string, fencingToken: string, category: string, summary: string, transaction: OutboxStateTransaction, now = new Date()): Promise<SettlementResult> {
+    const row = await transaction.outboxMessage.findFirst({ where: { id, status: "PROCESSING", fencingToken } });
+    if (!row) return "STALE";
+    if (row.attempts >= this.maxAttempts) return this.fail(id, fencingToken, category, summary, transaction, now, row.messageType === "EMAIL");
+    return this.settle(id, fencingToken, { status: "PENDING", availableAt: new Date(now.getTime() + Math.min(300_000, this.baseRetryMs * 2 ** row.attempts)), leaseExpiresAt: null, fencingToken: null, ...this.failure(category, summary) }, "RETRY_SCHEDULED", transaction);
   }
 
-  redrive(id: string, now = new Date()) { return this.client.outboxMessage.updateMany({ where: { id, status: { in: ["FAILED", "COMPLETED"] } }, data: { status: "PENDING", attempts: 0, availableAt: now, leaseExpiresAt: null, fencingToken: null, completedAt: null, failureCategory: null, failureSummary: null } }).then((result) => Boolean(result.count)); }
-  private settle(id: string, fencingToken: string, data: Record<string, unknown>) { return this.client.outboxMessage.updateMany({ where: { id, status: "PROCESSING", fencingToken }, data }).then((result) => Boolean(result.count)); }
+  async redrive(id: string, now = new Date()): Promise<RedriveResult> {
+    return this.inTransaction(async (transaction) => {
+      const row = await transaction.outboxMessage.findFirst({ where: { id, status: "FAILED" } });
+      if (!row) return { kind: "NOT_REDRIVABLE" };
+      if (row.messageType === "EMAIL" || !row.payloadEncrypted) return { kind: "PAYLOAD_PURGED" };
+      const result = await transaction.outboxMessage.updateMany({ where: { id, status: "FAILED", payloadEncrypted: row.payloadEncrypted }, data: { status: "PENDING", attempts: 0, availableAt: now, leaseExpiresAt: null, fencingToken: null, completedAt: null, failureCategory: null, failureSummary: null } });
+      if (!result.count) return { kind: "NOT_REDRIVABLE" };
+      if (transaction.auditEvent) await transaction.auditEvent.create({ data: { eventType: "OUTBOX_REDRIVEN", actorType: "SYSTEM", summary: { deliveryStatus: "REDRIVEN", resourceType: "OUTBOX", resourceRef: id } } });
+      return { kind: "APPLIED" };
+    });
+  }
+  private async settle(id: string, fencingToken: string, data: Record<string, unknown>, applied: Exclude<SettlementResult, "STALE">, transaction: OutboxStateTransaction): Promise<SettlementResult> {
+    const result = await transaction.outboxMessage.updateMany({ where: { id, status: "PROCESSING", fencingToken }, data });
+    return result.count ? applied : "STALE";
+  }
   private failure(category: string, summary: string) { return { failureCategory: safeText(category, 64) || "UNKNOWN", failureSummary: safeText(summary, 256) || "Delivery failed" }; }
 }
+
+export const outboxRepository = new OutboxRepository();

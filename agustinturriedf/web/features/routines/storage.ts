@@ -1,7 +1,8 @@
-import { mkdir, rm, unlink, writeFile } from "node:fs/promises";
+import { access, constants, mkdir, rm, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { RoutineFileType } from "@/lib/validation/routines";
+import { prisma } from "@/lib/prisma";
 
 const ROUTINES_STORAGE_BASE_DIR = path.join(process.cwd(), "storage", "routines", "students");
 
@@ -29,8 +30,19 @@ export const getStudentRoutineDirectory = (studentProfileId: string) => {
 
 export const ensureStudentRoutineDirectory = async (studentProfileId: string) => {
   const studentDirectory = getStudentRoutineDirectory(studentProfileId);
+  const relative = path.relative(ROUTINES_STORAGE_BASE_DIR, studentDirectory);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) throw new Error("Invalid routine directory");
   await mkdir(studentDirectory, { recursive: true });
+  const details = await stat(studentDirectory);
+  if (!details.isDirectory()) throw new Error("Invalid routine directory");
+  if (typeof process.getuid === "function" && typeof details.uid === "number" && details.uid !== process.getuid()) throw new Error("Invalid routine directory");
+  await access(studentDirectory, constants.R_OK | constants.W_OK);
   return studentDirectory;
+};
+
+export const persistRoutineProvisioning = async (studentProfileId: string, status: "READY" | "FAILED", transaction: any = prisma) => {
+  const result = await (transaction as any).studentProfile.updateMany({ where: { id: studentProfileId, provisioningStatus: "PENDING" }, data: { provisioningStatus: status } });
+  if (result.count !== 1) throw new Error("Provisioning state was not pending");
 };
 
 export const removeStudentRoutineDirectory = async (studentProfileId: string) => {
