@@ -13,15 +13,3 @@ export const GET = async (_request: Request, context: { params: Promise<{ invita
     return handleApiError(error);
   }
 };
-
-export const DELETE = async (_request: Request, context: { params: Promise<{ invitationId: string }> }) => {
-  try {
-    const actor = await requireSession();
-    const params = await context.params;
-    const result = await invitationService.revoke(params.invitationId, actor);
-
-    return apiSuccess(result);
-  } catch (error) {
-    return handleApiError(error);
-  }
-};

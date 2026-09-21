@@ -1,14 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createHash } from "node:crypto";
 
 const {
   findByEmailMock,
   createMock,
   findByIdMock,
-  updateTokenMock,
+  resendIfCurrentMock,
   findByTokenHashMock,
   markConsumedMock,
   markConsumedIfTokenMatchesMock,
-  markRevokedMock,
+  revokeIfCurrentMock,
   listByTrainerMock,
   listAllMock,
   sendActivationEmailMock,
@@ -21,15 +22,16 @@ const {
   appendAuditMock,
   enqueueOutboxMock,
   encryptPayloadMock,
+  transactionMock,
 } = vi.hoisted(() => ({
   findByEmailMock: vi.fn(),
   createMock: vi.fn(),
   findByIdMock: vi.fn(),
-  updateTokenMock: vi.fn(),
+  resendIfCurrentMock: vi.fn(),
   findByTokenHashMock: vi.fn(),
   markConsumedMock: vi.fn(),
   markConsumedIfTokenMatchesMock: vi.fn(),
-  markRevokedMock: vi.fn(),
+  revokeIfCurrentMock: vi.fn(),
   listByTrainerMock: vi.fn(),
   listAllMock: vi.fn(),
   sendActivationEmailMock: vi.fn(),
@@ -42,6 +44,7 @@ const {
   appendAuditMock: vi.fn(),
   enqueueOutboxMock: vi.fn(),
   encryptPayloadMock: vi.fn(),
+  transactionMock: vi.fn(),
 }));
 
 vi.mock("bcryptjs", () => ({ hash: hashMock }));
@@ -51,11 +54,11 @@ vi.mock("@/features/invitations/repository", () => ({
     findByEmail: findByEmailMock,
     create: createMock,
     findById: findByIdMock,
-    updateToken: updateTokenMock,
+    resendIfCurrent: resendIfCurrentMock,
     findByTokenHash: findByTokenHashMock,
     markConsumed: markConsumedMock,
     markConsumedIfTokenMatches: markConsumedIfTokenMatchesMock,
-    markRevoked: markRevokedMock,
+    revokeIfCurrent: revokeIfCurrentMock,
     listByTrainer: listByTrainerMock,
     listAll: listAllMock,
     list: listAllMock,
@@ -98,16 +101,7 @@ vi.mock("@/features/routines/storage", () => ({
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    $transaction: async (callback: (transaction: any) => Promise<unknown>) =>
-      callback({
-        user: {},
-        trainerConfig: {},
-        currentPayment: {},
-        routineFolder: {},
-        invitation: {},
-        outboxMessage: {},
-        auditEvent: {},
-      }),
+    $transaction: transactionMock,
   },
 }));
 
@@ -121,7 +115,12 @@ describe("invitationService", () => {
     hashMock.mockResolvedValue("hashed-password");
     markConsumedIfTokenMatchesMock.mockResolvedValue(true);
     findUserByEmailMock.mockResolvedValue(null);
+    appendAuditMock.mockResolvedValue(undefined);
+    enqueueOutboxMock.mockResolvedValue(undefined);
     encryptPayloadMock.mockReturnValue("encrypted-payload");
+    transactionMock.mockImplementation(async (callback: (transaction: any) => Promise<unknown>) => callback({
+      user: {}, trainerConfig: {}, currentPayment: {}, routineFolder: {}, invitation: {}, outboxMessage: {}, auditEvent: {},
+    }));
   });
 
   it("atomically issues a student invitation without creating a user or exposing its bearer", async () => {
@@ -205,7 +204,7 @@ describe("invitationService", () => {
     expect(result[0]).not.toHaveProperty("tokenHash");
   });
 
-  it("resends invitation by rotating token and expiration", async () => {
+  it("atomically resends a current invitation with a rotated bearer and encrypted delivery", async () => {
     findByIdMock.mockResolvedValue({
       id: "inv-1",
       trainerId: "c123456789012345678901234",
@@ -213,27 +212,24 @@ describe("invitationService", () => {
       firstName: "Ana",
       lastName: "Gomez",
       status: "SENT",
-      expiresAt: new Date(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-    updateTokenMock.mockResolvedValue({
-      id: "inv-1",
-      trainerId: "c123456789012345678901234",
-      email: "student@example.com",
-      firstName: "Ana",
-      lastName: "Gomez",
-      status: "SENT",
+      role: "STUDENT",
+      version: 3,
       expiresAt: new Date(Date.now() + 1000),
       createdAt: new Date(),
       updatedAt: new Date(),
     });
+    resendIfCurrentMock.mockResolvedValue(true);
 
-    const result = await invitationService.resend("inv-1", { id: "c123456789012345678901234", role: "TRAINER" } as any);
+    const result = await invitationService.resend("inv-1", { id: "c123456789012345678901234", role: "TRAINER" } as any, 3);
 
-    expect(updateTokenMock).toHaveBeenCalledTimes(1);
-    expect(sendActivationEmailMock).toHaveBeenCalledTimes(1);
-    expect(result.id).toBe("inv-1");
+    expect(resendIfCurrentMock).toHaveBeenCalledWith(expect.objectContaining({ invitationId: "inv-1", expectedVersion: 3, deliveryStatus: "PENDING" }), expect.any(Object));
+    expect(appendAuditMock).toHaveBeenCalledWith(expect.objectContaining({ eventType: "INVITATION_RESENT" }), expect.any(Object));
+    expect(enqueueOutboxMock).toHaveBeenCalledWith(expect.objectContaining({ idempotencyKey: "invitation:inv-1:resend:4", payloadEncrypted: "encrypted-payload" }), expect.any(Object));
+    const transaction = resendIfCurrentMock.mock.calls[0][1];
+    expect(appendAuditMock.mock.calls[0][1]).toBe(transaction);
+    expect(enqueueOutboxMock.mock.calls[0][1]).toBe(transaction);
+    expect(sendActivationEmailMock).not.toHaveBeenCalled();
+    expect(result).not.toHaveProperty("tokenHash");
   });
 
   it("rejects activation when token expired", async () => {
@@ -298,11 +294,107 @@ describe("invitationService", () => {
     expect(result.message).toBe("Cuenta activada. Ya podés iniciar sesión.");
   });
 
-  it("revokes invitation for owner trainer", async () => {
-    findByIdMock.mockResolvedValue({ id: "inv-1", trainerId: "c123456789012345678901234", status: "SENT" });
+  it("rejects stale or terminal resend commands without audit or delivery work", async () => {
+    findByIdMock.mockResolvedValue({ id: "inv-1", trainerId: "c123456789012345678901234", role: "STUDENT", status: "CONSUMED", version: 3, expiresAt: new Date(Date.now() + 1000) });
 
-    await invitationService.revoke("inv-1", { id: "c123456789012345678901234", role: "TRAINER" } as any);
+    await expect(invitationService.resend("inv-1", { id: "c123456789012345678901234", role: "TRAINER" } as any, 3)).rejects.toMatchObject({ status: 409, code: "CONFLICT" });
 
-    expect(markRevokedMock).toHaveBeenCalledWith("inv-1");
+    expect(resendIfCurrentMock).not.toHaveBeenCalled();
+    expect(appendAuditMock).not.toHaveBeenCalled();
+    expect(enqueueOutboxMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a lost resend CAS without audit or delivery work", async () => {
+    findByIdMock.mockResolvedValue({ id: "inv-1", trainerId: "c123456789012345678901234", email: "student@example.com", role: "STUDENT", status: "SENT", version: 3, expiresAt: new Date(Date.now() + 1000) });
+    resendIfCurrentMock.mockResolvedValue(false);
+
+    await expect(invitationService.resend("inv-1", { id: "c123456789012345678901234", role: "TRAINER" } as any, 3)).rejects.toMatchObject({ status: 409, code: "CONFLICT" });
+
+    expect(appendAuditMock).not.toHaveBeenCalled();
+    expect(enqueueOutboxMock).not.toHaveBeenCalled();
+  });
+
+  it("binds the rotated raw token to its CAS hash and encrypted payload only", async () => {
+    findByIdMock.mockResolvedValue({ id: "inv-1", trainerId: "c123456789012345678901234", email: "student@example.com", role: "STUDENT", status: "SENT", version: 3, expiresAt: new Date(Date.now() + 1000) });
+    resendIfCurrentMock.mockResolvedValue(true);
+    let encryptedPayload: any;
+    const consoleInfo = vi.spyOn(console, "info").mockImplementation(() => undefined);
+    encryptPayloadMock.mockImplementation((payload) => { encryptedPayload = payload; return "encrypted-payload"; });
+
+    const result = await invitationService.resend("inv-1", { id: "c123456789012345678901234", role: "TRAINER" } as any, 3);
+    const activationUrl = encryptedPayload.activationUrl as string;
+    const rawToken = new URL(activationUrl).searchParams.get("token")!;
+    const casInput = resendIfCurrentMock.mock.calls[0][0];
+
+    expect(casInput.tokenHash).toBe(createHash("sha256").update(rawToken).digest("hex"));
+    expect(JSON.stringify(casInput)).not.toContain(rawToken);
+    expect(JSON.stringify(appendAuditMock.mock.calls[0][0])).not.toContain(rawToken);
+    expect(JSON.stringify(result)).not.toContain(rawToken);
+    expect(consoleInfo).not.toHaveBeenCalled();
+    consoleInfo.mockRestore();
+  });
+
+  it.each(["audit", "outbox"])("rolls back staged resend mutation when %s persistence fails", async (failure) => {
+    findByIdMock.mockResolvedValue({ id: "inv-1", trainerId: "c123456789012345678901234", email: "student@example.com", role: "STUDENT", status: "SENT", version: 3, expiresAt: new Date(Date.now() + 1000) });
+    const committed: string[] = [];
+    transactionMock.mockImplementation(async (callback) => {
+      const staged: string[] = [];
+      try { const result = await callback({ stage: (effect: string) => staged.push(effect) }); committed.push(...staged); return result; }
+      finally { staged.length = 0; }
+    });
+    resendIfCurrentMock.mockImplementation(async (_input, transaction) => { transaction.stage("mutation"); return true; });
+    if (failure === "audit") appendAuditMock.mockRejectedValue(new Error("audit failed"));
+    else enqueueOutboxMock.mockRejectedValue(new Error("outbox failed"));
+
+    await expect(invitationService.resend("inv-1", { id: "c123456789012345678901234", role: "TRAINER" } as any, 3)).rejects.toThrow(`${failure} failed`);
+
+    expect(committed).toEqual([]);
+    if (failure === "audit") expect(enqueueOutboxMock).not.toHaveBeenCalled();
+  });
+
+  it("revokes only a current eligible invitation inside its audit transaction", async () => {
+    findByIdMock.mockResolvedValue({ id: "inv-1", trainerId: "c123456789012345678901234", role: "STUDENT", status: "SENT", version: 3, expiresAt: new Date(Date.now() + 1000) });
+    revokeIfCurrentMock.mockResolvedValue(true);
+
+    await invitationService.revoke("inv-1", { id: "c123456789012345678901234", role: "TRAINER" } as any, { expectedVersion: 3, reason: "Duplicate request" });
+
+    expect(revokeIfCurrentMock).toHaveBeenCalledWith(expect.objectContaining({ invitationId: "inv-1", expectedVersion: 3 }), expect.any(Object));
+    expect(appendAuditMock).toHaveBeenCalledWith(expect.objectContaining({ eventType: "INVITATION_REVOKED", reason: "Duplicate request" }), expect.any(Object));
+    expect(enqueueOutboxMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a lost revoke CAS without audit or delivery work", async () => {
+    findByIdMock.mockResolvedValue({ id: "inv-1", trainerId: "c123456789012345678901234", role: "STUDENT", status: "SENT", version: 3, expiresAt: new Date(Date.now() + 1000) });
+    revokeIfCurrentMock.mockResolvedValue(false);
+
+    await expect(invitationService.revoke("inv-1", { id: "c123456789012345678901234", role: "TRAINER" } as any, { expectedVersion: 3, reason: "Duplicate request" })).rejects.toMatchObject({ status: 409, code: "CONFLICT" });
+
+    expect(appendAuditMock).not.toHaveBeenCalled();
+    expect(enqueueOutboxMock).not.toHaveBeenCalled();
+  });
+
+  it("rolls back staged revoke mutation when its audit fails", async () => {
+    findByIdMock.mockResolvedValue({ id: "inv-1", trainerId: "c123456789012345678901234", role: "STUDENT", status: "SENT", version: 3, expiresAt: new Date(Date.now() + 1000) });
+    const committed: string[] = [];
+    transactionMock.mockImplementation(async (callback) => {
+      const staged: string[] = [];
+      try { const result = await callback({ stage: (effect: string) => staged.push(effect) }); committed.push(...staged); return result; }
+      finally { staged.length = 0; }
+    });
+    revokeIfCurrentMock.mockImplementation(async (_input, transaction) => { transaction.stage("mutation"); return true; });
+    appendAuditMock.mockRejectedValue(new Error("audit failed"));
+
+    await expect(invitationService.revoke("inv-1", { id: "c123456789012345678901234", role: "TRAINER" } as any, { expectedVersion: 3, reason: "Duplicate request" })).rejects.toThrow("audit failed");
+
+    expect(committed).toEqual([]);
+    expect(enqueueOutboxMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps trainers out of team invitation actions", async () => {
+    findByIdMock.mockResolvedValue({ id: "inv-team", trainerId: null, role: "ADMIN", status: "SENT", version: 3, expiresAt: new Date(Date.now() + 1000) });
+
+    await expect(invitationService.revoke("inv-team", { id: "trainer-1", role: "TRAINER" } as any, { expectedVersion: 3, reason: "No longer needed" })).rejects.toMatchObject({ status: 403, code: "FORBIDDEN" });
+
+    expect(revokeIfCurrentMock).not.toHaveBeenCalled();
   });
 });

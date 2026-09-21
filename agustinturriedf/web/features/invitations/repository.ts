@@ -19,6 +19,12 @@ export type CreateInvitationRepositoryInput = {
   status?: "PENDING" | "SENT" | "CONSUMED" | "EXPIRED" | "REVOKED";
 };
 
+type VersionedInvitationCommand = {
+  invitationId: string;
+  expectedVersion: number;
+  now: Date;
+};
+
 export class InvitationRepository {
   async create(input: CreateInvitationRepositoryInput, transaction = prismaInvitations) {
     return transaction.invitation.create({ data: input });
@@ -57,15 +63,23 @@ export class InvitationRepository {
     });
   }
 
-  async updateToken(invitationId: string, input: { tokenHash: string; expiresAt: Date; status: "SENT" | "PENDING" }) {
-    return prismaInvitations.invitation.update({
-      where: { id: invitationId },
+  async resendIfCurrent(input: VersionedInvitationCommand & { tokenHash: string; expiresAt: Date; deliveryStatus: "PENDING" }, transaction = prismaInvitations) {
+    const result = await transaction.invitation.updateMany({
+      where: {
+        id: input.invitationId,
+        version: input.expectedVersion,
+        status: { in: ["PENDING", "SENT"] },
+        tokenHash: { not: null },
+        expiresAt: { gt: input.now },
+      },
       data: {
         tokenHash: input.tokenHash,
         expiresAt: input.expiresAt,
-        status: input.status,
+        deliveryStatus: input.deliveryStatus,
+        version: { increment: 1 },
       },
     });
+    return result.count === 1;
   }
 
   async markConsumed(invitationId: string, transactionOverride?: any) {
@@ -81,14 +95,22 @@ export class InvitationRepository {
     });
   }
 
-  async markRevoked(invitationId: string) {
-    return prismaInvitations.invitation.update({
-      where: { id: invitationId },
+  async revokeIfCurrent(input: VersionedInvitationCommand, transaction = prismaInvitations) {
+    const result = await transaction.invitation.updateMany({
+      where: {
+        id: input.invitationId,
+        version: input.expectedVersion,
+        status: { in: ["PENDING", "SENT"] },
+        tokenHash: { not: null },
+        expiresAt: { gt: input.now },
+      },
       data: {
         status: "REVOKED",
         tokenHash: null,
+        version: { increment: 1 },
       },
     });
+    return result.count === 1;
   }
 
   async markConsumedIfTokenMatches(input: { invitationId: string; tokenHash: string }, transactionOverride?: any) {

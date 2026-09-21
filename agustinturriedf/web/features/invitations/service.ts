@@ -5,7 +5,6 @@ import { hash } from "bcryptjs";
 import { type AuthenticatedUser, requireRole } from "@/features/auth/authorization";
 import { buildAuditEvent } from "@/features/audit/event-factory";
 import { auditRepository } from "@/features/audit/repository";
-import { sendActivationEmail } from "@/features/invitations/email";
 import { invitationLogger } from "@/features/invitations/logger";
 import { invitationRepository } from "@/features/invitations/repository";
 import { routinesRepository } from "@/features/routines/repository";
@@ -18,6 +17,8 @@ import { prisma } from "@/lib/prisma";
 import {
   activateInvitationSchema,
   createInvitationSchema,
+  resendInvitationSchema,
+  revokeInvitationSchema,
   type CreateInvitationInput,
 } from "@/lib/validation/invitations";
 
@@ -45,13 +46,18 @@ const outboxKey = () => {
   return { id, value };
 };
 
-const ensureTrainerCanManage = (actor: AuthenticatedUser, trainerId: string) => {
+const ensureActorCanManage = (actor: AuthenticatedUser, invitation: { role: string; trainerId: string | null }) => {
   if (actor.role === "ADMIN") return;
-  if (actor.role === "TRAINER" && actor.id === trainerId) return;
-  throw new ApiError("No tenés permisos para gestionar esta invitación", 403, "FORBIDDEN");
+  if (actor.role === "TRAINER" && invitation.role === "STUDENT" && actor.id === invitation.trainerId) return;
+  throw new ApiError("Forbidden", 403, "FORBIDDEN");
 };
 
 const isExpired = (expiresAt: Date | null, now: Date) => !expiresAt || expiresAt.getTime() <= now.getTime();
+const requireEligibleInvitation = (invitation: any, now: Date) => {
+  if (!invitation || !["PENDING", "SENT"].includes(invitation.status) || isExpired(invitation.expiresAt, now)) {
+    throw new ApiError("Invitation cannot be changed", 409, "CONFLICT");
+  }
+};
 
 export class InvitationService {
   async create(actor: AuthenticatedUser, input: Omit<CreateInvitationInput, "role"> & { role?: CreateInvitationInput["role"] }) {
@@ -92,34 +98,28 @@ export class InvitationService {
     return this.toSafeDTO(createdInvitation);
   }
 
-  async resend(invitationId: string, actor: AuthenticatedUser) {
+  async resend(invitationId: string, actor: AuthenticatedUser, expectedVersion: number) {
     requireRole(actor, ["ADMIN", "TRAINER"], "Solo ADMIN y TRAINER pueden reenviar invitaciones");
+    const command = { invitationId, expectedVersion: resendInvitationSchema.shape.expectedVersion.parse(expectedVersion) };
 
     const invitation = await invitationRepository.findById(invitationId);
-    if (!invitation) throw new ApiError("Invitación no encontrada", 404, "NOT_FOUND");
-    ensureTrainerCanManage(actor, invitation.trainerId);
+    if (!invitation) throw new ApiError("Invitation not found", 404, "NOT_FOUND");
+    ensureActorCanManage(actor, invitation);
+    const now = new Date();
+    requireEligibleInvitation(invitation, now);
 
     const rawToken = generateToken();
-    const expiresAt = addHours(new Date(), TOKEN_EXPIRATION_HOURS);
-    const updated = await invitationRepository.updateToken(invitationId, {
-      tokenHash: hashToken(rawToken),
-      expiresAt,
-      status: "SENT",
+    const expiresAt = addHours(now, TOKEN_EXPIRATION_HOURS);
+    const tokenHash = hashToken(rawToken);
+    await prisma.$transaction(async (transaction) => {
+      const updated = await invitationRepository.resendIfCurrent({
+        invitationId: command.invitationId, expectedVersion: command.expectedVersion, now, tokenHash, expiresAt, deliveryStatus: "PENDING",
+      }, transaction);
+      if (!updated) throw new ApiError("Invitation cannot be changed", 409, "CONFLICT");
+      await auditRepository.append(buildAuditEvent({ eventType: "INVITATION_RESENT", invitationId: invitation.id, actor: { type: "USER", userId: actor.id }, summary: { deliveryStatus: "PENDING" } }), transaction as any);
+      await outboxRepository.enqueue({ messageType: "EMAIL", resourceType: "INVITATION", resourceId: invitation.id, idempotencyKey: `invitation:${invitation.id}:resend:${invitation.version + 1}`, payloadEncrypted: encryptPayload({ to: invitation.email, activationUrl: buildActivationUrl(rawToken), expiresAt: expiresAt.toISOString() }, outboxKey()) }, transaction as any);
     });
-
-    await sendActivationEmail({
-      to: updated.email,
-      activationUrl: buildActivationUrl(rawToken),
-      expiresAt,
-    });
-
-    await invitationLogger.resent({
-      invitationId: updated.id,
-      email: updated.email,
-      trainerId: updated.trainerId,
-    });
-
-    return updated;
+    return this.toSafeDTO({ ...invitation, expiresAt, deliveryStatus: "PENDING", version: invitation.version + 1 });
   }
 
   async activate(input: unknown) {
@@ -203,21 +203,21 @@ export class InvitationService {
     return { message: "Cuenta activada. Ya podés iniciar sesión." };
   }
 
-  async revoke(invitationId: string, actor: AuthenticatedUser) {
+  async revoke(invitationId: string, actor: AuthenticatedUser, input: { expectedVersion: number; reason: string }) {
     requireRole(actor, ["ADMIN", "TRAINER"], "Solo ADMIN y TRAINER pueden revocar invitaciones");
+    const command = { invitationId, ...revokeInvitationSchema.omit({ invitationId: true }).parse(input) };
 
     const invitation = await invitationRepository.findById(invitationId);
-    if (!invitation) throw new ApiError("Invitación no encontrada", 404, "NOT_FOUND");
-    ensureTrainerCanManage(actor, invitation.trainerId);
-
-    await invitationRepository.markRevoked(invitation.id);
-    await invitationLogger.revoked({
-      invitationId: invitation.id,
-      email: invitation.email,
-      trainerId: invitation.trainerId,
+    if (!invitation) throw new ApiError("Invitation not found", 404, "NOT_FOUND");
+    ensureActorCanManage(actor, invitation);
+    const now = new Date();
+    requireEligibleInvitation(invitation, now);
+    await prisma.$transaction(async (transaction) => {
+      const revoked = await invitationRepository.revokeIfCurrent({ invitationId: command.invitationId, expectedVersion: command.expectedVersion, now }, transaction);
+      if (!revoked) throw new ApiError("Invitation cannot be changed", 409, "CONFLICT");
+      await auditRepository.append(buildAuditEvent({ eventType: "INVITATION_REVOKED", invitationId: invitation.id, actor: { type: "USER", userId: actor.id }, reason: command.reason }), transaction as any);
     });
-
-    return { message: "Invitación revocada." };
+    return { id: invitation.id, status: "REVOKED", version: invitation.version + 1 };
   }
 
   async findByIdForActor(invitationId: string, actor: AuthenticatedUser) {
@@ -228,7 +228,7 @@ export class InvitationService {
       throw new ApiError("Invitación no encontrada", 404, "NOT_FOUND");
     }
 
-    ensureTrainerCanManage(actor, invitation.trainerId);
+    ensureActorCanManage(actor, invitation);
     return invitation;
   }
 

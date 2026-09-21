@@ -116,6 +116,11 @@ export const activateInvitationSchema = z
 
 export const resendInvitationSchema = z.object({
   invitationId: cuidSchema,
+  expectedVersion: z.number().int().positive(),
+});
+
+export const revokeInvitationSchema = resendInvitationSchema.extend({
+  reason: z.string().trim().min(1).max(500),
 });
 
 export type CreateInvitationInput = z.infer<typeof createInvitationSchema>;

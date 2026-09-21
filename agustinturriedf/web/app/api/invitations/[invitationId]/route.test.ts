@@ -1,20 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { requireSessionMock, findByIdForActorMock, revokeMock } = vi.hoisted(() => ({
+const { requireSessionMock, findByIdForActorMock } = vi.hoisted(() => ({
   requireSessionMock: vi.fn(),
   findByIdForActorMock: vi.fn(),
-  revokeMock: vi.fn(),
 }));
 
 vi.mock("@/features/auth/session", () => ({ requireSession: requireSessionMock }));
 vi.mock("@/features/invitations/service", () => ({
   invitationService: {
     findByIdForActor: findByIdForActorMock,
-    revoke: revokeMock,
   },
 }));
 
-import { DELETE, GET } from "@/app/api/invitations/[invitationId]/route";
+import * as invitationDetailRoute from "@/app/api/invitations/[invitationId]/route";
+
+const { GET } = invitationDetailRoute;
 
 describe("/api/invitations/[invitationId]", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -32,16 +32,7 @@ describe("/api/invitations/[invitationId]", () => {
     expect(body).toEqual({ success: true, data: { id: "inv-1" } });
   });
 
-  it("DELETE revokes invitation", async () => {
-    requireSessionMock.mockResolvedValue({ id: "t1", role: "TRAINER" });
-    revokeMock.mockResolvedValue({ message: "Invitación revocada." });
-
-    const response = await DELETE(new Request("http://localhost"), {
-      params: Promise.resolve({ invitationId: "inv-1" }),
-    });
-    const body = await response.json();
-
-    expect(response.status).toBe(200);
-    expect(body).toEqual({ success: true, data: { message: "Invitación revocada." } });
+  it("does not expose DELETE on the read-only detail route", () => {
+    expect("DELETE" in invitationDetailRoute).toBe(false);
   });
 });
