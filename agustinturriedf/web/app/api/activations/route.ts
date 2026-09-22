@@ -1,6 +1,8 @@
-import { invitationService } from "@/features/invitations/service";
-import { handleApiError } from "@/lib/http/api-response";
-import { activateInvitationSchema } from "@/lib/validation/invitations";
+import { cookies } from "next/headers";
+
+import { activationPrimitives } from "@/features/invitations/activation";
+import { ApiError, apiError, handleApiError } from "@/lib/http/api-response";
+import { activateFromSessionSchema } from "@/lib/validation/invitations";
 
 import {
   activationSuccessResponse,
@@ -9,18 +11,25 @@ import {
 
 export const POST = async (request: Request) => {
   try {
-    // SECURITY BOUNDARY: this route is public by design.
-    // Authorization is replaced by possession of a valid, unexpired single-use token.
+    const session = (await cookies()).get("activation_session")?.value;
+    if (!session) throw new ApiError("No activation session", 400, "INVALID_ACTIVATION");
     const payload = await request.json();
-    const parsedPayload = activateInvitationSchema.safeParse(payload);
+    const parsedPayload = activateFromSessionSchema.safeParse(payload);
 
     if (!parsedPayload.success) {
       throw createActivationValidationError(parsedPayload.error.flatten());
     }
 
-    await invitationService.activate(parsedPayload.data);
-    return activationSuccessResponse();
+    await activationPrimitives.activate({ password: parsedPayload.data.password, session });
+    const response = activationSuccessResponse();
+    response.cookies.set("activation_session", "", { httpOnly: true, maxAge: 0, path: "/", sameSite: "lax", secure: true });
+    return response;
   } catch (error) {
+    if (error instanceof ApiError && ["INVALID_ACTIVATION", "INVALID_OR_EXPIRED_TOKEN"].includes(error.code)) {
+      const response = apiError(new ApiError("No se pudo continuar con la activación.", 400, "INVALID_ACTIVATION"));
+      response.cookies.set("activation_session", "", { httpOnly: true, maxAge: 0, path: "/", sameSite: "lax", secure: true });
+      return response;
+    }
     return handleApiError(error);
   }
 };

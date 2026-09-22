@@ -1,28 +1,21 @@
+import { cookies } from "next/headers";
+import React from "react";
+
 import { AuthCard } from "../_components/auth-card";
 
 import { ActivationForm } from "@/app/(auth)/activation/_components/activation-form";
 
-const resolveActivationToken = (token: string | string[] | undefined) => {
-  if (!token) return null;
-  if (Array.isArray(token)) return token[0] ?? null;
-  return token.trim().length > 0 ? token.trim() : null;
-};
-
-export default async function ActivationPage({
-  searchParams,
-}: {
-  searchParams?: Promise<{ token?: string | string[] | undefined }>;
-}) {
-  const resolvedSearchParams = searchParams ? await searchParams : undefined;
-  const token = resolveActivationToken(resolvedSearchParams?.token);
+export default async function ActivationPage({ searchParams }: { searchParams: Promise<{ recovery?: string }> }) {
+  const session = (await cookies()).get("activation_session")?.value;
+  const recovery = (await searchParams).recovery === "1";
 
   return (
     <AuthCard>
       <h1>Activá tu cuenta</h1>
-      {!token ? (
-        <p role="alert">El enlace de activación no es válido.</p>
+      {recovery || !session ? (
+        <p role="alert">No se pudo continuar con la activación.</p>
       ) : (
-        <ActivationForm token={token} />
+        <ActivationForm />
       )}
     </AuthCard>
   );

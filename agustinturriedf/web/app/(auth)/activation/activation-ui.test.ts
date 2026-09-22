@@ -1,39 +1,73 @@
-import { readFileSync } from "node:fs";
-import path from "node:path";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import React from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { describe, expect, it } from "vitest";
+const { cookiesMock, pushMock } = vi.hoisted(() => ({ cookiesMock: vi.fn(), pushMock: vi.fn() }));
 
-const resolveActivationFile = (...segments: string[]) =>
-  path.join(process.cwd(), "app", "(auth)", "activation", ...segments);
+vi.mock("next/headers", () => ({ cookies: cookiesMock }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: pushMock }) }));
+vi.mock("@/app/(auth)/_components/auth-card", () => ({ AuthCard: ({ children }: { children: unknown }) => children }));
 
-describe("activation UI structure", () => {
-  it("reads token from search params and renders ActivationForm", () => {
-    const source = readFileSync(resolveActivationFile("page.tsx"), "utf8");
+import ActivationPage from "@/app/(auth)/activation/page";
+import { ActivationForm } from "@/app/(auth)/activation/_components/activation-form";
 
-    expect(source).toContain("resolveActivationToken");
-    expect(source).toContain("searchParams");
-    expect(source).toContain("ActivationForm");
-    expect(source).toContain("Promise<{ token?: string | string[] | undefined }>");
+describe("activation UI", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    cookiesMock.mockResolvedValue({ get: () => ({ value: "opaque-session" }) });
   });
 
-  it("shows invalid link message when token is missing", () => {
-    const source = readFileSync(resolveActivationFile("page.tsx"), "utf8");
+  afterEach(cleanup);
 
-    expect(source).toContain("El enlace de activación no es válido");
+  it("renders permanent, described password guidance without a dismiss path", () => {
+    render(React.createElement(ActivationForm));
+
+    expect(screen.getByRole("dialog")).toHaveAttribute("aria-modal", "true");
+    expect(screen.getByText("Mínimo 8 caracteres")).toBeVisible();
+    expect(screen.getByText("Una letra mayúscula")).toBeVisible();
+    expect(screen.getByText("Una letra minúscula")).toBeVisible();
+    expect(screen.getByText("Un número")).toBeVisible();
+    expect(screen.getByLabelText("Contraseña")).toHaveAttribute("aria-describedby", "password-requirements");
+    expect(screen.getByLabelText("Repetir contraseña")).toHaveAttribute("aria-describedby", "password-requirements");
+    expect(screen.queryByRole("button", { name: /cerrar|cancelar|omitir/i })).not.toBeInTheDocument();
   });
 
-  it("posts activation payload and redirects to confirmation screen", () => {
-    const source = readFileSync(resolveActivationFile("_components", "activation-form.tsx"), "utf8");
+  it("shows accessible policy and mismatch feedback before posting", () => {
+    render(React.createElement(ActivationForm));
 
-    expect(source).toContain('fetch("/api/activations"');
-    expect(source).toContain('router.push("/activation/confirm")');
-    expect(source).toContain("confirmPassword");
+    fireEvent.change(screen.getByLabelText("Contraseña"), { target: { value: "weak" } });
+    fireEvent.change(screen.getByLabelText("Repetir contraseña"), { target: { value: "different" } });
+    fireEvent.click(screen.getByRole("button", { name: "Activar cuenta" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("La contraseña debe cumplir todos los requisitos indicados.");
+    expect(screen.getByLabelText("Contraseña")).toHaveAttribute("aria-describedby", "password-requirements password-feedback");
   });
 
-  it("shows login CTA in confirmation page", () => {
-    const source = readFileSync(resolveActivationFile("confirm", "page.tsx"), "utf8");
+  it("posts only password setup and reports mismatch feedback", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ success: true, data: { message: "ok" } }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    render(React.createElement(ActivationForm));
 
-    expect(source).toContain('href="/login"');
-    expect(source).toContain("Cuenta activada");
+    fireEvent.change(screen.getByLabelText("Contraseña"), { target: { value: "Segura123" } });
+    fireEvent.change(screen.getByLabelText("Repetir contraseña"), { target: { value: "Segura124" } });
+    fireEvent.click(screen.getByRole("button", { name: "Activar cuenta" }));
+    expect(screen.getByRole("alert")).toHaveTextContent("Las contraseñas no coinciden.");
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText("Repetir contraseña"), { target: { value: "Segura123" } });
+    fireEvent.click(screen.getByRole("button", { name: "Activar cuenta" }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
+
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ password: "Segura123", confirmPassword: "Segura123" });
+    expect(JSON.stringify(fetchMock.mock.calls)).not.toContain("opaque-session");
+    expect(pushMock).toHaveBeenCalledWith("/activation/confirm");
+  });
+
+  it("renders recovery instead of the form when its marker overrides a stale cookie", async () => {
+    render(await ActivationPage({ searchParams: Promise.resolve({ recovery: "1" }) }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("No se pudo continuar con la activación.");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toContain("opaque-session");
   });
 });

@@ -114,6 +114,18 @@ export const activateInvitationSchema = z
     }
   });
 
+export const activateFromSessionSchema = z
+  .object({
+    password: z
+      .string()
+      .min(8, "Mínimo 8 caracteres")
+      .regex(/[A-Z]/, "Debe incluir una mayúscula")
+      .regex(/[a-z]/, "Debe incluir una minúscula")
+      .regex(/[0-9]/, "Debe incluir un número"),
+    confirmPassword: z.string(),
+  })
+  .refine((value) => value.password === value.confirmPassword, { path: ["confirmPassword"], message: "Las contraseñas no coinciden" });
+
 export const resendInvitationSchema = z.object({
   invitationId: cuidSchema,
   expectedVersion: z.number().int().positive(),
