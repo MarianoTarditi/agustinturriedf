@@ -10,6 +10,7 @@ type UpsertResetTokenInput = {
 
 type ConsumeTokenAndUpdatePasswordInput = {
   userId: string;
+  tokenHash: string;
   passwordHash: string;
   passwordUpdatedAt: Date;
 };
@@ -27,8 +28,12 @@ export class PasswordResetRepository {
     }) as Promise<{ id: string; email: string } | null>;
   }
 
-  async upsertResetToken(input: UpsertResetTokenInput) {
-    return prismaPasswordReset.passwordResetToken.upsert({
+  inTransaction<T>(operation: (transaction: any) => Promise<T>) {
+    return prismaPasswordReset.$transaction(operation);
+  }
+
+  async upsertResetToken(input: UpsertResetTokenInput, transaction = prismaPasswordReset) {
+    return transaction.passwordResetToken.upsert({
       where: {
         userId: input.userId,
       },
@@ -58,6 +63,18 @@ export class PasswordResetRepository {
 
   async consumeTokenAndUpdatePassword(input: ConsumeTokenAndUpdatePasswordInput) {
     const deletedRows = await prismaPasswordReset.$transaction(async (transaction: any) => {
+      const deleteResult = await transaction.passwordResetToken.deleteMany({
+        where: {
+          userId: input.userId,
+          tokenHash: input.tokenHash,
+          expiresAt: { gt: input.passwordUpdatedAt },
+        },
+      });
+
+      if (!deleteResult.count) {
+        return 0;
+      }
+
       await transaction.user.update({
         where: {
           id: input.userId,
@@ -65,12 +82,7 @@ export class PasswordResetRepository {
         data: {
           passwordHash: input.passwordHash,
           passwordUpdatedAt: input.passwordUpdatedAt,
-        },
-      });
-
-      const deleteResult = await transaction.passwordResetToken.deleteMany({
-        where: {
-          userId: input.userId,
+          authVersion: { increment: 1 },
         },
       });
 

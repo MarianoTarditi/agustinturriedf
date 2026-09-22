@@ -4,6 +4,10 @@ import { hash as hashPassword } from "bcryptjs";
 
 import { passwordResetLogger } from "@/features/auth/password-reset/logger";
 import { passwordResetRepository } from "@/features/auth/password-reset/repository";
+import { buildAuditEvent } from "@/features/audit/event-factory";
+import { auditRepository } from "@/features/audit/repository";
+import { encryptPayload } from "@/features/outbox/crypto";
+import { outboxRepository } from "@/features/outbox/repository";
 import { ApiError } from "@/lib/http/api-response";
 
 const RESET_TOKEN_EXPIRATION_MINUTES = 30;
@@ -27,6 +31,13 @@ const addMinutes = (date: Date, minutes: number) => new Date(date.getTime() + mi
 
 const buildResetUrl = (token: string) => `${getResetBaseUrl()}/reset-password/confirm?token=${token}`;
 
+const outboxKey = () => {
+  const value = process.env.OUTBOX_ENCRYPTION_KEY?.trim();
+  const id = process.env.OUTBOX_ENCRYPTION_KEY_ID?.trim() || "current";
+  if (!value) throw new ApiError("Outbox encryption is not configured", 500, "OUTBOX_CONFIG_MISSING");
+  return { id, value };
+};
+
 const createInvalidOrExpiredTokenError = () => new ApiError("Token inválido o expirado", 400, "INVALID_OR_EXPIRED_TOKEN");
 
 type ConfirmResetInput = {
@@ -49,16 +60,29 @@ export class PasswordResetService {
     const tokenHash = hashToken(rawToken);
     const expiresAt = addMinutes(new Date(), RESET_TOKEN_EXPIRATION_MINUTES);
 
-    await passwordResetRepository.upsertResetToken({
-      userId: user.id,
-      tokenHash,
-      expiresAt,
+    await passwordResetRepository.inTransaction(async (transaction) => {
+      await passwordResetRepository.upsertResetToken({
+        userId: user.id,
+        tokenHash,
+        expiresAt,
+      }, transaction);
+      await auditRepository.append(buildAuditEvent({
+        eventType: "PASSWORD_RESET_REQUESTED",
+        subjectUserId: user.id,
+        actor: { type: "SUBJECT", userId: user.id },
+        summary: { deliveryStatus: "PENDING" },
+      }), transaction);
+      await outboxRepository.enqueue({
+        messageType: "EMAIL",
+        resourceType: "PASSWORD_RESET",
+        resourceId: user.id,
+        idempotencyKey: `password-reset:${user.id}:${expiresAt.getTime()}`,
+        payloadEncrypted: encryptPayload({ to: user.email, activationUrl: buildResetUrl(rawToken), expiresAt: expiresAt.toISOString() }, outboxKey()),
+      }, transaction);
     });
 
     await passwordResetLogger.logPasswordResetEmail({
-      email: user.email,
-      resetUrl: buildResetUrl(rawToken),
-      expiresAt,
+      userId: user.id,
     });
 
     return {
@@ -80,10 +104,12 @@ export class PasswordResetService {
     }
 
     const nextPasswordHash = await hashPassword(input.password, PASSWORD_HASH_ROUNDS);
+    const consumedAt = new Date();
     const consumed = await passwordResetRepository.consumeTokenAndUpdatePassword({
       userId: resetToken.userId,
+      tokenHash,
       passwordHash: nextPasswordHash,
-      passwordUpdatedAt: now,
+      passwordUpdatedAt: consumedAt,
     });
 
     if (!consumed) {

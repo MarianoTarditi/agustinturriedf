@@ -1,16 +1,12 @@
 type LogPasswordResetEmailInput = {
-  email: string;
-  resetUrl: string;
-  expiresAt: Date;
+  userId: string;
 };
 
 export class PasswordResetLogger {
   async logPasswordResetEmail(input: LogPasswordResetEmailInput) {
     console.info({
-      event: "password_reset_requested",
-      email: input.email,
-      resetUrl: input.resetUrl,
-      expiresAt: input.expiresAt,
+      event: "password_reset_queued",
+      userId: input.userId,
     });
   }
 }

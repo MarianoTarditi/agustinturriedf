@@ -6,7 +6,7 @@ import { decryptPayload, type EncryptionKey } from "./crypto";
 import { sendOutboxEmail } from "./email-adapter";
 import { OutboxRepository, type OutboxStateTransaction, type OutboxTransaction, type SettlementResult } from "./repository";
 
-type EmailPayload = { to: string; activationUrl: string; expiresAt: string };
+type EmailPayload = { to: string; activationUrl: string; expiresAt: string; resourceType: string };
 type ProvisionPayload = { studentProfileId: string };
 type Dependencies = {
   repository?: OutboxRepository; keys: EncryptionKey | Record<string, string>;
@@ -33,7 +33,7 @@ export class OutboxWorker {
         if (job.messageType === "EMAIL") {
           const payload = decryptPayload<EmailPayload>(job.payloadEncrypted, this.keys);
           if (new Date(payload.expiresAt).getTime() <= Date.now()) throw new Error("EXPIRED");
-          await this.email({ ...payload, idempotencyKey: job.idempotencyKey });
+          await this.email({ ...payload, resourceType: job.resourceType, idempotencyKey: job.idempotencyKey });
         }
         else if (job.messageType === "ROUTINE_PROVISION") await this.provision(decryptPayload<ProvisionPayload>(job.payloadEncrypted, this.keys).studentProfileId);
         else throw new Error("unsupported message");

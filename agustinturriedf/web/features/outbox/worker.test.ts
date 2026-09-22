@@ -34,7 +34,7 @@ describe("outbox worker", () => {
     const worker = new OutboxWorker({ repository: outbox as any, keys: key, email, provision: vi.fn(), audit });
     await Promise.all([worker.drain(), worker.drain()]);
     expect(outbox.claim).toHaveBeenCalled();
-    expect(email).toHaveBeenCalledWith(expect.objectContaining({ idempotencyKey: "invite:1" }));
+    expect(email).toHaveBeenCalledWith(expect.objectContaining({ idempotencyKey: "invite:1", resourceType: "INVITATION" }));
     expect(outbox.complete).toHaveBeenCalledWith("job-1", "fence-1", expect.anything());
     expect(audit).toHaveBeenCalledWith(expect.objectContaining({ actorType: "SYSTEM", summary: expect.objectContaining({ deliveryStatus: "COMPLETED" }) }), expect.anything());
   });
