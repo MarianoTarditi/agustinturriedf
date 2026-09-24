@@ -1,4 +1,5 @@
 import { passwordResetService } from "@/features/auth/password-reset/service";
+import { passwordResetThrottle } from "@/features/auth/password-reset/throttle";
 import { handleApiError } from "@/lib/http/api-response";
 import { requestPasswordResetSchema } from "@/lib/validation/password-reset";
 
@@ -22,6 +23,8 @@ const waitForMinimumResponseDuration = async (startedAtMs: number) => {
   });
 };
 
+const publicThrottleSubject = "password-reset-public-shared";
+
 export const POST = async (request: Request) => {
   try {
     const payload = await request.json();
@@ -32,8 +35,13 @@ export const POST = async (request: Request) => {
     }
 
     const startedAt = Date.now();
-
-    await passwordResetService.requestReset(parsedPayload.data.email);
+    try {
+      if (await passwordResetThrottle.consume(publicThrottleSubject)) {
+        await passwordResetService.requestReset(parsedPayload.data.email);
+      }
+    } catch {
+      // A public recovery request must not reveal internal delivery state.
+    }
     await waitForMinimumResponseDuration(startedAt);
 
     return passwordResetGenericSuccessResponse();

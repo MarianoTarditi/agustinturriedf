@@ -33,6 +33,7 @@ const {
   expireToken,
   holdHash,
   consoleInfoMock,
+  consumeThrottleMock,
 } = vi.hoisted(() => {
   let usersById = new Map<string, UserRecord>();
   const userIdsByEmail = new Map<string, string>();
@@ -241,6 +242,7 @@ const {
       return release;
     },
     consoleInfoMock,
+    consumeThrottleMock: vi.fn(async () => true),
   };
 });
 
@@ -251,6 +253,10 @@ vi.mock("bcryptjs", () => ({
 
 vi.mock("@/lib/prisma", () => ({
   prisma: prismaMock,
+}));
+
+vi.mock("@/features/auth/password-reset/throttle", () => ({
+  passwordResetThrottle: { consume: consumeThrottleMock },
 }));
 
 vi.mock("next-auth", () => ({
@@ -279,6 +285,7 @@ describe("password reset integrated flow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     resetState();
+    consumeThrottleMock.mockResolvedValue(true);
     vi.spyOn(console, "info").mockImplementation(consoleInfoMock);
     process.env.OUTBOX_ENCRYPTION_KEY = outboxKey.value;
     process.env.OUTBOX_ENCRYPTION_KEY_ID = outboxKey.id;
@@ -293,7 +300,7 @@ describe("password reset integrated flow", () => {
       })
     );
 
-    expect(requestResponse.status).toBe(200);
+    expect(requestResponse.status).toBe(202);
     await expect(requestResponse.json()).resolves.toEqual({
       success: true,
       data: {
@@ -453,7 +460,7 @@ describe("password reset integrated flow", () => {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: "user@example.com" }),
     }));
 
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(202);
     expect(getLatestTokenRecord("user-1")).toBeNull();
     expect(getLatestOutboxMessage()).toBeNull();
     expect(getAuditEvents()).toEqual([]);

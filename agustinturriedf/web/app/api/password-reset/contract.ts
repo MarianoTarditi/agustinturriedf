@@ -10,7 +10,7 @@ export const createValidationError = (details: unknown) =>
 export const passwordResetGenericSuccessResponse = () =>
   apiSuccess({
     message: PASSWORD_RESET_GENERIC_SUCCESS_MESSAGE,
-  });
+  }, { status: 202 });
 
 export const passwordResetConfirmSuccessResponse = () =>
   apiSuccess({
