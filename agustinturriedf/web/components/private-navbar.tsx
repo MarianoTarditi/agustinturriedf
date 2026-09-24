@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { signOut } from "next-auth/react";
 import type { Session } from "next-auth";
 import { MaterialSymbol } from "@/components/material-symbol";
@@ -35,6 +35,12 @@ const navItems: NavItem[] = [
     label: "Usuarios",
     icon: "group",
     roles: ["ADMIN", "TRAINER"],
+  },
+  {
+    href: "/usuarios/equipo",
+    label: "Equipo",
+    icon: "groups",
+    roles: ["ADMIN"],
   },
   {
     href: "/pagos",
@@ -150,7 +156,12 @@ export function PrivateNavbar({ currentUser }: PrivateNavbarProps) {
       <div className={styles.sidebarBody}>
         <nav className={styles.nav} aria-label="Navegación privada">
           {visibleNavItems.map((item) => {
-            const active = isActive(pathname, item.href);
+            const active = isActive(pathname, item.href) && !visibleNavItems.some(
+              (candidate) =>
+                candidate.href !== item.href &&
+                candidate.href.startsWith(`${item.href}/`) &&
+                isActive(pathname, candidate.href)
+            );
 
             return (
               <Link key={item.href} href={item.href} className={`${styles.link} ${active ? styles.linkActive : ""}`}>
