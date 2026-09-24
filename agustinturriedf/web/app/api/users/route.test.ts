@@ -2,8 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "@/lib/http/api-response";
 
-const { requireSessionMock, listUsersMock } = vi.hoisted(() => ({
+const { requireSessionMock, listDirectoryMock, listUsersMock } = vi.hoisted(() => ({
   requireSessionMock: vi.fn(),
+  listDirectoryMock: vi.fn(),
   listUsersMock: vi.fn(),
 }));
 
@@ -13,6 +14,7 @@ vi.mock("@/features/auth/session", () => ({
 
 vi.mock("@/features/users/service", () => ({
   userService: {
+    listDirectory: listDirectoryMock,
     listUsers: listUsersMock,
   },
 }));
@@ -28,7 +30,7 @@ describe("GET /api/users", () => {
     requireSessionMock.mockResolvedValue({ id: "trainer-1", role: "TRAINER" });
     listUsersMock.mockResolvedValue([{ id: "u-1", email: "u1@example.com" }]);
 
-    const response = await GET();
+    const response = await GET(new Request("http://localhost/api/users"));
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -37,12 +39,13 @@ describe("GET /api/users", () => {
       data: [{ id: "u-1", email: "u1@example.com" }],
     });
     expect(listUsersMock).toHaveBeenCalledWith({ id: "trainer-1", role: "TRAINER" });
+    expect(listDirectoryMock).not.toHaveBeenCalled();
   });
 
   it("returns 403 when blocked or forbidden actor hits endpoint", async () => {
     requireSessionMock.mockRejectedValue(new ApiError("Cuenta bloqueada", 403, "FORBIDDEN"));
 
-    const response = await GET();
+    const response = await GET(new Request("http://localhost/api/users"));
     const body = await response.json();
 
     expect(response.status).toBe(403);
@@ -53,6 +56,7 @@ describe("GET /api/users", () => {
         code: "FORBIDDEN",
       },
     });
+    expect(listDirectoryMock).not.toHaveBeenCalled();
     expect(listUsersMock).not.toHaveBeenCalled();
   });
 });

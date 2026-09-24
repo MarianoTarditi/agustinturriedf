@@ -171,6 +171,28 @@ export const updateUserSchema = z
     message: "Debe enviarse al menos un campo para actualizar",
   });
 
+export const userDirectoryQuerySchema = z
+  .object({
+    view: z.enum(["students", "team"]),
+    search: z.string().trim().min(1).max(100).optional(),
+    status: z.enum(["ACTIVE", "INACTIVE", "BLOCKED", "ARCHIVED"]).optional(),
+    trainerId: cuidSchema.optional(),
+    role: z.enum(["ADMIN", "TRAINER"]).optional(),
+    sort: z.enum(["createdAt:asc", "createdAt:desc"]).default("createdAt:desc"),
+    limit: z.coerce.number().int().min(1).max(100).default(25),
+    cursor: z.string().min(1).max(2000).optional(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (value.view === "students" && value.role) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["role"], message: "role only applies to team" });
+    }
+
+    if (value.view === "team" && value.trainerId) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["trainerId"], message: "trainerId only applies to students" });
+    }
+  });
+
 export const selfProfileSchema = z.object({
   firstName: requiredStringSchema,
   lastName: requiredStringSchema,
@@ -221,6 +243,7 @@ export const stripImmutableSelfProfileFields = (
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
+export type UserDirectoryQuery = z.infer<typeof userDirectoryQuerySchema>;
 export type SelfProfileDTO = z.infer<typeof selfProfileSchema>;
 export type UpdateSelfProfileInput = z.infer<typeof updateSelfProfileSchema>;
 export type SelfProfileGender = z.infer<typeof selfProfileGenderSchema>;

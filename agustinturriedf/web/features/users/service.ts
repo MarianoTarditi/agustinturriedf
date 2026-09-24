@@ -19,6 +19,7 @@ import {
 } from "@/features/routines/storage";
 import {
   type CreateUserRepositoryInput,
+  type DirectoryRepositoryQuery,
   type LifecycleTransitionRepositoryInput,
   type UpdateSelfProfileRepositoryInput,
   userRepository,
@@ -31,6 +32,7 @@ import {
   type SelfProfileDTO,
   stripImmutableSelfProfileFields,
   type UpdateUserInput,
+  type UserDirectoryQuery,
   type UpdateSelfProfileInput,
   updateSelfProfileSchema,
   updateUserSchema,
@@ -189,6 +191,23 @@ export class UserService {
     return users
       .filter((user) => actor.role === "ADMIN" || user.role === "STUDENT")
       .map(mapToUserDTO);
+  }
+
+  async listDirectory(actor: AuthenticatedUser, query: UserDirectoryQuery) {
+    requireUserDirectoryAccess(actor);
+
+    if (actor.role === "TRAINER" && query.view === "team") {
+      throw new ApiError("No tenés permisos para ver cuentas de equipo", 403, "FORBIDDEN");
+    }
+
+    const roles: DirectoryRepositoryQuery["roles"] =
+      query.view === "students" ? ["STUDENT"] : query.role ? [query.role] : ["ADMIN", "TRAINER"];
+    const page = await userRepository.listDirectory({ ...query, roles });
+
+    return {
+      items: page.items.map(mapToUserDTO),
+      nextCursor: page.nextCursor,
+    };
   }
 
   async getUserById(actor: AuthenticatedUser, userId: string) {

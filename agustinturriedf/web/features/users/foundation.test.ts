@@ -8,6 +8,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const webRoot = path.resolve(__dirname, "../..");
 const schemaPath = path.join(webRoot, "prisma/schema.prisma");
 const migrationPath = path.join(webRoot, "prisma/migrations/20260913_admin_users_foundation/migration.sql");
+const unassignedStudentMigrationPath = path.join(
+  webRoot,
+  "prisma/migrations/20260923_student_profile_optional_trainer/migration.sql"
+);
 const reconciliationPath = path.join(
   webRoot,
   "prisma/reconciliation/admin-users-foundation.sql"
@@ -52,5 +56,15 @@ describe("admin-user schema foundation", () => {
     expect(reconciliation).toContain('u."status" = \'ACTIVE\'');
     expect(reconciliation).toContain('to_regclass(\'public."User_active_admin_idx"\')');
     expect(reconciliation).not.toMatch(/\b(INSERT|UPDATE|DELETE|ALTER|CREATE|DROP|TRUNCATE)\b/);
+  });
+
+  it("makes StudentProfile.trainerId nullable for unassigned students", () => {
+    const schema = readFileSync(schemaPath, "utf8");
+    const migration = readFileSync(unassignedStudentMigrationPath, "utf8");
+    const reconciliation = readFileSync(reconciliationPath, "utf8");
+
+    expect(schema).toMatch(/trainerId\s+String\?/);
+    expect(migration).toContain('ALTER TABLE "StudentProfile" ALTER COLUMN "trainerId" DROP NOT NULL');
+    expect(reconciliation).toContain("StudentProfile.trainerId must be nullable");
   });
 });

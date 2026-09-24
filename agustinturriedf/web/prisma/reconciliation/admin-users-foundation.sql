@@ -32,5 +32,14 @@ BEGIN
   IF to_regclass('public."User_active_admin_idx"') IS NULL THEN
     RAISE EXCEPTION 'User_active_admin_idx is missing';
   END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'StudentProfile'
+      AND column_name = 'trainerId' AND is_nullable = 'YES'
+  ) THEN
+    RAISE EXCEPTION 'StudentProfile.trainerId must be nullable';
+  END IF;
 END
 $$;

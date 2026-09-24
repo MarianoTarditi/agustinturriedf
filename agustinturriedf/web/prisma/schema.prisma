@@ -153,14 +153,14 @@ model Invitation {
 model StudentProfile {
   id        String        @id @default(cuid())
   userId    String        @unique
-  trainerId String
+  trainerId String?
   status    StudentStatus @default(ACTIVE)
   provisioningStatus ProvisioningStatus @default(PENDING)
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
   user         User          @relation("StudentUserProfile", fields: [userId], references: [id], onDelete: Cascade)
-  trainer      User          @relation("TrainerToStudents", fields: [trainerId], references: [id], onDelete: Restrict)
+  trainer      User?         @relation("TrainerToStudents", fields: [trainerId], references: [id], onDelete: Restrict)
   routineFolder RoutineFolder?
   currentPayment CurrentPayment?
   paymentHistory PaymentHistory[]

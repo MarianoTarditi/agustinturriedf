@@ -2,16 +2,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "@/lib/http/api-response";
 
-const { requireSessionMock, getUserByIdMock, listUsersMock, updateUserMock } = vi.hoisted(() => ({
+const { requireSessionMock, getUserByIdMock, listDirectoryMock, listUsersMock, updateUserMock } = vi.hoisted(() => ({
   requireSessionMock: vi.fn(),
   getUserByIdMock: vi.fn(),
+  listDirectoryMock: vi.fn(),
   listUsersMock: vi.fn(),
   updateUserMock: vi.fn(),
 }));
 
 vi.mock("@/features/auth/session", () => ({ requireSession: requireSessionMock }));
 vi.mock("@/features/users/service", () => ({
-  userService: { getUserById: getUserByIdMock, listUsers: listUsersMock, updateUser: updateUserMock },
+  userService: { getUserById: getUserByIdMock, listDirectory: listDirectoryMock, listUsers: listUsersMock, updateUser: updateUserMock },
 }));
 
 import { GET as getUser, PATCH, DELETE } from "@/app/api/users/[userId]/route";
@@ -53,7 +54,7 @@ describe("admin users read policy", () => {
     requireSessionMock.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
     listUsersMock.mockResolvedValue([{ id: userId, role: "STUDENT" }]);
 
-    const response = await listUsers();
+    const response = await listUsers(new Request("http://localhost/api/users"));
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ success: true, data: [{ id: userId, role: "STUDENT" }] });

@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { auditRepository } from "@/features/audit/repository";
 import { buildAuditEvent } from "@/features/audit/event-factory";
 import { addDays, normalizeToBuenosAiresDay } from "@/features/payments/timezone";
+import { createHmac, timingSafeEqual } from "node:crypto";
+
 import { ApiError } from "@/lib/http/api-response";
 
 type Role = "ADMIN" | "TRAINER" | "STUDENT";
@@ -28,7 +30,7 @@ export type CreateUserRepositoryInput = {
   heightCm?: number | null;
   weightKg?: number | null;
   studentProfile?: {
-    trainerId: string;
+    trainerId?: string | null;
     status?: StudentStatus;
     initialPaymentStartDate?: Date | null;
   };
@@ -71,6 +73,57 @@ export type LifecycleTransitionRepositoryInput = {
   reason: string;
 };
 
+export type DirectoryRepositoryQuery = {
+  view: "students" | "team";
+  roles: Role[];
+  search?: string;
+  status?: AccountStatus;
+  trainerId?: string;
+  role?: Extract<Role, "ADMIN" | "TRAINER">;
+  sort: "createdAt:asc" | "createdAt:desc";
+  limit: number;
+  cursor?: string;
+};
+
+type DirectoryCursor = {
+  scope: string;
+  sort: DirectoryRepositoryQuery["sort"];
+  createdAt: string;
+  id: string;
+};
+
+const directoryCursorSecret = () => {
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (!secret) throw new ApiError("Directory cursor signing is not configured", 500, "CONFIGURATION_ERROR");
+  return secret;
+};
+
+const directoryScope = (query: DirectoryRepositoryQuery) =>
+  JSON.stringify({ view: query.view, roles: query.roles, search: query.search ?? null, status: query.status ?? null, trainerId: query.trainerId ?? null, role: query.role ?? null });
+
+const signDirectoryCursor = (payload: string) => createHmac("sha256", directoryCursorSecret()).update(payload).digest("base64url");
+
+const parseDirectoryCursor = (value: string | undefined, query: DirectoryRepositoryQuery): DirectoryCursor | undefined => {
+  if (!value) return undefined;
+  try {
+    const parts = value.split(".");
+    if (parts.length !== 2 || parts.some((part) => !part)) throw new Error("Invalid cursor");
+    const [payload, signature] = parts;
+    const expectedSignature = signDirectoryCursor(payload);
+    if (signature.length !== expectedSignature.length || !timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) throw new Error("Invalid cursor");
+    const cursor = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as DirectoryCursor;
+    if (!cursor.id || cursor.scope !== directoryScope(query) || cursor.sort !== query.sort || Number.isNaN(new Date(cursor.createdAt).getTime())) throw new Error("Invalid cursor");
+    return cursor;
+  } catch {
+    throw new ApiError("Invalid directory cursor", 400, "VALIDATION_ERROR");
+  }
+};
+
+const createDirectoryCursor = (user: { id: string; createdAt: Date }, query: DirectoryRepositoryQuery) => {
+  const payload = Buffer.from(JSON.stringify({ scope: directoryScope(query), sort: query.sort, createdAt: user.createdAt.toISOString(), id: user.id })).toString("base64url");
+  return `${payload}.${signDirectoryCursor(payload)}`;
+};
+
 const removeUndefined = <T extends Record<string, unknown>>(value: T) =>
   Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined));
 
@@ -85,6 +138,45 @@ const isRetryableTransactionError = (error: unknown) =>
   typeof error === "object" && error !== null && "code" in error && error.code === "P2034";
 
 export class UserRepository {
+  async listDirectory(query: DirectoryRepositoryQuery) {
+    const cursor = parseDirectoryCursor(query.cursor, query);
+    const direction = query.sort.endsWith(":asc") ? "asc" : "desc";
+    const users = await (prisma as any).user.findMany({
+      where: {
+        role: { in: query.roles },
+        ...(query.status ? { status: query.status } : { status: { not: "ARCHIVED" } }),
+        ...(query.trainerId ? { studentProfile: { is: { trainerId: query.trainerId } } } : {}),
+        AND: [
+          ...(query.search
+            ? [{ OR: [
+                { firstName: { contains: query.search, mode: "insensitive" } },
+                { lastName: { contains: query.search, mode: "insensitive" } },
+                { email: { contains: query.search, mode: "insensitive" } },
+              ] }]
+            : []),
+        ...(cursor
+          ? [{ OR:
+                direction === "asc"
+                  ? [{ createdAt: { gt: new Date(cursor.createdAt) } }, { createdAt: new Date(cursor.createdAt), id: { gt: cursor.id } }]
+                  : [{ createdAt: { lt: new Date(cursor.createdAt) } }, { createdAt: new Date(cursor.createdAt), id: { lt: cursor.id } }],
+              }]
+          : []),
+        ],
+      },
+      include: userWithProfileInclude,
+      orderBy: [{ createdAt: direction }, { id: direction }],
+      take: query.limit + 1,
+    });
+    const hasMore = users.length > query.limit;
+    const items = users.slice(0, query.limit);
+    const last = items.at(-1);
+
+    return {
+      items,
+      nextCursor: hasMore && last ? createDirectoryCursor(last, query) : null,
+    };
+  }
+
   async list() {
     return prisma.user.findMany({
       include: userWithProfileInclude,
@@ -136,7 +228,7 @@ export class UserRepository {
             ? {
                 studentProfile: {
                   create: {
-                    trainerId: input.studentProfile.trainerId,
+                    ...removeUndefined({ trainerId: input.studentProfile.trainerId ?? undefined }),
                     status: input.studentProfile.status ?? "ACTIVE",
                   },
                 },
@@ -146,7 +238,7 @@ export class UserRepository {
         include: userWithProfileInclude,
       });
 
-      if (createdUser.role === "STUDENT" && createdUser.studentProfile) {
+      if (createdUser.role === "STUDENT" && createdUser.studentProfile && input.studentProfile?.trainerId) {
         const trainerConfig = await transaction.trainerConfig.upsert({
           where: {
             trainerId: createdUser.studentProfile.trainerId,
