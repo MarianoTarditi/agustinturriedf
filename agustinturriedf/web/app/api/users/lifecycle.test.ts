@@ -146,6 +146,7 @@ const createLifecycleHarness = (initialUsers: Array<Record<string, unknown>>) =>
   prismaMock.$transaction.mockImplementation(async (callback: (transaction: any) => Promise<unknown>) => {
     const stagedUsers = structuredClone(committedUsers);
     const transaction = {
+      $executeRaw: vi.fn(),
       user: {
         findUnique: vi.fn(async ({ where }: any) => stagedUsers.find((user) => user.id === where.id) ?? null),
         count: vi.fn(async ({ where }: any) => stagedUsers.filter((user) => user.role === where.role && user.status === where.status).length),
@@ -160,6 +161,17 @@ const createLifecycleHarness = (initialUsers: Array<Record<string, unknown>>) =>
           return { count: 1 };
         }),
       },
+      studentProfile: {
+        update: vi.fn(async ({ where, data }: any) => {
+          const user = stagedUsers.find((item) => (item.studentProfile as { id?: string } | null)?.id === where.id);
+          if (user?.studentProfile) Object.assign(user.studentProfile as object, data);
+        }),
+        updateMany: vi.fn(async ({ where, data }: any) => {
+          stagedUsers.filter((user) => (user.studentProfile as { trainerId?: string } | null)?.trainerId === where.trainerId).forEach((user) => {
+            (user.studentProfile as { trainerId: string | null }).trainerId = data.trainerId;
+          });
+        }),
+      },
     };
     const result = await callback(transaction);
     committedUsers = stagedUsers;
@@ -167,6 +179,50 @@ const createLifecycleHarness = (initialUsers: Array<Record<string, unknown>>) =>
   });
 
   return () => committedUsers;
+};
+
+const createAdvisoryLockHarness = (initialUsers: Array<Record<string, any>>) => {
+  const users = structuredClone(initialUsers);
+  const waiters: Array<() => void> = [];
+  let locked = false;
+  let contended = 0;
+  const acquire = async () => {
+    if (locked) {
+      contended += 1;
+      await new Promise<void>((resolve) => waiters.push(resolve));
+    }
+    locked = true;
+  };
+  const release = () => {
+    locked = false;
+    waiters.shift()?.();
+  };
+  prismaMock.$transaction.mockImplementation(async (callback: (transaction: any) => Promise<unknown>) => {
+    let ownsLock = false;
+    const transaction = {
+      $executeRaw: async () => { await acquire(); ownsLock = true; },
+      user: {
+        findUnique: async ({ where }: any) => structuredClone(users.find((user) => user.id === where.id) ?? null),
+        count: async ({ where }: any) => users.filter((user) => user.role === where.role && user.status === where.status).length,
+        updateMany: async ({ where, data }: any) => {
+          const user = users.find((item) => item.id === where.id && item.version === where.version && (!where.status || item.status === where.status));
+          if (!user) return { count: 0 };
+          Object.assign(user, data, { version: user.version + data.version.increment });
+          if (data.authVersion) user.authVersion += data.authVersion.increment;
+          return { count: 1 };
+        },
+      },
+      studentProfile: {
+        update: async ({ where, data }: any) => {
+          const user = users.find((item) => item.studentProfile?.id === where.id);
+          if (user?.studentProfile) Object.assign(user.studentProfile, data);
+        },
+        updateMany: async ({ where, data }: any) => users.filter((user) => user.studentProfile?.trainerId === where.trainerId).forEach((user) => Object.assign(user.studentProfile, data)),
+      },
+    };
+    try { return await callback(transaction); } finally { if (ownsLock) release(); }
+  });
+  return { users, contention: () => contended };
 };
 
 describe("UserRepository.transition", () => {
@@ -202,5 +258,34 @@ describe("UserRepository.transition", () => {
     ).rejects.toThrow("audit unavailable");
 
     expect(users()[0]).toMatchObject({ status: "ARCHIVED", version: 4, authVersion: 2, archiveReason: "Old" });
+  });
+
+  it.each(["assignment", "deactivation"] as const)("serializes %s lock winner without an inactive trainer assignment", async (winner) => {
+    const harness = createAdvisoryLockHarness([
+      { id: "trainer-1", role: "TRAINER", status: "ACTIVE", version: 1, authVersion: 1, studentProfile: null },
+      { id: "student-1", role: "STUDENT", status: "ACTIVE", version: 1, authVersion: 1, studentProfile: { id: "profile-1", trainerId: "trainer-1" } },
+    ]);
+    const repository = new UserRepository();
+    let releaseFirst!: () => void;
+    const firstAudit = new Promise<void>((resolve) => { releaseFirst = resolve; });
+    let firstAuditReached!: () => void;
+    const reached = new Promise<void>((resolve) => { firstAuditReached = resolve; });
+    appendMock.mockImplementation(async () => { firstAuditReached(); await firstAudit; });
+    const assignment = () => repository.assignTrainer({ userId: "student-1", trainerId: "trainer-1", expectedVersion: 1, actorId: "admin-1" });
+    const deactivation = () => repository.transition({ userId: "trainer-1", actorId: "admin-1", targetStatus: "INACTIVE", expectedVersion: 1, reason: "Leave" });
+    const first = winner === "assignment" ? assignment() : deactivation();
+    await reached;
+    const second = winner === "assignment" ? deactivation() : assignment();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    releaseFirst();
+    if (winner === "assignment") await Promise.all([first, second]);
+    else await expect(second).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    if (winner !== "assignment") await first;
+
+    expect(harness.contention()).toBe(1);
+    expect(harness.users[0]).toMatchObject({ status: "INACTIVE" });
+    expect(harness.users[1].studentProfile.trainerId).toBeNull();
+    expect(appendMock).toHaveBeenCalledTimes(winner === "assignment" ? 2 : 1);
+    expect(prismaMock.$transaction).toHaveBeenCalledTimes(2);
   });
 });

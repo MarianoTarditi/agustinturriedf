@@ -19,6 +19,7 @@ import {
 } from "@/features/routines/storage";
 import {
   type CreateUserRepositoryInput,
+  type AssignTrainerRepositoryInput,
   type DirectoryRepositoryQuery,
   type LifecycleTransitionRepositoryInput,
   type UpdateSelfProfileRepositoryInput,
@@ -28,6 +29,8 @@ import {
 import { ApiError } from "@/lib/http/api-response";
 import {
   createUserSchema,
+  assignTrainerSchema,
+  type AssignTrainerInput,
   type CreateUserInput,
   type SelfProfileDTO,
   stripImmutableSelfProfileFields,
@@ -320,6 +323,17 @@ export class UserService {
 
     const updatedUser = await userRepository.update(userId, repositoryInput);
     return mapToUserDTO(updatedUser);
+  }
+
+  async assignTrainer(actor: AuthenticatedUser, userId: string, input: AssignTrainerInput) {
+    requireRole(actor, ["ADMIN", "TRAINER"], "Solo ADMIN y TRAINER pueden asignar alumnos");
+    const currentUser = await userRepository.findById(userId);
+    if (!currentUser) throw new ApiError("Usuario no encontrado", 404, "NOT_FOUND");
+    requireUserMutationAccess(actor, currentUser);
+
+    const command = assignTrainerSchema.parse(input);
+    const repositoryInput: AssignTrainerRepositoryInput = { ...command, userId, actorId: actor.id };
+    return mapToUserDTO(await userRepository.assignTrainer(repositoryInput));
   }
 
   async transitionUser(

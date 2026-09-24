@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { appendMock, createMock, findManyMock, findUniqueMock, requireSessionMock, transactionMock, updateManyMock } = vi.hoisted(() => ({
+const { appendMock, createMock, findManyMock, findUniqueMock, requireSessionMock, transactionMock, updateManyMock, updateProfileMock, advisoryLockMock } = vi.hoisted(() => ({
   appendMock: vi.fn(),
   createMock: vi.fn(),
   findManyMock: vi.fn(),
@@ -8,6 +8,8 @@ const { appendMock, createMock, findManyMock, findUniqueMock, requireSessionMock
   requireSessionMock: vi.fn(),
   transactionMock: vi.fn(),
   updateManyMock: vi.fn(),
+  updateProfileMock: vi.fn(),
+  advisoryLockMock: vi.fn(),
 }));
 
 vi.mock("@/lib/prisma", () => ({
@@ -19,6 +21,7 @@ vi.mock("@/features/audit/repository", () => ({ auditRepository: { append: appen
 
 import { GET } from "@/app/api/users/route";
 import { PATCH as patchUser } from "@/app/api/users/[userId]/route";
+import { PATCH as patchAssignment } from "@/app/api/users/[userId]/assignment/route";
 import { userRepository } from "@/features/users/repository";
 import { userService } from "@/features/users/service";
 
@@ -205,6 +208,74 @@ describe("user directory", () => {
     })).rejects.toMatchObject({ status: 409, code: "VERSION_CONFLICT" });
 
     expect(appendMock).not.toHaveBeenCalled();
+  });
+
+  it("assigns only an active trainer under the shared advisory lock with CAS and audit", async () => {
+    const updatedUser = { ...user, version: 2, studentProfile: { ...user.studentProfile, trainerId: "trainer-1" } };
+    findUniqueMock.mockResolvedValueOnce(user).mockResolvedValueOnce({ id: "trainer-1", role: "TRAINER", status: "ACTIVE" }).mockResolvedValueOnce(updatedUser);
+    updateManyMock.mockResolvedValue({ count: 1 });
+    updateProfileMock.mockResolvedValue({ ...user.studentProfile, trainerId: "trainer-1" });
+    transactionMock.mockImplementation(async (callback) => callback({
+      $executeRaw: advisoryLockMock,
+      user: { findUnique: findUniqueMock, updateMany: updateManyMock },
+      studentProfile: { update: updateProfileMock },
+    }));
+
+    await expect(userRepository.assignTrainer({ userId: "student-1", trainerId: "trainer-1", expectedVersion: 1, actorId: "admin-1" })).resolves.toEqual(updatedUser);
+
+    expect(advisoryLockMock).toHaveBeenCalled();
+    expect(updateManyMock).toHaveBeenCalledWith({ where: { id: "student-1", version: 1 }, data: { version: { increment: 1 } } });
+    expect(updateProfileMock).toHaveBeenCalledWith({ where: { id: "profile-1" }, data: { trainerId: "trainer-1" } });
+    expect(appendMock).toHaveBeenCalledWith(expect.objectContaining({ eventType: "STUDENT_TRAINER_ASSIGNED", subjectUserId: "student-1" }), expect.anything());
+  });
+
+  it.each([null, { id: "trainer-1", role: "ADMIN", status: "ACTIVE" }, { id: "trainer-1", role: "TRAINER", status: "INACTIVE" }])("rejects an ineligible assignment destination without a student mutation", async (trainer) => {
+    findUniqueMock.mockResolvedValueOnce(user).mockResolvedValueOnce(trainer);
+    transactionMock.mockImplementation(async (callback) => callback({ $executeRaw: advisoryLockMock, user: { findUnique: findUniqueMock, updateMany: updateManyMock } }));
+
+    await expect(userRepository.assignTrainer({ userId: "student-1", trainerId: "trainer-1", expectedVersion: 1, actorId: "admin-1" })).rejects.toMatchObject({ status: 400, code: "VALIDATION_ERROR" });
+    expect(updateManyMock).not.toHaveBeenCalled();
+    expect(appendMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects stale assignment CAS before profile or audit side effects", async () => {
+    findUniqueMock.mockResolvedValueOnce(user).mockResolvedValueOnce({ id: "trainer-1", role: "TRAINER", status: "ACTIVE" });
+    updateManyMock.mockResolvedValue({ count: 0 });
+    transactionMock.mockImplementation(async (callback) => callback({ $executeRaw: advisoryLockMock, user: { findUnique: findUniqueMock, updateMany: updateManyMock } }));
+
+    await expect(userRepository.assignTrainer({ userId: "student-1", trainerId: "trainer-1", expectedVersion: 1, actorId: "admin-1" })).rejects.toMatchObject({ status: 409, code: "VERSION_CONFLICT" });
+    expect(updateProfileMock).not.toHaveBeenCalled();
+    expect(appendMock).not.toHaveBeenCalled();
+  });
+
+  it("rolls back assignment when its atomic audit append fails", async () => {
+    let committedTrainerId: string | null = null;
+    let stagedTrainerId: string | null = committedTrainerId;
+    findUniqueMock.mockResolvedValueOnce(user).mockResolvedValueOnce({ id: "trainer-1", role: "TRAINER", status: "ACTIVE" });
+    updateManyMock.mockResolvedValue({ count: 1 });
+    updateProfileMock.mockImplementation(async ({ data }) => { stagedTrainerId = data.trainerId; });
+    appendMock.mockRejectedValue(new Error("audit unavailable"));
+    transactionMock.mockImplementation(async (callback) => {
+      stagedTrainerId = committedTrainerId;
+      await callback({ $executeRaw: advisoryLockMock, user: { findUnique: findUniqueMock, updateMany: updateManyMock }, studentProfile: { update: updateProfileMock } });
+      committedTrainerId = stagedTrainerId;
+    });
+
+    await expect(userRepository.assignTrainer({ userId: "student-1", trainerId: "trainer-1", expectedVersion: 1, actorId: "admin-1" })).rejects.toThrow("audit unavailable");
+    expect(committedTrainerId).toBeNull();
+  });
+
+  it("validates the assignment route before calling the service", async () => {
+    requireSessionMock.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
+    const assignSpy = vi.spyOn(userService, "assignTrainer");
+
+    const response = await patchAssignment(
+      new Request("http://localhost/api/users/student-1/assignment", { method: "PATCH", body: JSON.stringify({ trainerId: "bad", expectedVersion: 1 }) }),
+      { params: Promise.resolve({ userId: "student-1" }) }
+    );
+
+    expect(response.status).toBe(400);
+    expect(assignSpy).not.toHaveBeenCalled();
   });
 
   it("rolls back a successful CAS when the audit append fails", async () => {

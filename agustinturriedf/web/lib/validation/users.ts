@@ -170,6 +170,13 @@ export const updateUserSchema = z
     message: "Debe enviarse al menos un campo para actualizar",
   });
 
+export const assignTrainerSchema = z
+  .object({
+    trainerId: cuidSchema,
+    expectedVersion: z.number().int().nonnegative(),
+  })
+  .strict();
+
 export const userDirectoryQuerySchema = z
   .object({
     view: z.enum(["students", "team"]),
@@ -242,6 +249,7 @@ export const stripImmutableSelfProfileFields = (
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
+export type AssignTrainerInput = z.infer<typeof assignTrainerSchema>;
 export type UserDirectoryQuery = z.infer<typeof userDirectoryQuerySchema>;
 export type SelfProfileDTO = z.infer<typeof selfProfileSchema>;
 export type UpdateSelfProfileInput = z.infer<typeof updateSelfProfileSchema>;

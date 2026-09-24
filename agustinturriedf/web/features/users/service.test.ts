@@ -8,6 +8,7 @@ const {
   createMock,
   findByIdMock,
   updateMock,
+  assignTrainerMock,
   deleteMock,
   ensureFolderForStudentMock,
   ensureStudentRoutineDirectoryMock,
@@ -20,6 +21,7 @@ const {
   createMock: vi.fn(),
   findByIdMock: vi.fn(),
   updateMock: vi.fn(),
+  assignTrainerMock: vi.fn(),
   deleteMock: vi.fn(),
   ensureFolderForStudentMock: vi.fn(),
   ensureStudentRoutineDirectoryMock: vi.fn(),
@@ -35,6 +37,7 @@ vi.mock("@/features/users/repository", () => ({
     create: createMock,
     findById: findByIdMock,
     update: updateMock,
+    assignTrainer: assignTrainerMock,
     delete: deleteMock,
   },
 }));
@@ -173,6 +176,34 @@ describe("UserService.updateUser", () => {
     expect(updateMock).toHaveBeenCalledWith("student-1", expect.objectContaining({ expectedVersion: 1, actorId: "admin-1" }));
     expect(result).toMatchObject({ id: "student-1", version: 2, studentProfile: { trainerId: "trainer-1" } });
     expect(result).not.toHaveProperty("passwordHash");
+  });
+});
+
+describe("UserService.assignTrainer", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("authorizes only persisted student targets before assigning", async () => {
+    findByIdMock.mockResolvedValue({ id: "team-1", role: "TRAINER", studentProfile: null });
+
+    await expect(userService.assignTrainer(
+      { id: "trainer-1", role: "TRAINER" }, "team-1", { trainerId: "c123456789012345678901234", expectedVersion: 1 }
+    )).rejects.toMatchObject({ status: 403, code: "FORBIDDEN" });
+
+    expect(assignTrainerMock).not.toHaveBeenCalled();
+  });
+
+  it("forwards a valid authorized assignment with actor attribution", async () => {
+    findByIdMock.mockResolvedValue({ id: "student-1", role: "STUDENT", studentProfile: { id: "profile-1", trainerId: null } });
+    assignTrainerMock.mockResolvedValue({
+      id: "student-1", firstName: "Ana", lastName: "Student", email: "ana@example.com", phone: null, photoUrl: null, birthDate: null, gender: null, heightCm: null, weightKg: null,
+      role: "STUDENT", status: "ACTIVE", version: 2, createdAt: new Date(), updatedAt: new Date(), studentProfile: { id: "profile-1", trainerId: "c123456789012345678901234", status: "ACTIVE" },
+    });
+
+    await userService.assignTrainer(
+      { id: "admin-1", role: "ADMIN" }, "student-1", { trainerId: "c123456789012345678901234", expectedVersion: 1 }
+    );
+
+    expect(assignTrainerMock).toHaveBeenCalledWith({ userId: "student-1", trainerId: "c123456789012345678901234", expectedVersion: 1, actorId: "admin-1" });
   });
 });
 

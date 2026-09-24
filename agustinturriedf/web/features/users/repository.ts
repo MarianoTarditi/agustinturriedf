@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 
 import { auditRepository } from "@/features/audit/repository";
 import { buildAuditEvent } from "@/features/audit/event-factory";
+import { lockTrainerAssignmentCoordination } from "@/features/users/assignment-coordination";
 import { addDays, normalizeToBuenosAiresDay } from "@/features/payments/timezone";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
@@ -61,6 +62,13 @@ export type LifecycleTransitionRepositoryInput = {
   targetStatus: AccountStatus;
   expectedVersion: number;
   reason: string;
+};
+
+export type AssignTrainerRepositoryInput = {
+  userId: string;
+  trainerId: string;
+  expectedVersion: number;
+  actorId: string;
 };
 
 export type DirectoryRepositoryQuery = {
@@ -303,6 +311,36 @@ export class UserRepository {
     });
   }
 
+  async assignTrainer(input: AssignTrainerRepositoryInput) {
+    return (prisma as any).$transaction(async (transaction: any) => {
+      await lockTrainerAssignmentCoordination(transaction, input.trainerId);
+      const [student, trainer] = await Promise.all([
+        transaction.user.findUnique({ where: { id: input.userId }, include: userWithProfileInclude }),
+        transaction.user.findUnique({ where: { id: input.trainerId } }),
+      ]);
+      if (!student || student.role !== "STUDENT" || !student.studentProfile) {
+        throw new ApiError("Student account not found", 404, "NOT_FOUND");
+      }
+      if (!trainer || trainer.role !== "TRAINER" || trainer.status !== "ACTIVE") {
+        throw new ApiError("Trainer must be active", 400, "VALIDATION_ERROR");
+      }
+      const mutation = await transaction.user.updateMany({
+        where: { id: input.userId, version: input.expectedVersion },
+        data: { version: { increment: 1 } },
+      });
+      if (mutation.count !== 1) throw new ApiError("Account version is stale", 409, "VERSION_CONFLICT");
+
+      await transaction.studentProfile.update({ where: { id: student.studentProfile.id }, data: { trainerId: input.trainerId } });
+      await auditRepository.append(buildAuditEvent({
+        eventType: "STUDENT_TRAINER_ASSIGNED",
+        subjectUserId: input.userId,
+        actor: { type: "USER", userId: input.actorId },
+        summary: { resourceRef: input.trainerId },
+      }), transaction);
+      return transaction.user.findUnique({ where: { id: input.userId }, include: userWithProfileInclude });
+    }, { isolationLevel: "Serializable" });
+  }
+
   async transition(input: LifecycleTransitionRepositoryInput) {
     const prismaUsers = prisma as any;
 
@@ -323,6 +361,9 @@ export class UserRepository {
               throw new ApiError("Administrators cannot archive themselves", 403, "FORBIDDEN");
             }
 
+            const deactivatesTrainer = currentUser.role === "TRAINER" && fromStatus === "ACTIVE" && input.targetStatus !== "ACTIVE";
+            if (deactivatesTrainer) await lockTrainerAssignmentCoordination(transaction, currentUser.id);
+
             const removesActiveAdmin = currentUser.role === "ADMIN" && currentUser.status === "ACTIVE" && input.targetStatus !== "ACTIVE";
             if (removesActiveAdmin) {
               const activeAdminCount = await transaction.user.count({ where: { role: "ADMIN", status: "ACTIVE" } });
@@ -342,6 +383,10 @@ export class UserRepository {
             });
             if (mutation.count !== 1) throw new ApiError("Account version is stale", 409, "VERSION_CONFLICT");
 
+            if (deactivatesTrainer) {
+              await transaction.studentProfile.updateMany({ where: { trainerId: currentUser.id }, data: { trainerId: null } });
+            }
+
             const updatedUser = await transaction.user.findUnique({
               where: { id: input.userId },
               include: userWithProfileInclude,
@@ -352,7 +397,7 @@ export class UserRepository {
                 subjectUserId: input.userId,
                 actor: { type: "USER", userId: input.actorId },
                 reason: input.reason,
-                summary: { fromStatus, toStatus: input.targetStatus },
+                summary: { fromStatus, toStatus: input.targetStatus, ...(deactivatesTrainer ? { resourceRef: "assigned-students-unassigned" } : {}) },
               }),
               transaction
             );
