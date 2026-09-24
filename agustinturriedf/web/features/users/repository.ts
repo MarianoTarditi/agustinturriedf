@@ -36,22 +36,12 @@ export type CreateUserRepositoryInput = {
   };
 };
 
-type StudentProfileUpdateAction =
-  | {
-      action: "upsert";
-      trainerId: string;
-      status?: StudentStatus;
-    }
-  | {
-      action: "delete";
-    };
-
 export type UpdateUserRepositoryInput = {
   firstName?: string;
   lastName?: string;
   email?: string;
-  passwordHash?: string;
-  studentProfile?: StudentProfileUpdateAction;
+  expectedVersion: number;
+  actorId: string;
 };
 
 export type UpdateSelfProfileRepositoryInput = {
@@ -275,40 +265,24 @@ export class UserRepository {
   }
 
   async update(userId: string, input: UpdateUserRepositoryInput) {
-    const data = {
-      ...removeUndefined({
-        firstName: input.firstName,
-        lastName: input.lastName,
-        email: input.email,
-        passwordHash: input.passwordHash,
-      }),
-    };
+    return (prisma as any).$transaction(async (transaction: any) => {
+      const currentUser = await transaction.user.findUnique({ where: { id: userId }, include: userWithProfileInclude });
+      if (!currentUser) throw new ApiError("Usuario no encontrado", 404, "NOT_FOUND");
 
-    if (input.studentProfile?.action === "upsert") {
-      data.studentProfile = {
-        upsert: {
-          create: {
-            trainerId: input.studentProfile.trainerId,
-            status: input.studentProfile.status ?? "ACTIVE",
-          },
-          update: removeUndefined({
-            trainerId: input.studentProfile.trainerId,
-            status: input.studentProfile.status,
-          }),
-        },
-      };
-    }
+      const mutation = await transaction.user.updateMany({
+        where: { id: userId, version: input.expectedVersion },
+        data: { ...removeUndefined({ firstName: input.firstName, lastName: input.lastName, email: input.email }), version: { increment: 1 } },
+      });
+      if (mutation.count !== 1) throw new ApiError("Account version is stale", 409, "VERSION_CONFLICT");
 
-    if (input.studentProfile?.action === "delete") {
-      data.studentProfile = {
-        delete: true,
-      };
-    }
+      await auditRepository.append(buildAuditEvent({
+        eventType: "USER_PROFILE_UPDATED",
+        subjectUserId: userId,
+        actor: { type: "USER", userId: input.actorId },
+        summary: { changedFields: Object.keys(removeUndefined({ firstName: input.firstName, lastName: input.lastName, email: input.email })) },
+      }), transaction);
 
-    return prisma.user.update({
-      where: { id: userId },
-      data,
-      include: userWithProfileInclude,
+      return transaction.user.findUnique({ where: { id: userId }, include: userWithProfileInclude });
     });
   }
 

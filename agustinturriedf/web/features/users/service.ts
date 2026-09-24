@@ -67,6 +67,7 @@ const mapToUserDTO = (user: Awaited<ReturnType<typeof userRepository.create>>): 
   weightKg: user.weightKg,
   role: user.role,
   status: user.status,
+  version: user.version,
   createdAt: user.createdAt,
   updatedAt: user.updatedAt,
   studentProfile: user.studentProfile
@@ -305,6 +306,8 @@ export class UserService {
       firstName: parsedInput.firstName,
       lastName: parsedInput.lastName,
       email: parsedInput.email ? normalizeEmail(parsedInput.email) : undefined,
+      expectedVersion: parsedInput.expectedVersion,
+      actorId: actor.id,
     };
 
     if (repositoryInput.email) {
@@ -312,40 +315,6 @@ export class UserService {
 
       if (existingWithEmail && existingWithEmail.id !== currentUser.id) {
         throw new ApiError("Ya existe un usuario con ese email", 409, "CONFLICT");
-      }
-    }
-
-    if (currentUser.role === "STUDENT") {
-      const trainerId = parsedInput.trainerId ?? currentUser.studentProfile?.trainerId;
-
-      if (!trainerId) {
-        throw new ApiError(
-          "trainerId es obligatorio para usuarios STUDENT",
-          400,
-          "VALIDATION_ERROR"
-        );
-      }
-
-      await ensureTrainerExists(trainerId);
-
-      repositoryInput.studentProfile = {
-        action: "upsert",
-        trainerId,
-        status: parsedInput.studentStatus ?? currentUser.studentProfile?.status ?? "ACTIVE",
-      };
-    } else {
-      if (parsedInput.trainerId || parsedInput.studentStatus) {
-        throw new ApiError(
-          "trainerId y studentStatus solo aplican a usuarios STUDENT",
-          400,
-          "VALIDATION_ERROR"
-        );
-      }
-
-      if (currentUser.studentProfile) {
-        repositoryInput.studentProfile = {
-          action: "delete",
-        };
       }
     }
 

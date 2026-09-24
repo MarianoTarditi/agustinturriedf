@@ -104,7 +104,7 @@ describe("UserService.updateUser", () => {
     });
 
     await expect(
-      userService.updateUser({ id: "trainer-1", role: "TRAINER" }, "team-1", { firstName: "Changed" })
+      userService.updateUser({ id: "trainer-1", role: "TRAINER" }, "team-1", { firstName: "Changed", expectedVersion: 1 })
     ).rejects.toMatchObject({
       status: 403,
       code: "FORBIDDEN",
@@ -120,11 +120,59 @@ describe("UserService.updateUser", () => {
       userService.updateUser(
         { id: "admin-1", role: "ADMIN" },
         "student-1",
-        { firstName: "Changed", role: "ADMIN" } as never
+        { firstName: "Changed", expectedVersion: 1, role: "ADMIN" } as never
       )
     ).rejects.toMatchObject({ name: "ZodError" });
 
     expect(updateMock).not.toHaveBeenCalled();
+  });
+
+  it("requires a version and rejects lifecycle injection before mutation", async () => {
+    findByIdMock.mockResolvedValue({ id: "student-1", role: "STUDENT", studentProfile: { trainerId: null } });
+
+    await expect(userService.updateUser(
+      { id: "admin-1", role: "ADMIN" }, "student-1", { firstName: "Changed" } as never
+    )).rejects.toMatchObject({ name: "ZodError" });
+    await expect(userService.updateUser(
+      { id: "admin-1", role: "ADMIN" }, "student-1", { expectedVersion: 1, studentStatus: "BLOCKED" } as never
+    )).rejects.toMatchObject({ name: "ZodError" });
+
+    expect(updateMock).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["password", { password: "not-allowed" }],
+    ["password hash", { passwordHash: "not-allowed" }],
+    ["lifecycle status", { status: "BLOCKED" }],
+    ["audit field", { auditReason: "not-allowed" }],
+    ["server version", { version: 2 }],
+    ["trainer assignment", { trainerId: "c123456789012345678901234" }],
+  ])("rejects %s injection before mutation", async (_case, immutableField) => {
+    findByIdMock.mockResolvedValue({ id: "student-1", role: "STUDENT", studentProfile: { trainerId: null } });
+
+    await expect(userService.updateUser(
+      { id: "admin-1", role: "ADMIN" }, "student-1", { firstName: "Changed", expectedVersion: 1, ...immutableField } as never
+    )).rejects.toMatchObject({ name: "ZodError" });
+
+    expect(updateMock).not.toHaveBeenCalled();
+  });
+
+  it("authorizes the persisted student target and returns the incremented safe DTO", async () => {
+    findByIdMock.mockResolvedValue({ id: "student-1", role: "STUDENT", studentProfile: { trainerId: null } });
+    updateMock.mockResolvedValue({
+      id: "student-1", firstName: "Changed", lastName: "Student", email: "student@example.com",
+      phone: null, photoUrl: null, birthDate: null, gender: null, heightCm: null, weightKg: null,
+      role: "STUDENT", status: "ACTIVE", version: 2, createdAt: new Date(), updatedAt: new Date(),
+      passwordHash: "secret", studentProfile: { id: "profile-1", trainerId: "trainer-1", status: "ACTIVE" },
+    });
+
+    const result = await userService.updateUser(
+      { id: "admin-1", role: "ADMIN" }, "student-1", { firstName: "Changed", expectedVersion: 1 }
+    );
+
+    expect(updateMock).toHaveBeenCalledWith("student-1", expect.objectContaining({ expectedVersion: 1, actorId: "admin-1" }));
+    expect(result).toMatchObject({ id: "student-1", version: 2, studentProfile: { trainerId: "trainer-1" } });
+    expect(result).not.toHaveProperty("passwordHash");
   });
 });
 

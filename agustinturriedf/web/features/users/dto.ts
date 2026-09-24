@@ -11,7 +11,8 @@ export type UserDTO = {
   weightKg: number | null;
   role: "ADMIN" | "TRAINER" | "STUDENT";
   status: "ACTIVE" | "INACTIVE" | "BLOCKED" | "ARCHIVED";
+  version: number;
   createdAt: Date;
   updatedAt: Date;
-  studentProfile: { id: string; trainerId: string; status: "ACTIVE" | "INACTIVE" | "BLOCKED" } | null;
+  studentProfile: { id: string; trainerId: string | null; status: "ACTIVE" | "INACTIVE" | "BLOCKED" } | null;
 };
