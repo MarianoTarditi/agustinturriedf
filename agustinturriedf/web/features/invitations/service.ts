@@ -122,6 +122,43 @@ export class InvitationService {
     return this.toSafeDTO({ ...invitation, expiresAt, deliveryStatus: "PENDING", version: invitation.version + 1 });
   }
 
+  async requestReplacement(rawEmail: string) {
+    const email = normalizeEmail(rawEmail);
+    const invitation = await invitationRepository.findPendingReplacementByEmail(email);
+    const now = new Date();
+
+    if (!invitation) return;
+
+    const rawToken = generateToken();
+    const expiresAt = addHours(now, TOKEN_EXPIRATION_HOURS);
+    const tokenHash = hashToken(rawToken);
+
+    await prisma.$transaction(async (transaction) => {
+      const replaced = await invitationRepository.replacePendingForEmail({
+        invitationId: invitation.id,
+        expectedVersion: invitation.version,
+        expectedTokenHash: invitation.tokenHash,
+        tokenHash,
+        expiresAt,
+      }, transaction);
+      if (!replaced) return;
+
+      await auditRepository.append(buildAuditEvent({
+        eventType: "INVITATION_REPLACEMENT_REQUESTED",
+        invitationId: invitation.id,
+        actor: { type: "SYSTEM" },
+        summary: { deliveryStatus: "PENDING" },
+      }), transaction as any);
+      await outboxRepository.enqueue({
+        messageType: "EMAIL",
+        resourceType: "INVITATION",
+        resourceId: invitation.id,
+        idempotencyKey: `invitation:${invitation.id}:replacement:${invitation.version + 1}`,
+        payloadEncrypted: encryptPayload({ to: invitation.email, activationUrl: buildActivationUrl(rawToken), expiresAt: expiresAt.toISOString() }, outboxKey()),
+      }, transaction as any);
+    });
+  }
+
   async activate(input: unknown) {
     // SECURITY BOUNDARY: activation is token-gated and intentionally unauthenticated.
     // We never trust client payload without Zod validation and token-hash lookup.

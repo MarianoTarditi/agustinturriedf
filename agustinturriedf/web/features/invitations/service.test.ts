@@ -3,9 +3,11 @@ import { createHash } from "node:crypto";
 
 const {
   findByEmailMock,
+  findPendingReplacementByEmailMock,
   createMock,
   findByIdMock,
   resendIfCurrentMock,
+  replacePendingForEmailMock,
   findByTokenHashMock,
   markConsumedMock,
   markConsumedIfTokenMatchesMock,
@@ -25,9 +27,11 @@ const {
   transactionMock,
 } = vi.hoisted(() => ({
   findByEmailMock: vi.fn(),
+  findPendingReplacementByEmailMock: vi.fn(),
   createMock: vi.fn(),
   findByIdMock: vi.fn(),
   resendIfCurrentMock: vi.fn(),
+  replacePendingForEmailMock: vi.fn(),
   findByTokenHashMock: vi.fn(),
   markConsumedMock: vi.fn(),
   markConsumedIfTokenMatchesMock: vi.fn(),
@@ -52,9 +56,11 @@ vi.mock("bcryptjs", () => ({ hash: hashMock }));
 vi.mock("@/features/invitations/repository", () => ({
   invitationRepository: {
     findByEmail: findByEmailMock,
+    findPendingReplacementByEmail: findPendingReplacementByEmailMock,
     create: createMock,
     findById: findByIdMock,
     resendIfCurrent: resendIfCurrentMock,
+    replacePendingForEmail: replacePendingForEmailMock,
     findByTokenHash: findByTokenHashMock,
     markConsumed: markConsumedMock,
     markConsumedIfTokenMatches: markConsumedIfTokenMatchesMock,
@@ -230,6 +236,80 @@ describe("invitationService", () => {
     expect(enqueueOutboxMock.mock.calls[0][1]).toBe(transaction);
     expect(sendActivationEmailMock).not.toHaveBeenCalled();
     expect(result).not.toHaveProperty("tokenHash");
+  });
+
+  const replacementHarness = () => {
+    let committed = {
+      invitation: { id: "inv-1", email: "student@example.com", status: "PENDING", tokenHash: "previous-hash", version: 3 },
+      audits: [] as unknown[], outbox: [] as unknown[],
+    };
+    let queue = Promise.resolve();
+    transactionMock.mockImplementation((callback) => {
+      const operation = queue.then(async () => {
+        const staged = structuredClone(committed);
+        const result = await callback({ staged });
+        committed = staged;
+        return result;
+      });
+      queue = operation.catch(() => undefined);
+      return operation;
+    });
+    findPendingReplacementByEmailMock.mockImplementation(async (email) =>
+      committed.invitation.email === email && committed.invitation.status === "PENDING" && committed.invitation.tokenHash
+        ? structuredClone(committed.invitation) : null
+    );
+    replacePendingForEmailMock.mockImplementation(async (input, transaction) => {
+      const invitation = transaction.staged.invitation;
+      if (invitation.id !== input.invitationId || invitation.version !== input.expectedVersion || invitation.status !== "PENDING" || invitation.tokenHash !== input.expectedTokenHash) return false;
+      Object.assign(invitation, { tokenHash: input.tokenHash, expiresAt: input.expiresAt, deliveryStatus: "PENDING", version: invitation.version + 1 });
+      return true;
+    });
+    appendAuditMock.mockImplementation(async (event, transaction) => { transaction.staged.audits.push(event); });
+    enqueueOutboxMock.mockImplementation(async (message, transaction) => { transaction.staged.outbox.push(message); });
+    return () => committed;
+  };
+
+  it("looks up normalized pending invitations and CAS-binds the observed identity and bearer hash", async () => {
+    const state = replacementHarness();
+    let encryptedPayload: any;
+    encryptPayloadMock.mockImplementation((payload) => { encryptedPayload = payload; return "encrypted-payload"; });
+
+    await invitationService.requestReplacement(" Student@Example.com ");
+
+    const rawToken = new URL(encryptedPayload.activationUrl).searchParams.get("token")!;
+    const command = replacePendingForEmailMock.mock.calls[0][0];
+    expect(findPendingReplacementByEmailMock).toHaveBeenCalledWith("student@example.com");
+    expect(command).toMatchObject({ invitationId: "inv-1", expectedVersion: 3, expectedTokenHash: "previous-hash" });
+    expect(command.tokenHash).toBe(createHash("sha256").update(rawToken).digest("hex"));
+    expect(JSON.stringify(command)).not.toContain(rawToken);
+    expect(state().audits).toHaveLength(1);
+    expect(state().outbox).toHaveLength(1);
+  });
+
+  it("commits one rotation, audit, and outbox message for concurrent replayed observations", async () => {
+    const state = replacementHarness();
+
+    await Promise.all([
+      invitationService.requestReplacement("student@example.com"),
+      invitationService.requestReplacement("student@example.com"),
+    ]);
+
+    expect(replacePendingForEmailMock).toHaveBeenCalledTimes(2);
+    expect(state().invitation.version).toBe(4);
+    expect(state().audits).toHaveLength(1);
+    expect(state().outbox).toHaveLength(1);
+  });
+
+  it.each(["audit", "outbox"])("rolls back the staged replacement when %s persistence fails", async (failure) => {
+    const state = replacementHarness();
+    if (failure === "audit") appendAuditMock.mockRejectedValue(new Error("audit failed"));
+    else enqueueOutboxMock.mockRejectedValue(new Error("outbox failed"));
+
+    await expect(invitationService.requestReplacement("student@example.com")).rejects.toThrow(`${failure} failed`);
+
+    expect(state().invitation).toMatchObject({ tokenHash: "previous-hash", version: 3 });
+    expect(state().audits).toEqual([]);
+    expect(state().outbox).toEqual([]);
   });
 
   it("rejects activation when token expired", async () => {

@@ -34,6 +34,12 @@ export class InvitationRepository {
     return prismaInvitations.invitation.findFirst({ where: { email } });
   }
 
+  async findPendingReplacementByEmail(email: string) {
+    return prismaInvitations.invitation.findFirst({
+      where: { email, status: "PENDING", tokenHash: { not: null } },
+    });
+  }
+
   async findByTokenHash(tokenHash: string) {
     return prismaInvitations.invitation.findUnique({ where: { tokenHash } });
   }
@@ -76,6 +82,24 @@ export class InvitationRepository {
         tokenHash: input.tokenHash,
         expiresAt: input.expiresAt,
         deliveryStatus: input.deliveryStatus,
+        version: { increment: 1 },
+      },
+    });
+    return result.count === 1;
+  }
+
+  async replacePendingForEmail(input: { invitationId: string; expectedVersion: number; expectedTokenHash: string; tokenHash: string; expiresAt: Date }, transaction = prismaInvitations) {
+    const result = await transaction.invitation.updateMany({
+      where: {
+        id: input.invitationId,
+        version: input.expectedVersion,
+        status: "PENDING",
+        tokenHash: input.expectedTokenHash,
+      },
+      data: {
+        tokenHash: input.tokenHash,
+        expiresAt: input.expiresAt,
+        deliveryStatus: "PENDING",
         version: { increment: 1 },
       },
     });
