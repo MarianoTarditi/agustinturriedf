@@ -44,4 +44,19 @@ describe("PasswordResetThrottle", () => {
     expect(results).toEqual([true, true, false]);
     expect(client.buckets.get("password-reset-public:203.0.113.1")?.count).toBe(2);
   });
+
+  it("isolates concurrent actor and target capacities in distinct panel scopes", async () => {
+    const client = createClient();
+    const actorThrottle = new PasswordResetThrottle(client, { limit: 2, windowMs: 60_000 }, "password-reset-panel-actor");
+    const targetThrottle = new PasswordResetThrottle(client, { limit: 2, windowMs: 60_000 }, "password-reset-panel-target");
+
+    const results = await Promise.all([
+      actorThrottle.consume("actor:admin-1"), actorThrottle.consume("actor:admin-1"), actorThrottle.consume("actor:admin-1"),
+      targetThrottle.consume("target:user-1"), targetThrottle.consume("target:user-1"), targetThrottle.consume("target:user-1"),
+    ]);
+
+    expect(results).toEqual([true, true, false, true, true, false]);
+    expect(client.buckets.get("password-reset-panel-actor:actor:admin-1")?.count).toBe(2);
+    expect(client.buckets.get("password-reset-panel-target:target:user-1")?.count).toBe(2);
+  });
 });

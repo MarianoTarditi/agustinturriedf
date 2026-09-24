@@ -12,6 +12,8 @@ const {
   auditAppendMock,
   outboxEnqueueMock,
   encryptPayloadMock,
+  findUserByIdMock,
+  consumeThrottleMock,
 } = vi.hoisted(() => ({
   hashMock: vi.fn(),
   findUserByEmailMock: vi.fn(),
@@ -22,6 +24,8 @@ const {
   auditAppendMock: vi.fn(),
   outboxEnqueueMock: vi.fn(),
   encryptPayloadMock: vi.fn(),
+  findUserByIdMock: vi.fn(),
+  consumeThrottleMock: vi.fn(),
 }));
 
 vi.mock("bcryptjs", () => ({
@@ -36,6 +40,15 @@ vi.mock("@/features/auth/password-reset/repository", () => ({
     consumeTokenAndUpdatePassword: consumeTokenAndUpdatePasswordMock,
     inTransaction: vi.fn(async (operation) => operation({ transactionId: "reset-request" })),
   },
+}));
+
+vi.mock("@/features/users/repository", () => ({
+  userRepository: { findById: findUserByIdMock },
+}));
+
+vi.mock("@/features/auth/password-reset/throttle", () => ({
+  passwordResetActorThrottle: { consume: consumeThrottleMock },
+  passwordResetTargetThrottle: { consume: consumeThrottleMock },
 }));
 
 vi.mock("@/features/auth/password-reset/logger", () => ({
@@ -63,6 +76,7 @@ describe("passwordResetService.requestReset", () => {
     vi.clearAllMocks();
     process.env.OUTBOX_ENCRYPTION_KEY = Buffer.alloc(32, 1).toString("base64url");
     process.env.OUTBOX_ENCRYPTION_KEY_ID = "test";
+    consumeThrottleMock.mockResolvedValue(true);
   });
 
   it("returns generic message and does not create token when email does not exist", async () => {
@@ -130,6 +144,43 @@ describe("passwordResetService.requestReset", () => {
 
     expect(upsertResetTokenMock).toHaveBeenCalledTimes(2);
     expect(logPasswordResetEmailMock).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("passwordResetService.requestResetForActor", () => {
+  const trainer = { id: "trainer-1", role: "TRAINER" as const };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.env.OUTBOX_ENCRYPTION_KEY = Buffer.alloc(32, 1).toString("base64url");
+    process.env.OUTBOX_ENCRYPTION_KEY_ID = "test";
+    consumeThrottleMock.mockResolvedValue(true);
+  });
+
+  it("allows an admin for any persisted target and consumes actor and target capacity before durable reset work", async () => {
+    findUserByIdMock.mockResolvedValue({ id: "target-1", role: "ADMIN", email: "admin@example.com" });
+
+    const result = await passwordResetService.requestResetForActor({ id: "admin-1", role: "ADMIN" }, "target-1");
+
+    expect(result).toEqual({ message: "Solicitud de recuperación aceptada." });
+    expect(consumeThrottleMock).toHaveBeenNthCalledWith(1, "actor:admin-1");
+    expect(consumeThrottleMock).toHaveBeenNthCalledWith(2, "target:target-1");
+    expect(upsertResetTokenMock).toHaveBeenCalledWith(expect.objectContaining({ userId: "target-1" }), expect.anything());
+    expect(outboxEnqueueMock).toHaveBeenCalledWith(expect.objectContaining({ resourceId: "target-1" }), expect.anything());
+  });
+
+  it("denies trainer-to-team and exhausted capacity before a reset mutation", async () => {
+    findUserByIdMock.mockResolvedValue({ id: "target-1", role: "TRAINER", email: "team@example.com" });
+
+    await expect(passwordResetService.requestResetForActor(trainer, "target-1")).rejects.toMatchObject({ status: 403, code: "FORBIDDEN" });
+    expect(consumeThrottleMock).not.toHaveBeenCalled();
+    expect(upsertResetTokenMock).not.toHaveBeenCalled();
+
+    findUserByIdMock.mockResolvedValue({ id: "student-1", role: "STUDENT", email: "student@example.com" });
+    consumeThrottleMock.mockResolvedValueOnce(false);
+
+    await expect(passwordResetService.requestResetForActor(trainer, "student-1")).rejects.toMatchObject({ status: 429, code: "RATE_LIMITED" });
+    expect(upsertResetTokenMock).not.toHaveBeenCalled();
   });
 });
 
