@@ -1,14 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { requireSessionMock, listForActorMock, createMock } = vi.hoisted(() => ({
+const { requireSessionMock, listForActorMock, listPageForActorMock, createMock } = vi.hoisted(() => ({
   requireSessionMock: vi.fn(),
   listForActorMock: vi.fn(),
+  listPageForActorMock: vi.fn(),
   createMock: vi.fn(),
 }));
 
 vi.mock("@/features/auth/session", () => ({ requireSession: requireSessionMock }));
 vi.mock("@/features/invitations/service", () => ({
-  invitationService: { listForActor: listForActorMock, create: createMock },
+  invitationService: { listForActor: listForActorMock, listPageForActor: listPageForActorMock, create: createMock },
 }));
 
 import { GET, POST } from "@/app/api/invitations/route";
@@ -16,15 +17,16 @@ import { GET, POST } from "@/app/api/invitations/route";
 describe("/api/invitations", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("GET returns invitation list", async () => {
+  it("GET validates and forwards the bounded queue query", async () => {
     requireSessionMock.mockResolvedValue({ id: "t1", role: "TRAINER" });
-    listForActorMock.mockResolvedValue([{ id: "inv-1" }]);
+    listPageForActorMock.mockResolvedValue({ items: [{ id: "inv-1" }], nextCursor: null });
 
-    const response = await GET();
+    const response = await GET(new Request("http://localhost/api/invitations?search=ana&status=PENDING&role=STUDENT&limit=2&cursor=signed"));
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body).toEqual({ success: true, data: [{ id: "inv-1" }] });
+    expect(body).toEqual({ success: true, data: { items: [{ id: "inv-1" }], nextCursor: null } });
+    expect(listPageForActorMock).toHaveBeenCalledWith({ id: "t1", role: "TRAINER" }, expect.objectContaining({ search: "ana", status: "PENDING", role: "STUDENT", limit: 2, cursor: "signed" }));
   });
 
   it("POST returns created invitation", async () => {

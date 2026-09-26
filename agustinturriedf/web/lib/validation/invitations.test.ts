@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   activateInvitationSchema,
   createInvitationSchema,
+  invitationQueueQuerySchema,
   resendInvitationSchema,
 } from "@/lib/validation/invitations";
 
@@ -75,8 +76,14 @@ describe("invitation validation schemas", () => {
   it("accepts resend payload with invitationId", () => {
     const parsed = resendInvitationSchema.parse({
       invitationId: "c123456789012345678901234",
+      expectedVersion: 1,
     });
 
     expect(parsed.invitationId).toBe("c123456789012345678901234");
+  });
+
+  it("allows only bounded invitation queue filters and pagination inputs", () => {
+    expect(invitationQueueQuerySchema.safeParse({ search: "ana", status: "PENDING", role: "STUDENT", limit: "25", cursor: "signed" }).success).toBe(true);
+    expect(invitationQueueQuerySchema.safeParse({ tokenHash: "secret", limit: "101" }).success).toBe(false);
   });
 });

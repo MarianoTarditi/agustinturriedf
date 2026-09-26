@@ -20,6 +20,7 @@ import {
   resendInvitationSchema,
   revokeInvitationSchema,
   type CreateInvitationInput,
+  type InvitationQueueQuery,
 } from "@/lib/validation/invitations";
 
 const TOKEN_EXPIRATION_HOURS = 48;
@@ -273,6 +274,13 @@ export class InvitationService {
     requireRole(actor, ["ADMIN", "TRAINER"], "Solo ADMIN y TRAINER pueden listar invitaciones");
     const invitations = await invitationRepository.list(actor.role === "ADMIN" ? {} : { trainerId: actor.id, role: "STUDENT" });
     return invitations.map((invitation: any) => this.toSafeDTO(invitation));
+  }
+
+  async listPageForActor(actor: AuthenticatedUser, query: InvitationQueueQuery) {
+    requireRole(actor, ["ADMIN", "TRAINER"], "Solo ADMIN y TRAINER pueden listar invitaciones");
+    if (actor.role === "TRAINER" && query.role && query.role !== "STUDENT") throw new ApiError("Forbidden", 403, "FORBIDDEN");
+    const page = await invitationRepository.listPage({ ...query, trainerId: actor.role === "TRAINER" ? actor.id : undefined, roles: actor.role === "TRAINER" ? ["STUDENT"] : ["ADMIN", "TRAINER", "STUDENT"] });
+    return { items: page.items.map((invitation: any) => this.toSafeDTO(invitation)), nextCursor: page.nextCursor };
   }
 
   private toSafeDTO(invitation: any) {

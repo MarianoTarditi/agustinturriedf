@@ -1,12 +1,16 @@
 import { requireSession } from "@/features/auth/session";
 import { invitationService } from "@/features/invitations/service";
 import { ApiError, apiSuccess, handleApiError } from "@/lib/http/api-response";
-import { createInvitationSchema } from "@/lib/validation/invitations";
+import { createInvitationSchema, invitationQueueQuerySchema } from "@/lib/validation/invitations";
 
-export const GET = async () => {
+export const GET = async (request: Request) => {
   try {
     const actor = await requireSession();
-    const invitations = await invitationService.listForActor(actor);
+    const searchParams = new URL(request.url).searchParams;
+    if (searchParams.size === 0) return apiSuccess(await invitationService.listForActor(actor));
+    const query = invitationQueueQuerySchema.safeParse(Object.fromEntries(searchParams.entries()));
+    if (!query.success) throw new ApiError("Validation failed", 400, "VALIDATION_ERROR", query.error.flatten());
+    const invitations = await invitationService.listPageForActor(actor, query.data);
 
     return apiSuccess(invitations);
   } catch (error) {

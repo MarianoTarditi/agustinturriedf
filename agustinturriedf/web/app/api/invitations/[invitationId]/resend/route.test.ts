@@ -19,14 +19,19 @@ describe("POST /api/invitations/[invitationId]/resend", () => {
 
   it("resends invitation and returns updated invitation", async () => {
     requireSessionMock.mockResolvedValue({ id: "t1", role: "TRAINER" });
-    resendMock.mockResolvedValue({ id: "inv-1", status: "SENT" });
+    const invitationId = "c123456789012345678901234";
+    resendMock.mockResolvedValue({ id: invitationId, status: "SENT" });
 
-    const response = await POST(new Request("http://localhost"), {
-      params: Promise.resolve({ invitationId: "inv-1" }),
+    const response = await POST(new Request("http://localhost", {
+      method: "POST",
+      body: JSON.stringify({ expectedVersion: 1 }),
+    }), {
+      params: Promise.resolve({ invitationId }),
     });
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body).toEqual({ success: true, data: { id: "inv-1", status: "SENT" } });
+    expect(body).toEqual({ success: true, data: { id: invitationId, status: "SENT" } });
+    expect(resendMock).toHaveBeenCalledWith(invitationId, expect.any(Object), 1);
   });
 });

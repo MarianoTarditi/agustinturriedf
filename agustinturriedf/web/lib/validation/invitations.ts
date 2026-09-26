@@ -131,10 +131,19 @@ export const resendInvitationSchema = z.object({
   expectedVersion: z.number().int().positive(),
 });
 
+export const invitationQueueQuerySchema = z.object({
+  search: z.string().trim().min(1).max(100).optional(),
+  status: z.enum(["PENDING", "SENT", "CONSUMED", "EXPIRED", "REVOKED"]).optional(),
+  role: z.enum(["ADMIN", "TRAINER", "STUDENT"]).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(25),
+  cursor: z.string().min(1).max(2000).optional(),
+}).strict();
+
 export const revokeInvitationSchema = resendInvitationSchema.extend({
   reason: z.string().trim().min(1).max(500),
 });
 
 export type CreateInvitationInput = z.infer<typeof createInvitationSchema>;
 export type ActivateInvitationInput = z.infer<typeof activateInvitationSchema>;
+export type InvitationQueueQuery = z.infer<typeof invitationQueueQuerySchema>;
 export type ResendInvitationInput = z.infer<typeof resendInvitationSchema>;

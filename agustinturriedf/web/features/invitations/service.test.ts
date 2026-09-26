@@ -14,6 +14,7 @@ const {
   revokeIfCurrentMock,
   listByTrainerMock,
   listAllMock,
+  listPageMock,
   sendActivationEmailMock,
   hashMock,
   findTrainerByIdMock,
@@ -38,6 +39,7 @@ const {
   revokeIfCurrentMock: vi.fn(),
   listByTrainerMock: vi.fn(),
   listAllMock: vi.fn(),
+  listPageMock: vi.fn(),
   sendActivationEmailMock: vi.fn(),
   hashMock: vi.fn(),
   findTrainerByIdMock: vi.fn(),
@@ -68,6 +70,7 @@ vi.mock("@/features/invitations/repository", () => ({
     listByTrainer: listByTrainerMock,
     listAll: listAllMock,
     list: listAllMock,
+    listPage: listPageMock,
   },
 }));
 
@@ -476,5 +479,14 @@ describe("invitationService", () => {
     await expect(invitationService.revoke("inv-team", { id: "trainer-1", role: "TRAINER" } as any, { expectedVersion: 3, reason: "No longer needed" })).rejects.toMatchObject({ status: 403, code: "FORBIDDEN" });
 
     expect(revokeIfCurrentMock).not.toHaveBeenCalled();
+  });
+
+  it("binds trainer queue pages to owned student invitations", async () => {
+    listPageMock.mockResolvedValue({ items: [{ id: "inv-1", email: "ana@example.com", role: "STUDENT", trainerId: "trainer-1", status: "PENDING", deliveryStatus: "PENDING", expiresAt: new Date(), createdAt: new Date(), version: 1 }], nextCursor: "signed" });
+
+    await expect(invitationService.listPageForActor({ id: "trainer-1", role: "TRAINER" } as any, { limit: 25 })).resolves.toMatchObject({ nextCursor: "signed", items: [{ id: "inv-1" }] });
+
+    expect(listPageMock).toHaveBeenCalledWith(expect.objectContaining({ trainerId: "trainer-1", roles: ["STUDENT"], limit: 25 }));
+    await expect(invitationService.listPageForActor({ id: "trainer-1", role: "TRAINER" } as any, { role: "ADMIN", limit: 25 })).rejects.toMatchObject({ status: 403, code: "FORBIDDEN" });
   });
 });
