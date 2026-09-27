@@ -61,18 +61,23 @@ describe("Prisma schema foundation", () => {
     expect(schema).toContain("@@index([expiresAt])");
   });
 
-  it("declares invitation model with expected unique constraints and indexes", () => {
+  it("declares invitation history and lookup constraints", () => {
     const schema = readSchema();
+    const invitationModel = schema.match(/model Invitation\s*\{([\s\S]*?)\n\}/)?.[1];
 
     expect(schema).toContain("enum InvitationStatus");
     expect(schema).toContain("model Invitation");
-    expect(schema).toContain("email                   String           @unique");
-    expect(schema).toContain("tokenHash               String?          @unique");
-    expect(schema).toContain("status                  InvitationStatus @default(PENDING)");
-    expect(schema).toContain("trainer User @relation(fields: [trainerId], references: [id], onDelete: Restrict)");
-    expect(schema).toContain("@@index([trainerId])");
-    expect(schema).toContain("@@index([expiresAt])");
-    expect(schema).toContain("@@index([status])");
+    expect(invitationModel).toBeDefined();
+
+    expect(invitationModel).toMatch(/^\s*email\s+String\s*$/m);
+    expect(invitationModel).not.toMatch(/^\s*email\s+String\s+@unique/m);
+    expect(invitationModel).toMatch(/^\s*tokenHash\s+String\?\s+@unique/m);
+    expect(invitationModel).toMatch(/^\s*status\s+InvitationStatus\s+@default\(PENDING\)/m);
+    expect(invitationModel).toContain("trainer User? @relation(fields: [trainerId], references: [id], onDelete: Restrict)");
+    expect(invitationModel).toContain("@@index([email])");
+    expect(invitationModel).toContain("@@index([trainerId])");
+    expect(invitationModel).toContain("@@index([expiresAt])");
+    expect(invitationModel).toContain("@@index([status])");
   });
 
   it("contains forgot-password-flow migration with schema updates", () => {

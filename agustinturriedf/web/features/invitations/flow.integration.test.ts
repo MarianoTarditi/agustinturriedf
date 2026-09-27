@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { decryptPayload } from "@/features/outbox/crypto";
+
 type InvitationRecord = {
   id: string;
   email: string;
@@ -26,34 +28,38 @@ const {
   findByTokenHashMock,
   markConsumedIfTokenMatchesMock,
   findTrainerByIdMock,
+  findUserByEmailMock,
   createUserMock,
   ensureFolderForStudentMock,
   ensureStudentRoutineDirectoryMock,
-  sendActivationEmailMock,
+  appendAuditEventMock,
+  enqueueOutboxMock,
 } = vi.hoisted(() => ({
   findByEmailMock: vi.fn(),
   createInvitationMock: vi.fn(),
   findByTokenHashMock: vi.fn(),
   markConsumedIfTokenMatchesMock: vi.fn(),
   findTrainerByIdMock: vi.fn(),
+  findUserByEmailMock: vi.fn(),
   createUserMock: vi.fn(),
   ensureFolderForStudentMock: vi.fn(),
   ensureStudentRoutineDirectoryMock: vi.fn(),
-  sendActivationEmailMock: vi.fn(),
+  appendAuditEventMock: vi.fn(),
+  enqueueOutboxMock: vi.fn(),
 }));
 
-const { invitationStore, resetState, createdUsers, sentActivationUrls } = vi.hoisted(() => {
+const { invitationStore, resetState, createdUsers, outboxMessages } = vi.hoisted(() => {
   const invitationStore = new Map<string, InvitationRecord>();
   const createdUsers: Array<{ id: string; email: string; studentProfileId: string }> = [];
-  const sentActivationUrls: string[] = [];
+  const outboxMessages: Array<{ payloadEncrypted: string }> = [];
 
   const resetState = () => {
     invitationStore.clear();
     createdUsers.length = 0;
-    sentActivationUrls.length = 0;
+    outboxMessages.length = 0;
   };
 
-  return { invitationStore, resetState, createdUsers, sentActivationUrls };
+  return { invitationStore, resetState, createdUsers, outboxMessages };
 });
 
 vi.mock("@/features/invitations/repository", () => ({
@@ -68,6 +74,7 @@ vi.mock("@/features/invitations/repository", () => ({
 vi.mock("@/features/users/repository", () => ({
   userRepository: {
     findById: findTrainerByIdMock,
+    findByEmail: findUserByEmailMock,
     create: createUserMock,
   },
 }));
@@ -82,8 +89,12 @@ vi.mock("@/features/routines/storage", () => ({
   ensureStudentRoutineDirectory: ensureStudentRoutineDirectoryMock,
 }));
 
-vi.mock("@/features/invitations/email", () => ({
-  sendActivationEmail: sendActivationEmailMock,
+vi.mock("@/features/audit/repository", () => ({
+  auditRepository: { append: appendAuditEventMock },
+}));
+
+vi.mock("@/features/outbox/repository", () => ({
+  outboxRepository: { enqueue: enqueueOutboxMock },
 }));
 
 vi.mock("@/lib/prisma", () => ({
@@ -111,13 +122,20 @@ vi.mock("@/lib/prisma", () => ({
 
 import { invitationService } from "@/features/invitations/service";
 
+const outboxKey = { id: "current", value: Buffer.alloc(32, 1).toString("base64url") };
+const activationUrlAt = (index: number) =>
+  decryptPayload<{ activationUrl: string }>(outboxMessages[index].payloadEncrypted, outboxKey).activationUrl;
+
 describe("invitations create -> activate integration flow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     resetState();
     process.env.NEXTAUTH_URL = "http://localhost:3010";
+    process.env.OUTBOX_ENCRYPTION_KEY_ID = outboxKey.id;
+    process.env.OUTBOX_ENCRYPTION_KEY = outboxKey.value;
 
-    findTrainerByIdMock.mockResolvedValue({ id: "c123456789012345678901234", role: "TRAINER" });
+    findTrainerByIdMock.mockResolvedValue({ id: "c123456789012345678901234", role: "TRAINER", status: "ACTIVE" });
+    findUserByEmailMock.mockResolvedValue(null);
 
     findByEmailMock.mockImplementation(async (email: string) => {
       for (const invitation of invitationStore.values()) {
@@ -175,9 +193,9 @@ describe("invitations create -> activate integration flow", () => {
       return record;
     });
 
-    sendActivationEmailMock.mockImplementation(async (input: { activationUrl: string }) => {
-      sentActivationUrls.push(input.activationUrl);
-      return { id: "mail-1" };
+    enqueueOutboxMock.mockImplementation(async (input: { payloadEncrypted: string }) => {
+      outboxMessages.push(input);
+      return { id: `outbox-${outboxMessages.length}` };
     });
 
     findByTokenHashMock.mockImplementation(async (tokenHash: string) => {
@@ -237,9 +255,9 @@ describe("invitations create -> activate integration flow", () => {
 
     expect(invitation.email).toBe("ana@example.com");
     expect(createdUsers).toHaveLength(0);
-    expect(sentActivationUrls).toHaveLength(1);
+    expect(outboxMessages).toHaveLength(1);
 
-    const rawToken = new URL(sentActivationUrls[0]).searchParams.get("token");
+    const rawToken = new URL(activationUrlAt(0)).searchParams.get("token");
     expect(rawToken).toBeTruthy();
 
     const activationResult = await invitationService.activate({
@@ -262,7 +280,7 @@ describe("invitations create -> activate integration flow", () => {
     ).rejects.toMatchObject({ status: 400, code: "INVALID_OR_EXPIRED_TOKEN" });
   });
 
-  it("re-issuing invitation replaces previous token for same email", async () => {
+  it("rejects re-issuing an active invitation for the same email", async () => {
     const actor = { id: "c123456789012345678901234", role: "TRAINER" } as any;
 
     await invitationService.create(actor, {
@@ -273,27 +291,23 @@ describe("invitations create -> activate integration flow", () => {
       initialPaymentStartDate: "2026-05-01",
     });
 
-    const firstToken = new URL(sentActivationUrls[0]).searchParams.get("token");
+    const firstToken = new URL(activationUrlAt(0)).searchParams.get("token");
     expect(firstToken).toBeTruthy();
 
-    await invitationService.create(actor, {
-      firstName: "Ana",
-      lastName: "Gomez",
-      email: "ana@example.com",
-      trainerId: "c123456789012345678901234",
-      initialPaymentStartDate: "2026-05-01",
-    });
+    await expect(
+      invitationService.create(actor, {
+        firstName: "Ana",
+        lastName: "Gomez",
+        email: "ana@example.com",
+        trainerId: "c123456789012345678901234",
+        initialPaymentStartDate: "2026-05-01",
+      })
+    ).rejects.toMatchObject({ status: 409, code: "CONFLICT" });
 
-    const secondToken = new URL(sentActivationUrls[1]).searchParams.get("token");
-    expect(secondToken).toBeTruthy();
-    expect(secondToken).not.toBe(firstToken);
+    expect(outboxMessages).toHaveLength(1);
 
     await expect(
       invitationService.activate({ token: firstToken, password: "Segura123", confirmPassword: "Segura123" })
-    ).rejects.toMatchObject({ status: 400, code: "INVALID_OR_EXPIRED_TOKEN" });
-
-    await expect(
-      invitationService.activate({ token: secondToken, password: "Segura123", confirmPassword: "Segura123" })
     ).resolves.toEqual({ message: "Cuenta activada. Ya podés iniciar sesión." });
   });
 });
