@@ -550,6 +550,45 @@
   backdrop-filter: blur(6px);
 }
 
+.invitationDialogOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.invitationDialog {
+  width: min(100%, 32rem);
+  display: grid;
+  gap: 1rem;
+  padding: 2rem;
+  border: 1px solid rgba(123, 44, 191, 0.35);
+  border-radius: 0.7rem;
+  background: var(--surface);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.62);
+}
+
+.invitationDialog h2,
+.invitationDialog p { margin: 0; }
+
+.invitationDialogActions,
+.invitationActions { display: flex; gap: 0.5rem; }
+
+.invitationDialogActions button,
+.invitationActions button {
+  border: 1px solid rgba(76, 67, 83, 0.5);
+  border-radius: 0.4rem;
+  padding: 0.45rem 0.7rem;
+  background: transparent;
+  color: var(--on-surface);
+  cursor: pointer;
+}
+
+.invitationDialogActions button:last-child { background: var(--primary-container); }
+
 .createModal,
 .detailModal,
 .editModal {
