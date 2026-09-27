@@ -1,0 +1,200 @@
+<html class="dark"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "primary-container": "#7b2cbf",
+                  "outline-variant": "#4c4353",
+                  "on-tertiary-fixed": "#2b1700",
+                  "surface-container": "#1f1f1f",
+                  "on-secondary-fixed": "#0d1c32",
+                  "on-secondary": "#233148",
+                  "on-primary-fixed": "#2d0050",
+                  "surface-tint": "#deb7ff",
+                  "surface-container-high": "#2a2a2a",
+                  "surface-bright": "#393939",
+                  "tertiary-fixed-dim": "#fdb969",
+                  "on-surface-variant": "#cfc2d5",
+                  "on-secondary-container": "#abb9d6",
+                  "secondary-fixed": "#d6e3ff",
+                  "primary-fixed-dim": "#deb7ff",
+                  "error": "#ffb4ab",
+                  "outline": "#988d9e",
+                  "inverse-surface": "#e2e2e2",
+                  "on-primary-fixed-variant": "#680eac",
+                  "surface": "#131313",
+                  "surface-container-low": "#1b1b1b",
+                  "on-error-container": "#ffdad6",
+                  "primary": "#deb7ff",
+                  "surface-container-highest": "#353535",
+                  "on-primary-container": "#e4c2ff",
+                  "on-tertiary": "#482a00",
+                  "inverse-on-surface": "#303030",
+                  "primary-fixed": "#f1dbff",
+                  "on-tertiary-fixed-variant": "#663e00",
+                  "on-error": "#690005",
+                  "surface-container-lowest": "#0e0e0e",
+                  "on-primary": "#4a007f",
+                  "tertiary-fixed": "#ffddba",
+                  "secondary": "#b9c7e4",
+                  "surface-dim": "#131313",
+                  "on-background": "#e2e2e2",
+                  "background": "#131313",
+                  "on-surface": "#e2e2e2",
+                  "error-container": "#93000a",
+                  "on-tertiary-container": "#ffc480",
+                  "secondary-container": "#3c4962",
+                  "inverse-primary": "#8234c6",
+                  "tertiary-container": "#7e4d00",
+                  "surface-variant": "#353535",
+                  "tertiary": "#fdb969",
+                  "secondary-fixed-dim": "#b9c7e4",
+                  "on-secondary-fixed-variant": "#39475f"
+          },
+          "borderRadius": {
+                  "DEFAULT": "0.125rem",
+                  "lg": "0.25rem",
+                  "xl": "0.5rem",
+                  "full": "0.75rem"
+          },
+          "fontFamily": {
+                  "headline": ["Space Grotesk"],
+                  "body": ["Inter"],
+                  "label": ["Inter"]
+          }
+        },
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .noir-gradient-text {
+      background: linear-gradient(135deg, #deb7ff 0%, #7b2cbf 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .noir-glass {
+      background: rgba(31, 31, 31, 0.7);
+      backdrop-filter: blur(40px);
+    }
+    .modal-glow {
+      box-shadow: 0px 0px 40px rgba(123, 44, 191, 0.15);
+    }
+  </style>
+</head>
+<body class="bg-[#131313] text-on-surface font-body min-h-screen">
+<!-- Background Content (Student Management Screen) -->
+<div class="fixed inset-0 z-0 overflow-hidden pointer-events-none opacity-40">
+<header class="flex justify-between items-center px-8 h-20 w-full bg-[#131313]/90 border-b border-[#ffffff]/15">
+<div class="text-2xl font-bold tracking-tighter text-[#deb7ff] font-headline uppercase">KINETIC_NOIR</div>
+<div class="flex gap-8">
+<span class="text-[#deb7ff] border-b-2 border-[#7b2cbf] pb-1 font-headline uppercase tracking-tight">Athletes</span>
+<span class="text-[#e2e2e2]/60 font-headline uppercase tracking-tight">Workouts</span>
+<span class="text-[#e2e2e2]/60 font-headline uppercase tracking-tight">Architecture</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary">notifications</span>
+<div class="w-10 h-10 rounded-full bg-surface-container-highest border border-outline-variant"></div>
+</div>
+</header>
+<main class="p-12">
+<div class="flex justify-between items-end mb-12">
+<div>
+<h1 class="text-5xl font-bold font-headline tracking-tighter uppercase mb-2">Roster</h1>
+<p class="text-on-surface-variant font-light tracking-wide">Managing 42 Active Architects</p>
+</div>
+<button class="bg-primary-container text-on-primary-container px-6 py-3 rounded-md font-headline font-bold uppercase tracking-widest text-sm">Add New Athlete</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="bg-surface-container p-8 border border-outline-variant/10">
+<div class="flex items-center gap-4 mb-6">
+<div class="w-16 h-16 rounded-lg bg-surface-container-highest"></div>
+<div>
+<h3 class="font-headline text-xl font-bold">Lucas Silva</h3>
+<p class="text-sm text-primary">Elite Program</p>
+</div>
+</div>
+<div class="h-2 bg-surface-container-highest w-full rounded-full overflow-hidden">
+<div class="bg-primary-container h-full w-3/4"></div>
+</div>
+</div>
+<!-- Placeholder Cards -->
+<div class="bg-surface-container p-8 border border-outline-variant/10 opacity-50"></div>
+<div class="bg-surface-container p-8 border border-outline-variant/10 opacity-50"></div>
+</div>
+</main>
+</div>
+<!-- Modal Overlay -->
+<div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+<!-- Modal Container -->
+<div class="relative w-full max-w-lg bg-[#000000] border border-primary-container/20 rounded-lg modal-glow overflow-hidden">
+<!-- Top Decorative Bar -->
+<div class="h-1 w-full bg-gradient-to-r from-transparent via-primary-container to-transparent opacity-50"></div>
+<div class="p-8 md:p-12">
+<!-- Close Icon -->
+<button class="absolute top-6 right-6 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+<!-- Header Section -->
+<div class="flex flex-col items-center text-center mb-8">
+<div class="w-16 h-16 rounded-full bg-error-container/20 flex items-center justify-center mb-6 border border-error/20">
+<span class="material-symbols-outlined text-error text-3xl" data-weight="fill">warning</span>
+</div>
+<h2 class="text-3xl font-bold font-headline tracking-tighter uppercase mb-4 text-on-surface">¿Eliminar Alumno?</h2>
+<p class="text-on-surface-variant text-sm leading-relaxed max-w-sm">
+            Esta acción es permanente y no se puede deshacer. Se eliminarán todos los datos, rutinas y registros de pagos asociados a este usuario.
+          </p>
+</div>
+<!-- Target Subject Info Card -->
+<div class="bg-surface-container-low border border-outline-variant/20 rounded-md p-5 mb-10 flex items-center gap-4">
+<div class="relative">
+<img class="w-12 h-12 rounded-full object-cover grayscale brightness-75 border border-primary/30" data-alt="dramatic black and white portrait of a focused athletic man in a dark gym setting with sharp shadows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmgOxV6C9CCQnRTrOj4PXbPL20OaoIpQ4KC9GwApWLV82ofgrh5x_uKo076YbuH8cQyUkQklrDgCwbLgae4B-lJMfI9ZrZ7biYiIq5bybIE8HOgQdTNEC4UpZqoeC0hix_3IWoBjqq7HTq-L9T2pLy_g13r3GbFmAH_eiSWEwkP71bpcRON_pNMKT1F6stJfpWdDOLM51qatDjsSpR-l74-UzSd48NCxnUJ2K33fgeLpRZhVZkr3_dDtbExVL7BK7P7JV7CxK12hOd"/>
+<div class="absolute -bottom-1 -right-1 bg-error-container rounded-full p-0.5">
+<span class="material-symbols-outlined text-[10px] text-on-error-container" style="font-variation-settings: 'FILL' 1;">person_remove</span>
+</div>
+</div>
+<div>
+<span class="text-[10px] uppercase tracking-[0.2em] text-primary block mb-1">Architect Roster</span>
+<span class="font-headline text-lg font-bold text-on-surface">Lucas Silva</span>
+</div>
+<div class="ml-auto">
+<span class="bg-surface-container-highest px-3 py-1 rounded-full text-[10px] font-bold text-on-surface-variant uppercase tracking-widest border border-outline-variant/10">ID: #4492</span>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex flex-col sm:flex-row-reverse gap-4">
+<button class="flex-1 bg-gradient-to-r from-primary-container to-on-primary-fixed-variant hover:opacity-90 active:scale-95 transition-all text-on-primary-container py-4 px-6 rounded-md font-headline font-bold uppercase tracking-widest text-xs">
+            Eliminar Permanentemente
+          </button>
+<button class="flex-1 bg-transparent border border-outline-variant hover:bg-surface-container hover:text-on-surface transition-all text-on-surface-variant py-4 px-6 rounded-md font-headline font-bold uppercase tracking-widest text-xs">
+            Cancelar
+          </button>
+</div>
+</div>
+<!-- Bottom Accent -->
+<div class="absolute bottom-0 left-0 right-0 flex justify-center py-2">
+<div class="w-12 h-0.5 bg-primary/20 rounded-full"></div>
+</div>
+</div>
+</div>
+<!-- Footer Navigation (Hidden on Mobile) -->
+<footer class="fixed bottom-0 w-full py-12 border-t border-[#ffffff]/10 bg-[#000000] z-50 flex flex-col items-center gap-4">
+<div class="flex gap-12">
+<span class="font-label text-xs tracking-widest uppercase text-[#e2e2e2]/40 hover:text-[#deb7ff] transition-opacity cursor-pointer">Privacy</span>
+<span class="font-label text-xs tracking-widest uppercase text-[#e2e2e2]/40 hover:text-[#deb7ff] transition-opacity cursor-pointer">Terms</span>
+<span class="font-label text-xs tracking-widest uppercase text-[#e2e2e2]/40 hover:text-[#deb7ff] transition-opacity cursor-pointer">Safety</span>
+<span class="font-label text-xs tracking-widest uppercase text-[#e2e2e2]/40 hover:text-[#deb7ff] transition-opacity cursor-pointer">Contact</span>
+</div>
+<p class="font-label text-[10px] tracking-widest uppercase text-[#7b2cbf] opacity-60">© 2024 KINETIC NOIR ARCHITECTURE</p>
+</footer>
+</body></html>

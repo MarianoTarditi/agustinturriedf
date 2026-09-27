@@ -16,6 +16,8 @@ pnpm-debug.log*
 # environment variables
 .env
 .env.production
+.env.local
+.env.*.local
 
 # macOS-specific files
 .DS_Store
@@ -25,3 +27,13 @@ pnpm-debug.log*
 
 # vercel
 .vercel/
+
+# agent tooling
+.atl/
+
+# monorepo/subproject build artifacts
+**/.next/
+**/storage/
+*.tsbuildinfo
+
+desaignPrototypes

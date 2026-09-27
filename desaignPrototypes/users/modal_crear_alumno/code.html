@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gestión de Alumnos - Crear Alumno</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed": "#0d1c32",
+                        "on-tertiary-container": "#ffc480",
+                        "on-surface": "#e2e2e2",
+                        "outline": "#988d9e",
+                        "on-surface-variant": "#cfc2d5",
+                        "on-secondary-fixed-variant": "#39475f",
+                        "inverse-on-surface": "#303030",
+                        "primary-fixed": "#f1dbff",
+                        "surface-bright": "#393939",
+                        "primary-container": "#7b2cbf",
+                        "on-primary": "#4a007f",
+                        "surface-container-highest": "#353535",
+                        "secondary-fixed-dim": "#b9c7e4",
+                        "on-tertiary-fixed": "#2b1700",
+                        "inverse-primary": "#8234c6",
+                        "error-container": "#93000a",
+                        "surface-container-high": "#2a2a2a",
+                        "on-secondary": "#233148",
+                        "on-background": "#e2e2e2",
+                        "error": "#ffb4ab",
+                        "secondary-fixed": "#d6e3ff",
+                        "on-tertiary": "#482a00",
+                        "secondary-container": "#3c4962",
+                        "secondary": "#b9c7e4",
+                        "surface-container-lowest": "#0e0e0e",
+                        "surface": "#131313",
+                        "on-primary-fixed": "#2d0050",
+                        "inverse-surface": "#e2e2e2",
+                        "tertiary-fixed-dim": "#fdb969",
+                        "on-secondary-container": "#abb9d6",
+                        "surface-dim": "#131313",
+                        "surface-container": "#1f1f1f",
+                        "surface-tint": "#deb7ff",
+                        "surface-variant": "#353535",
+                        "on-primary-fixed-variant": "#680eac",
+                        "on-tertiary-fixed-variant": "#663e00",
+                        "tertiary-fixed": "#ffddba",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-low": "#1b1b1b",
+                        "tertiary-container": "#7e4d00",
+                        "background": "#131313",
+                        "on-error": "#690005",
+                        "outline-variant": "#4c4353",
+                        "primary": "#deb7ff",
+                        "tertiary": "#fdb969",
+                        "on-primary-container": "#e4c2ff",
+                        "primary-fixed-dim": "#deb7ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .kinetic-gradient {
+            background: linear-gradient(135deg, #7b2cbf 0%, #680eac 100%);
+        }
+        .obsidian-glass {
+            background: rgba(31, 31, 31, 0.8);
+            backdrop-filter: blur(40px);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body antialiased min-h-screen overflow-hidden">
+<header class="fixed top-0 w-full z-50 bg-[#131313]/70 backdrop-blur-xl border-b border-[#ffffff]/15 flex justify-between items-center px-8 py-4 max-w-full mx-auto shadow-[0px_20px_40px_rgba(123,44,191,0.08)]">
+<div class="text-2xl font-bold tracking-tighter text-[#deb7ff] font-headline">Gestión de Alumnos</div>
+<nav class="hidden md:flex gap-8 items-center">
+<a class="text-[#e2e2e2]/60 hover:text-[#e2e2e2] font-headline tracking-tight transition-all duration-300" href="#">Dashboard</a>
+<a class="text-[#deb7ff] border-b-2 border-[#7b2cbf] pb-1 font-headline tracking-tight" href="#">Alumnos</a>
+<a class="text-[#e2e2e2]/60 hover:text-[#e2e2e2] font-headline tracking-tight transition-all duration-300" href="#">Programas</a>
+<a class="text-[#e2e2e2]/60 hover:text-[#e2e2e2] font-headline tracking-tight transition-all duration-300" href="#">Pagos</a>
+</nav>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#deb7ff] cursor-pointer hover:bg-[#2a2a2a] p-2 rounded-full transition-all duration-300">notifications</span>
+<span class="material-symbols-outlined text-[#deb7ff] cursor-pointer hover:bg-[#2a2a2a] p-2 rounded-full transition-all duration-300">settings</span>
+<div class="w-10 h-10 rounded-full overflow-hidden border border-[#7b2cbf]/30">
+<img alt="Trainer Profile Avatar" class="w-full h-full object-cover" data-alt="professional male fitness trainer with athletic build and focused expression in high-contrast cinematic lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBztfxGBgkXjdc6QlNjiiwaFZGYsnYZxGyi-PN4Xz9tOLO3fJ7POWEuUcMjLxjBVxakyhmt-tN2fQ2AX983-E4iX4_GDgN1caVRlQcMzHRXkeCrEHWTgt688JF0dDI2D5f6aX0IZx_FIeeQ96nRFO4TA3wZN7wGSWjepggEYSoeCQC3X-yQFODYEdcuHt1hbCq1AjbhYYR9j_l6BC2Hi657vX2b5RC0ta5R3mQuX45geiXJ0nRMSkK-6xA0-ZEzVk1gfSrgbmhGSC09"/>
+</div>
+</div>
+</header>
+<main class="pt-24 px-8 pb-12 h-screen">
+<div class="max-w-7xl mx-auto opacity-40 blur-[2px] pointer-events-none">
+<div class="flex justify-between items-end mb-10">
+<div>
+<h1 class="font-headline text-5xl font-bold tracking-tighter mb-2">ROSTER</h1>
+<p class="text-on-surface-variant font-medium">Administración de atletas activos y programas.</p>
+</div>
+<button class="kinetic-gradient text-on-primary-container px-6 py-3 rounded-md font-headline font-bold uppercase tracking-widest text-sm flex items-center gap-2">
+<span class="material-symbols-outlined">add</span>
+                    Crear alumno
+                </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bg-surface-container p-6 border border-outline-variant/15 rounded-lg">
+<div class="flex justify-between items-start mb-4">
+<div class="w-16 h-16 rounded-md bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-3xl">person</span>
+</div>
+<span class="bg-primary-container/20 text-primary px-3 py-1 rounded-full text-xs font-bold font-headline">ELITE</span>
+</div>
+<h3 class="font-headline text-xl font-bold">CARLOS MEYER</h3>
+<p class="text-sm text-on-surface-variant mb-4">Functional Strength</p>
+<div class="flex gap-2">
+<div class="bg-surface-container-high px-3 py-1 rounded-full text-[10px] uppercase font-bold tracking-widest">Active</div>
+<div class="bg-surface-container-high px-3 py-1 rounded-full text-[10px] uppercase font-bold tracking-widest">Day 12/30</div>
+</div>
+</div>
+<div class="bg-surface-container p-6 border border-outline-variant/15 rounded-lg">
+<div class="flex justify-between items-start mb-4">
+<div class="w-16 h-16 rounded-md bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-3xl">person</span>
+</div>
+<span class="bg-secondary-container text-secondary px-3 py-1 rounded-full text-xs font-bold font-headline">PRO</span>
+</div>
+<h3 class="font-headline text-xl font-bold">SOFIA LUNA</h3>
+<p class="text-sm text-on-surface-variant mb-4">Weightlifting Performance</p>
+<div class="flex gap-2">
+<div class="bg-surface-container-high px-3 py-1 rounded-full text-[10px] uppercase font-bold tracking-widest">Active</div>
+<div class="bg-surface-container-high px-3 py-1 rounded-full text-[10px] uppercase font-bold tracking-widest">Day 2/30</div>
+</div>
+</div>
+<div class="bg-surface-container p-6 border border-outline-variant/15 rounded-lg">
+<div class="flex justify-between items-start mb-4">
+<div class="w-16 h-16 rounded-md bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-3xl">person</span>
+</div>
+<span class="bg-primary-container/20 text-primary px-3 py-1 rounded-full text-xs font-bold font-headline">ELITE</span>
+</div>
+<h3 class="font-headline text-xl font-bold">MARCOS RUIZ</h3>
+<p class="text-sm text-on-surface-variant mb-4">Hypertrophy V2</p>
+<div class="flex gap-2">
+<div class="bg-surface-container-high px-3 py-1 rounded-full text-[10px] uppercase font-bold tracking-widest">Late Payment</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<div class="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 bg-surface/80 backdrop-blur-sm">
+<div class="bg-surface-container-low w-full max-w-2xl max-h-[921px] overflow-y-auto rounded-xl border border-outline-variant/20 shadow-[0px_40px_80px_rgba(0,0,0,0.5),0px_20px_40px_rgba(123,44,191,0.15)] obsidian-glass">
+<div class="p-8">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h2 class="text-3xl font-headline font-bold tracking-tighter text-on-surface">Crear alumno</h2>
+<p class="mt-2 text-on-surface-variant text-sm leading-relaxed max-w-md">
+                            Los usuarios Admin y trainer pueden dar de alta alumnos desde esta seccion. El usuario accedera al sistema con su <span class="text-primary font-mono italic">"Email"</span> y contraseña <span class="text-primary font-mono italic">"123456789"</span>.
+                        </p>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface p-2 transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<form class="space-y-8">
+<div class="space-y-6">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="block font-headline text-xs font-bold tracking-widest uppercase text-on-surface-variant">Nombre *</label>
+<input class="w-full bg-surface-container-highest border-none rounded-md px-4 py-3 text-on-surface focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-on-surface/20" placeholder="Ej. Juan" type="text"/>
+</div>
+<div class="space-y-2">
+<label class="block font-headline text-xs font-bold tracking-widest uppercase text-on-surface-variant">Apellido *</label>
+<input class="w-full bg-surface-container-highest border-none rounded-md px-4 py-3 text-on-surface focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-on-surface/20" placeholder="Ej. Pérez" type="text"/>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="block font-headline text-xs font-bold tracking-widest uppercase text-on-surface-variant">Email *</label>
+<input class="w-full bg-surface-container-highest border-none rounded-md px-4 py-3 text-on-surface focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-on-surface/20" placeholder="email@ejemplo.com" type="email"/>
+</div>
+<div class="space-y-2">
+<label class="block font-headline text-xs font-bold tracking-widest uppercase text-on-surface-variant">Celular *</label>
+<input class="w-full bg-surface-container-highest border-none rounded-md px-4 py-3 text-on-surface focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-on-surface/20" placeholder="+54 9 11 ..." type="tel"/>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="space-y-2">
+<label class="block font-headline text-xs font-bold tracking-widest uppercase text-on-surface-variant">F. Nacimiento</label>
+<input class="w-full bg-surface-container-highest border-none rounded-md px-4 py-3 text-on-surface focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-on-surface/20" placeholder="DD/MM/AAAA" type="text"/>
+</div>
+<div class="space-y-2">
+<label class="block font-headline text-xs font-bold tracking-widest uppercase text-on-surface-variant">Género</label>
+<select class="w-full bg-surface-container-highest border-none rounded-md px-4 py-3 text-on-surface focus:ring-2 focus:ring-primary/50 transition-all appearance-none cursor-pointer">
+<option disabled="" selected="" value="">Seleccionar</option>
+<option value="m">Masculino</option>
+<option value="f">Femenino</option>
+<option value="o">Otro</option>
+</select>
+</div>
+<div class="grid grid-cols-2 gap-2">
+<div class="space-y-2">
+<label class="block font-headline text-xs font-bold tracking-widest uppercase text-on-surface-variant">Altura</label>
+<input class="w-full bg-surface-container-highest border-none rounded-md px-4 py-3 text-on-surface focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-on-surface/20" placeholder="cm" type="number"/>
+</div>
+<div class="space-y-2">
+<label class="block font-headline text-xs font-bold tracking-widest uppercase text-on-surface-variant">Peso</label>
+<input class="w-full bg-surface-container-highest border-none rounded-md px-4 py-3 text-on-surface focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-on-surface/20" placeholder="kg" type="number"/>
+</div>
+</div>
+</div>
+</div>
+<div class="pt-6 border-t border-outline-variant/15">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-primary-fixed-dim text-lg" style="font-variation-settings: 'FILL' 1;">payments</span>
+<h4 class="font-headline text-sm font-bold tracking-widest uppercase text-primary-fixed-dim">Primer pago</h4>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-2">
+<label class="block font-headline text-xs font-bold tracking-widest uppercase text-on-surface-variant">Monto inicial *</label>
+<div class="relative">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant">$</span>
+<input class="w-full bg-surface-container-highest border-none rounded-md pl-8 pr-4 py-3 text-on-surface focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-on-surface/20" placeholder="0.00" type="number"/>
+</div>
+</div>
+<div class="space-y-2">
+<label class="block font-headline text-xs font-bold tracking-widest uppercase text-on-surface-variant">Ciclo de cobro (dias) *</label>
+<input class="w-full bg-surface-container-highest border-none rounded-md px-4 py-3 text-on-surface focus:ring-2 focus:ring-primary/50 transition-all" type="number" value="30"/>
+<p class="text-[10px] text-on-surface-variant/60 italic mt-1">Recomendado: 30 dias</p>
+</div>
+</div>
+</div>
+<div class="flex flex-col-reverse md:flex-row gap-4 pt-4">
+<button class="flex-1 px-8 py-4 border border-outline-variant/30 text-on-surface font-headline font-bold uppercase tracking-widest text-sm rounded-md hover:bg-surface-container-high transition-colors" type="button">
+                            Cancelar
+                        </button>
+<button class="flex-1 px-8 py-4 kinetic-gradient text-on-primary-container font-headline font-bold uppercase tracking-widest text-sm rounded-md shadow-[0px_10px_20px_rgba(123,44,191,0.3)] hover:scale-[1.02] active:scale-95 transition-all" type="submit">
+                            Crear alumno
+                        </button>
+</div>
+</form>
+</div>
+</div>
+</div>
+</body></html>

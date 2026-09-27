@@ -1,0 +1,81 @@
+---
+const facilities = [
+  {
+    icon: "femur_alt",
+    title: "Germán Gazaba",
+    description: "Lic. Kinesiología y Fisiatría MP 6109 Osteópata c.o.",
+  },
+  {
+    icon: "fitness_center",
+    title: "AgustinTurriEDF",
+    description: "Entrenador de fuerza y reacondicionamiento físico.",
+  },
+  {
+    icon: "nutrition",
+    title: "Mariana E. Bauducco",
+    description: "Lic. en Nutrición MP 1567",
+  },
+];
+
+const backgroundImage = "https://lh3.googleusercontent.com/aida-public/AB6AXuBpz0R7-rAi3omOO55xCZnKLXc_NQTr9n4lO95B_V5OCwaYdYzAQwjumYSZthi0oQfdQZNGx8vSci-1W0QWQGVJTd_8-Zc5lxr2begrfD_fvvCCBilE7JBy-_5VJUqKw4zWRLqGJNJROx0R4p4fV9eqODFC2JFk4d7Unw6b4J3ff41dA20ZSlpCRT1VJp6s_OverLXQIYuNyDn8PNBFBi4ihl6u6HK0T3djOafVVLQED4SD4XykuPEKz_9bwfDDxULZ5mJeLLM-rGWn";
+
+const galleryImages = [
+  "/images/BalanceEstudio.jpeg",
+  "/images/BalanceEstudio2.jpeg",
+];
+---
+
+<section class="relative py-24 bg-secondary-container overflow-hidden" id="facilities">
+  <div class="absolute inset-0 opacity-20">
+    <img
+      class="w-full h-full object-cover"
+      data-alt="close up of heavy duty gym equipment with matte black finishes and violet neon accent lighting in the background"
+      src={backgroundImage}
+    />
+  </div>
+  <div class="container mx-auto px-8 relative z-10">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <div>
+        <h2 class="font-headline text-5xl font-black uppercase tracking-tighter mb-8 leading-tight">
+          Instalaciones <br />
+          <span class="text-primary-fixed">Balance estudio</span>
+        </h2>
+        <div class="space-y-8">
+          {facilities.map((item) => (
+            <div class="flex gap-6 items-start">
+              <div class="bg-primary-container/20 p-4 rounded-xl">
+                <span class="material-symbols-outlined text-primary text-3xl">
+                  {item.icon}
+                </span>
+              </div>
+              <div>
+                <h4 class="font-headline text-xl font-bold uppercase text-on-secondary-container">
+                  {item.title}
+                </h4>
+                <p class="text-on-secondary-container/70">
+                  {item.description}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4 h-[500px]">
+        <div class="rounded-xl overflow-hidden shadow-2xl hover:scale-105 active:scale-105 transition-transform duration-300 cursor-pointer">
+          <img
+            class="w-full h-full object-cover transition-all duration-700"
+            data-alt="atmospheric photo of a modern gym with specialized weightlifting racks and moody dark blue lighting"
+            src={galleryImages[0]}
+          />
+        </div>
+        <div class="rounded-xl overflow-hidden shadow-2xl mt-12 hover:scale-105 active:scale-105 transition-transform duration-300 cursor-pointer">
+          <img
+            class="w-full h-full object-cover transition-all duration-700"
+            data-alt="detail shot of a heavy kettlebell on a textured black floor with dramatic purple rim lighting"
+            src={galleryImages[1]}
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

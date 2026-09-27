@@ -1,0 +1,30 @@
+.breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 1.1rem 2rem 0;
+  color: rgba(207, 194, 213, 0.72);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.item {
+  line-height: 1;
+}
+
+.current {
+  color: rgba(226, 226, 226, 0.86);
+}
+
+.separator {
+  font-size: 0.95rem;
+  color: rgba(207, 194, 213, 0.48);
+}
+
+@media (max-width: 1024px) {
+  .breadcrumb {
+    padding: 0.95rem 1.25rem 0;
+    font-size: 0.64rem;
+  }
+}

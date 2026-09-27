@@ -1,0 +1,73 @@
+---
+const heroImage = "/images/Espacio2.jpeg";
+
+const whatsappNumber = "5491178296710";
+const whatsappMessage =
+  "Hola Agustin! Quiero solicitar información sobre los planes de entrenamiento.";
+const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+const appUrl = import.meta.env.PUBLIC_APP_URL ?? "http://localhost:3010";
+const loginUrl = `${appUrl}/login`;
+---
+
+<section class="relative h-[921px] flex items-center overflow-hidden pt-20">
+  <div class="absolute inset-0 z-0">
+    <img
+      class="w-full h-full object-cover grayscale opacity-60"
+      data-alt="gym interior"
+      src={heroImage}
+    />
+    <div class="absolute inset-0 noir-overlay"></div>
+  </div>
+  <div class="relative z-10 container mx-auto px-8">
+    <div class="max-w-4xl">
+      <span
+        class="inline-block px-4 py-1 mb-6 bg-surface-container-highest rounded-full text-xs font-bold tracking-widest text-primary uppercase"
+      >
+        El entrenamiento, como cualquier orden de la vida, es un PROCESO.
+      </span>
+      <h1
+        class="font-headline text-6xl md:text-8xl font-bold tracking-tighter leading-[0.9] text-on-surface mb-8 text-glow"
+      >
+        <span class="text-primary italic">
+            <span class="text-[#e2e2e2]" style="font-style: normal;"
+            >AgustinTurriEDF</span
+          >
+        </span>
+        <div>
+          <span class="text-primary italic text-5xl md:text-7xl">ENTRENADOR DE FUERZA</span>
+        </div>
+      </h1>
+      <p
+        class="text-lg text-secondary max-w-xl mb-10 leading-relaxed opacity-80"
+      >
+        Entrenamiento de fuerza personalizado, con foco en el movimiento y la
+        calidad del proceso. Evaluar primero, entrenar después integrando salud
+        y rendimiento.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a
+          href={loginUrl}
+          class="bg-primary-container text-on-primary-container px-10 py-4 rounded-md font-headline font-bold uppercase tracking-widest text-center transition-all hover:scale-105 active:scale-105 cursor-pointer inline-block"
+        >
+          Comenzar Ahora
+        </a>
+        <a
+          class="border border-outline-variant text-on-surface px-10 py-4 rounded-md font-headline font-bold uppercase tracking-widest text-center backdrop-blur-md transition-all hover:scale-105 active:scale-105 flex items-center justify-center gap-3"
+          href={whatsappUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Contactáme
+          <img
+            src="/icons/whatsapp.svg"
+            width="24"
+            height="24"
+            alt="WhatsApp"
+          />
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</script>

@@ -1,0 +1,45 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html class="dark" lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <link rel="icon" type="image/png" href="/Logo.png" />
+    <title>{title}</title>
+    <meta name="google-site-verification" content="google24b851b5e39c56e2" />
+    <meta name="description" content="AgustinTurriEDF - Entrenador de fuerza profesional en Rojas, Buenos Aires. Transformación física, entrenamiento personalizado y planes de fitness." />
+    <meta name="keywords" content="entrenador de fuerza, fitness, gym, Rojas, Buenos Aires, AgustinTurriEDF, personal trainer, entrenamiento personalizado, fuerza" />
+    <meta name="author" content="AgustinTurriEDF" />
+    <meta name="robots" content="index, follow" />
+    <meta name="geo.region" content="AR-B" />
+    <meta name="geo.placename" content="Rojas, Buenos Aires" />
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content="AgustinTurriEDF - Entrenador de fuerza profesional en Rojas, Buenos Aires." />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_AR" />
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content="AgustinTurriEDF - Entrenador de fuerza profesional en Rojas, Buenos Aires." />
+    
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Inter:wght@300..700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+  </head>
+  <body class="bg-background text-on-surface font-body selection:bg-primary-container selection:text-white">
+    <slot />
+  </body>
+</html>

@@ -1,0 +1,19 @@
+import path from "node:path";
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+  test: {
+    include: ["**/*.test.{ts,tsx}"],
+    clearMocks: true,
+    pool: "threads",
+    maxWorkers: 1,
+    environment: "jsdom",
+    setupFiles: ["./test-setup.ts"],
+    globals: true,
+  },
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname),
+    },
+  },
+});

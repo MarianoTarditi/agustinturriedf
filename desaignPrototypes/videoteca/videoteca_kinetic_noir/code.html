@@ -1,0 +1,394 @@
+<!DOCTYPE html><html class="dark" lang="es"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Videoteca | Kinetic Noir</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error-container": "#93000a",
+                        "on-error-container": "#ffdad6",
+                        "surface-tint": "#deb7ff",
+                        "error": "#ffb4ab",
+                        "surface-bright": "#393939",
+                        "on-tertiary-container": "#ffc480",
+                        "secondary": "#b9c7e4",
+                        "on-surface": "#e2e2e2",
+                        "secondary-fixed-dim": "#b9c7e4",
+                        "on-tertiary": "#482a00",
+                        "primary": "#deb7ff",
+                        "outline-variant": "#4c4353",
+                        "on-secondary-container": "#abb9d6",
+                        "on-secondary-fixed": "#0d1c32",
+                        "on-primary-fixed": "#2d0050",
+                        "surface-variant": "#353535",
+                        "secondary-fixed": "#d6e3ff",
+                        "inverse-on-surface": "#303030",
+                        "tertiary": "#fdb969",
+                        "secondary-container": "#3c4962",
+                        "primary-container": "#7b2cbf",
+                        "on-secondary": "#233148",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-container": "#1f1f1f",
+                        "on-tertiary-fixed-variant": "#663e00",
+                        "on-tertiary-fixed": "#2b1700",
+                        "surface-container-highest": "#353535",
+                        "outline": "#988d9e",
+                        "tertiary-fixed": "#ffddba",
+                        "surface": "#131313",
+                        "on-primary-fixed-variant": "#680eac",
+                        "surface-dim": "#131313",
+                        "on-secondary-fixed-variant": "#39475f",
+                        "inverse-primary": "#8234c6",
+                        "primary-fixed-dim": "#deb7ff",
+                        "surface-container-low": "#1b1b1b",
+                        "primary-fixed": "#f1dbff",
+                        "inverse-surface": "#e2e2e2",
+                        "on-surface-variant": "#cfc2d5",
+                        "on-primary-container": "#e4c2ff",
+                        "tertiary-container": "#7e4d00",
+                        "on-background": "#e2e2e2",
+                        "on-primary": "#4a007f",
+                        "on-error": "#690005",
+                        "surface-container-lowest": "#0e0e0e",
+                        "background": "#131313",
+                        "tertiary-fixed-dim": "#fdb969"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #131313;
+            color: #e2e2e2;
+            font-family: 'Inter', sans-serif;
+        }
+        .font-space-grotesk { font-family: 'Space Grotesk', sans-serif; }
+    </style>
+</head>
+<body class="flex min-h-screen overflow-x-hidden">
+<!-- SideNavBar (Shared Component) -->
+<nav class="fixed left-0 top-0 h-full flex flex-col py-6 bg-zinc-950 dark:bg-black h-screen w-64 border-r border-zinc-800/15 z-50">
+<div class="px-6 mb-10">
+<span class="text-2xl font-bold tracking-tighter text-purple-400 uppercase font-space-grotesk" style="">aGustín turri</span>
+<p class="text-xs text-zinc-500 font-medium tracking-widest mt-1" style="">ENTRENADOR DE FUERZA</p>
+</div>
+<div class="flex-1 space-y-1">
+<a class="flex items-center px-6 py-3 text-zinc-500 dark:text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/80 hover:text-purple-400 transition-all duration-300 scale-95 active:scale-100 transition-transform font-space-grotesk tracking-tight text-sm font-medium" href="#" style="">
+<span class="material-symbols-outlined mr-3" style="">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center px-6 py-3 text-zinc-500 dark:text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/80 hover:text-purple-400 transition-all duration-300 scale-95 active:scale-100 transition-transform font-space-grotesk tracking-tight text-sm font-medium" href="#" style="">
+<span class="material-symbols-outlined mr-3" style="">group</span>
+                Usuarios
+            </a>
+<a class="flex items-center px-6 py-3 text-zinc-500 dark:text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/80 hover:text-purple-400 transition-all duration-300 scale-95 active:scale-100 transition-transform font-space-grotesk tracking-tight text-sm font-medium" href="#" style="">
+<span class="material-symbols-outlined mr-3" style="">payments</span>
+                Pagos
+            </a>
+<a class="flex items-center px-6 py-3 text-zinc-500 dark:text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/80 hover:text-purple-400 transition-all duration-300 scale-95 active:scale-100 transition-transform font-space-grotesk tracking-tight text-sm font-medium" href="#" style="">
+<span class="material-symbols-outlined mr-3" style="">fitness_center</span>
+                Rutinas
+            </a>
+<!-- Active Tab: Videoteca -->
+<a class="flex items-center px-6 py-3 text-purple-300 font-bold border-r-2 border-purple-500 bg-zinc-900/50 scale-95 active:scale-100 transition-transform font-space-grotesk tracking-tight text-sm font-medium" href="#" style="">
+<span class="material-symbols-outlined mr-3" style="font-variation-settings: &quot;FILL&quot; 1;">movie</span>
+                Videoteca
+            </a>
+<a class="flex items-center px-6 py-3 text-zinc-500 dark:text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/80 hover:text-purple-400 transition-all duration-300 scale-95 active:scale-100 transition-transform font-space-grotesk tracking-tight text-sm font-medium" href="#" style="">
+<span class="material-symbols-outlined mr-3" style="">settings</span>
+                Configuraciones
+            </a>
+<a class="flex items-center px-6 py-3 text-zinc-500 dark:text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/80 hover:text-purple-400 transition-all duration-300 scale-95 active:scale-100 transition-transform font-space-grotesk tracking-tight text-sm font-medium" href="#" style="">
+<span class="material-symbols-outlined mr-3" style="">account_circle</span>
+                Perfil
+            </a>
+</div>
+<div class="px-6 mt-auto">
+<div class="flex items-center gap-3 p-2 bg-surface-container rounded-lg">
+<img alt="Admin Avatar" class="w-10 h-10 rounded-full object-cover" data-alt="Close-up portrait of a professional athletic coach with short hair in a dark gym environment, moody cinematic lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCl7ghkqC6O3AD72LSr3qLKAk6qF6SHzHJ944OukkZiYgdxwNn1KcZ-3cqTIKYd8WkA-CLts_CNjgexZOvVXFrrFcNc2IDnwJD-ksUKarMSBg-NZOcTvE0PAWgQUSo6vg8R58AE7xne5hcjA2Wwxasc-SRVzvraUy195xVN9SsVbuKxD2v_dMYqvZ-g_lTL1oGxIAixz3GqyB0MDQBFbZVKETAJklm5NaSBnT1-IfPm12iV7M7F04y-npIh_PlbLUj23GSSYlfel9WD" style="">
+<div class="overflow-hidden">
+<p class="text-xs font-bold text-on-surface truncate" style="">Agustín Turri</p>
+<p class="text-[10px] text-zinc-500 truncate" style="">ENTRENADOR</p>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-64 min-h-screen flex flex-col">
+<!-- TopAppBar (Shared Component) -->
+<header class="flex justify-between items-center px-8 w-full sticky top-0 z-40 bg-zinc-950/70 backdrop-blur-xl h-16 shadow-[0px_20px_40px_rgba(123,44,191,0.08)]">
+<div class="flex items-center flex-1 max-w-xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" style="">search</span>
+<input class="bg-surface-container-low border-none rounded-full pl-10 pr-4 py-2 text-sm w-full focus:ring-1 focus:ring-primary-container text-on-surface-variant transition-all" placeholder="Buscar en videoteca..." type="text">
+</div>
+</div>
+<div class="flex items-center gap-6 ml-8">
+<button class="text-zinc-400 hover:text-purple-300 transition-colors" style="">
+<span class="material-symbols-outlined" style="">notifications</span>
+</button>
+<button class="text-zinc-400 hover:text-purple-300 transition-colors" style="">
+<span class="material-symbols-outlined" style="">settings</span>
+</button>
+</div>
+</header>
+<!-- Videoteca Section Content -->
+<section class="p-8 space-y-12 max-w-7xl mx-auto w-full">
+<!-- Hero Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div class="space-y-4 max-w-2xl">
+<h1 class="text-5xl font-black font-space-grotesk tracking-tighter text-on-surface leading-none uppercase" style="">Videoteca</h1>
+<p class="text-on-surface-variant body-lg leading-relaxed font-light" style="">
+                        Biblioteca de ejercicios, movilidad y técnica. Organizá contenido por articulación y dejá todo claro para que el alumno vea, entienda y repita sin perderse.
+                    </p>
+</div>
+<button class="group flex items-center gap-2 bg-gradient-to-br from-primary-container to-on-primary-fixed-variant text-on-primary-container px-6 py-3 rounded-md font-bold tracking-wide shadow-[0px_20px_40px_rgba(123,44,191,0.15)] hover:scale-[1.02] active:scale-95 transition-all" style="">
+<span class="material-symbols-outlined" style="">create_new_folder</span>
+<span class="font-space-grotesk" style="">+ Nueva carpeta</span>
+</button>
+</div>
+<!-- Filter Controls Shell -->
+<div class="flex flex-col md:flex-row items-center justify-between gap-4 py-6 border-y border-outline-variant/15">
+<div class="flex flex-wrap items-center gap-3">
+<div class="relative">
+<select class="appearance-none bg-surface-container px-4 py-2 pr-10 rounded-md border-none text-sm font-medium focus:ring-1 focus:ring-primary-container">
+<option>Más recientes</option>
+<option>A-Z</option>
+<option>Más archivos</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none scale-75" style="">expand_more</span>
+</div>
+<button class="flex items-center gap-2 bg-surface-container px-4 py-2 rounded-md text-sm font-medium text-zinc-400 hover:text-purple-300 transition-colors" style="">
+<span class="material-symbols-outlined scale-90" style="">filter_alt</span>
+                        Filtrar
+                    </button>
+</div>
+<div class="flex items-center gap-1 bg-surface-container-low p-1 rounded-md">
+<button class="p-2 rounded bg-surface-container-highest text-purple-400" style="">
+<span class="material-symbols-outlined" style="">grid_view</span>
+</button>
+<button class="p-2 rounded text-zinc-500 hover:text-zinc-200" style="">
+<span class="material-symbols-outlined" style="">view_list</span>
+</button>
+</div>
+</div>
+<!-- Folder Bento Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Folder Card 1 -->
+<div class="group bg-surface-container hover:bg-surface-container-high p-6 rounded-xl transition-all duration-500 relative flex flex-col justify-between h-56 cursor-pointer border border-transparent hover:border-outline-variant/20">
+<div class="flex justify-between items-start">
+<div class="bg-primary-container/10 p-3 rounded-lg group-hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-purple-400 group-hover:text-on-primary-container" style="font-variation-settings: &quot;FILL&quot; 1;">folder</span>
+</div>
+<button class="text-zinc-600 hover:text-on-surface transition-colors" style="">
+<span class="material-symbols-outlined" style="">more_vert</span>
+</button>
+</div>
+<div>
+<h3 class="text-xl font-bold font-space-grotesk tracking-tight uppercase group-hover:text-primary transition-colors" style="">RODILLA</h3>
+<p class="text-xs text-zinc-500 mt-1" style="">Última actualización: 12 Oct 2023</p>
+<div class="flex items-center gap-3 mt-4">
+<span class="text-xs font-bold text-zinc-400 flex items-center gap-1" style="">
+<span class="material-symbols-outlined text-sm" style="">video_library</span>
+                                14 archivos
+                            </span>
+<div class="flex gap-1">
+<span class="bg-surface-container-highest px-2 py-0.5 rounded-full text-[10px] text-purple-300 font-medium" style="">rodilla</span>
+<span class="bg-surface-container-highest px-2 py-0.5 rounded-full text-[10px] text-purple-300 font-medium" style="">movilidad</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Folder Card 2 -->
+<div class="group bg-surface-container hover:bg-surface-container-high p-6 rounded-xl transition-all duration-500 relative flex flex-col justify-between h-56 cursor-pointer border border-transparent hover:border-outline-variant/20">
+<div class="flex justify-between items-start">
+<div class="bg-primary-container/10 p-3 rounded-lg group-hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-purple-400 group-hover:text-on-primary-container" style="font-variation-settings: &quot;FILL&quot; 1;">folder</span>
+</div>
+<button class="text-zinc-600 hover:text-on-surface transition-colors" style="">
+<span class="material-symbols-outlined" style="">more_vert</span>
+</button>
+</div>
+<div>
+<h3 class="text-xl font-bold font-space-grotesk tracking-tight uppercase group-hover:text-primary transition-colors" style="">May correa</h3>
+<p class="text-xs text-zinc-500 mt-1" style="">Última actualización: 08 Oct 2023</p>
+<div class="flex items-center gap-3 mt-4">
+<span class="text-xs font-bold text-zinc-400 flex items-center gap-1" style="">
+<span class="material-symbols-outlined text-sm" style="">video_library</span>
+                                2 archivos
+                            </span>
+<div class="flex gap-1">
+<span class="bg-surface-container-highest px-2 py-0.5 rounded-full text-[10px] text-purple-300 font-medium" style="">aad</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Folder Card 3 -->
+<div class="group bg-surface-container hover:bg-surface-container-high p-6 rounded-xl transition-all duration-500 relative flex flex-col justify-between h-56 cursor-pointer border border-transparent hover:border-outline-variant/20">
+<div class="flex justify-between items-start">
+<div class="bg-primary-container/10 p-3 rounded-lg group-hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-purple-400 group-hover:text-on-primary-container" style="font-variation-settings: &quot;FILL&quot; 1;">folder</span>
+</div>
+<button class="text-zinc-600 hover:text-on-surface transition-colors" style="">
+<span class="material-symbols-outlined" style="">more_vert</span>
+</button>
+</div>
+<div>
+<h3 class="text-xl font-bold font-space-grotesk tracking-tight uppercase group-hover:text-primary transition-colors" style="">Cadera</h3>
+<p class="text-xs text-zinc-500 mt-1" style="">Última actualización: 25 Sep 2023</p>
+<div class="flex items-center gap-3 mt-4">
+<span class="text-xs font-bold text-zinc-400 flex items-center gap-1" style="">
+<span class="material-symbols-outlined text-sm" style="">video_library</span>
+                                8 archivos
+                            </span>
+<div class="flex gap-1">
+<span class="bg-surface-container-highest px-2 py-0.5 rounded-full text-[10px] text-purple-300 font-medium" style="">cadera</span>
+<span class="bg-surface-container-highest px-2 py-0.5 rounded-full text-[10px] text-purple-300 font-medium" style="">atleta</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Folder Card 4 -->
+<div class="group bg-surface-container hover:bg-surface-container-high p-6 rounded-xl transition-all duration-500 relative flex flex-col justify-between h-56 cursor-pointer border border-transparent hover:border-outline-variant/20">
+<div class="flex justify-between items-start">
+<div class="bg-primary-container/10 p-3 rounded-lg group-hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-purple-400 group-hover:text-on-primary-container" style="font-variation-settings: &quot;FILL&quot; 1;">folder</span>
+</div>
+<button class="text-zinc-600 hover:text-on-surface transition-colors" style="">
+<span class="material-symbols-outlined" style="">more_vert</span>
+</button>
+</div>
+<div>
+<h3 class="text-xl font-bold font-space-grotesk tracking-tight uppercase group-hover:text-primary transition-colors" style="">CORE &amp; ESTABILIDAD</h3>
+<p class="text-xs text-zinc-500 mt-1" style="">Última actualización: 14 Sep 2023</p>
+<div class="flex items-center gap-3 mt-4">
+<span class="text-xs font-bold text-zinc-400 flex items-center gap-1" style="">
+<span class="material-symbols-outlined text-sm" style="">video_library</span>
+                                21 archivos
+                            </span>
+<div class="flex gap-1">
+<span class="bg-surface-container-highest px-2 py-0.5 rounded-full text-[10px] text-purple-300 font-medium" style="">core</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Folder Card 5 -->
+<div class="group bg-surface-container hover:bg-surface-container-high p-6 rounded-xl transition-all duration-500 relative flex flex-col justify-between h-56 cursor-pointer border border-transparent hover:border-outline-variant/20">
+<div class="flex justify-between items-start">
+<div class="bg-primary-container/10 p-3 rounded-lg group-hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-purple-400 group-hover:text-on-primary-container" style="font-variation-settings: &quot;FILL&quot; 1;">folder</span>
+</div>
+<button class="text-zinc-600 hover:text-on-surface transition-colors" style="">
+<span class="material-symbols-outlined" style="">more_vert</span>
+</button>
+</div>
+<div>
+<h3 class="text-xl font-bold font-space-grotesk tracking-tight uppercase group-hover:text-primary transition-colors" style="">Hombro</h3>
+<p class="text-xs text-zinc-500 mt-1" style="">Última actualización: 02 Sep 2023</p>
+<div class="flex items-center gap-3 mt-4">
+<span class="text-xs font-bold text-zinc-400 flex items-center gap-1" style="">
+<span class="material-symbols-outlined text-sm" style="">video_library</span>
+                                6 archivos
+                            </span>
+<div class="flex gap-1">
+<span class="bg-surface-container-highest px-2 py-0.5 rounded-full text-[10px] text-purple-300 font-medium" style="">articulacion</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Folder Card 6 -->
+<div class="group bg-surface-container hover:bg-surface-container-high p-6 rounded-xl transition-all duration-500 relative flex flex-col justify-between h-56 cursor-pointer border border-transparent hover:border-outline-variant/20">
+<div class="flex justify-between items-start">
+<div class="bg-primary-container/10 p-3 rounded-lg group-hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-purple-400 group-hover:text-on-primary-container" style="font-variation-settings: &quot;FILL&quot; 1;">folder</span>
+</div>
+<button class="text-zinc-600 hover:text-on-surface transition-colors" style="">
+<span class="material-symbols-outlined" style="">more_vert</span>
+</button>
+</div>
+<div>
+<h3 class="text-xl font-bold font-space-grotesk tracking-tight uppercase group-hover:text-primary transition-colors" style="">Técnicas de Fuerza</h3>
+<p class="text-xs text-zinc-500 mt-1" style="">Última actualización: 28 Ago 2023</p>
+<div class="flex items-center gap-3 mt-4">
+<span class="text-xs font-bold text-zinc-400 flex items-center gap-1" style="">
+<span class="material-symbols-outlined text-sm" style="">video_library</span>
+                                32 archivos
+                            </span>
+<div class="flex gap-1">
+<span class="bg-surface-container-highest px-2 py-0.5 rounded-full text-[10px] text-purple-300 font-medium" style="">elite</span>
+<span class="bg-surface-container-highest px-2 py-0.5 rounded-full text-[10px] text-purple-300 font-medium" style="">fuerza</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Add Folder Placeholder -->
+<div class="group border-2 border-dashed border-outline-variant/30 hover:border-primary-container/50 p-6 rounded-xl transition-all duration-500 relative flex flex-col items-center justify-center h-56 cursor-pointer bg-transparent">
+<div class="bg-surface-container p-4 rounded-full group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-zinc-500 group-hover:text-purple-400" style="">create_new_folder</span>
+</div>
+<span class="text-sm font-bold font-space-grotesk mt-4 text-zinc-500 group-hover:text-on-surface" style="">CREAR CARPETA</span>
+</div>
+</div>
+<!-- Featured Resources (Asymmetric Layout) -->
+<div class="mt-20 space-y-8">
+<h2 class="text-2xl font-bold font-space-grotesk tracking-tight uppercase" style="">Videos Recientes Destacados</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="md:col-span-2 relative group overflow-hidden rounded-2xl h-[400px]">
+<img alt="Workout Video Thumbnail" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Cinematic shot of a professional female athlete performing a barbell squat in a dimly lit, high-end gym with purple accent lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhWWoE49lN5SVlc01PdlApLpKxO0qJD1GtcDGyQXM9CmTU7ukxomyZRlxXcyuBiPDOPDExU1qXNcxNuarc6n8L3BuLGhYSHGHyUKJP2o2ltzvxx9OZ_L2xicOX04EC_9Ptk8c_awkgwqdXSsxqEAkt6tD7cuvnreMI0uBju6YBjPQKmjmv9YIKkRlfP49-_FOe0tsuetJCWz59byW3MKXSWQKT3h26JYPDl7-J5AYWIu6P1RIkogPE9mDs5PE2Yn_8jDRy_AaTs3kv" style="">
+<div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent"></div>
+<div class="absolute inset-0 flex flex-col justify-end p-8">
+<span class="bg-primary text-on-primary-container text-[10px] font-black px-3 py-1 rounded-full w-fit uppercase tracking-widest mb-4" style="">Masterclass</span>
+<h3 class="text-3xl font-bold font-space-grotesk leading-none" style="">ESTABILIDAD DE CORE NIVEL 3</h3>
+<p class="text-sm text-zinc-400 mt-2 max-w-lg" style="">Explicación técnica detallada sobre la activación del transverso abdominal durante cargas máximas.</p>
+</div>
+<div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<div class="w-20 h-20 bg-primary-container/80 backdrop-blur-md rounded-full flex items-center justify-center text-on-primary-container scale-75 group-hover:scale-100 transition-transform">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: &quot;FILL&quot; 1;">play_arrow</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container rounded-2xl p-8 flex flex-col justify-between border border-outline-variant/10">
+<div class="space-y-6">
+<span class="material-symbols-outlined text-purple-400 text-4xl" style="">tips_and_updates</span>
+<h3 class="text-xl font-bold font-space-grotesk leading-tight uppercase" style="">Tip del día: Movilidad de Tobillo</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed" style="">
+                                El 80% de los problemas en sentadilla profunda derivan de una dorsiflexión limitada. Revisá la carpeta de 'Mobility Foundations' para ver el nuevo video explicativo.
+                            </p>
+</div>
+<button class="w-full py-4 border border-primary-container text-primary hover:bg-primary-container/10 transition-colors rounded-md font-bold text-xs tracking-widest uppercase" style="">
+                            Ver Carpeta
+                        </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer Padding for clarity -->
+<footer class="h-20"></footer>
+</main>
+<!-- FAB for quick action (Suppressed on details, shown on library) -->
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-primary shadow-lg shadow-primary-container/40 rounded-full flex items-center justify-center text-on-primary-container hover:scale-110 active:scale-95 transition-all z-50" style="">
+<span class="material-symbols-outlined" style="font-variation-settings: &quot;FILL&quot; 1;">cloud_upload</span>
+</button>
+</body></html>

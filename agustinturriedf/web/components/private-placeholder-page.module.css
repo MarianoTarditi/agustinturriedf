@@ -1,0 +1,53 @@
+.page {
+  position: relative;
+  z-index: 1;
+}
+
+.wrapper {
+  display: grid;
+  gap: 1.25rem;
+  padding: 1.5rem 2rem 2rem;
+}
+
+.card {
+  border-radius: 0.6rem;
+  padding: 1.5rem;
+  background: var(--surface-low);
+  border: 1px solid rgba(76, 67, 83, 0.18);
+  max-width: 40rem;
+}
+
+.badge {
+  display: inline-flex;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--primary);
+  background: rgba(123, 44, 191, 0.14);
+  border: 1px solid rgba(123, 44, 191, 0.35);
+  border-radius: 999px;
+  padding: 0.32rem 0.55rem;
+  font-weight: 700;
+}
+
+.copy {
+  margin: 0.9rem 0 1.2rem;
+  color: var(--on-surface-variant);
+}
+
+.button {
+  border: 0;
+  border-radius: 0.38rem;
+  padding: 0.68rem 1rem;
+  color: #e4c2ff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary-container), var(--primary-variant));
+  box-shadow: 0 20px 40px rgba(123, 44, 191, 0.08);
+}
+
+@media (max-width: 1024px) {
+  .wrapper {
+    padding: 1.25rem 1.25rem 2rem;
+  }
+}

@@ -1,0 +1,921 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import styles from "@/app/(private)/videoteca/videoteca.module.css";
+import { useLoading } from "@/components/use-loading";
+import { DestructiveConfirmationModal } from "@/components/destructive-confirmation-modal";
+import { MaterialSymbol } from "@/components/material-symbol";
+import { PrivateBreadcrumb } from "@/components/private-breadcrumb";
+import { PrivateTopbar } from "@/components/private-topbar";
+import {
+  createVideotecaFolder,
+  deleteVideotecaFolder,
+  fetchVideotecaFolders,
+  normalizeFolderName,
+  renameVideotecaFolder,
+} from "@/app/(private)/videoteca/videoteca.service";
+import { useToast } from "@/components/use-toast";
+import {
+  VIDEOTECA_PAGE_SIZE,
+  clampVideotecaPage,
+  getVideotecaPage,
+  getVideotecaTotalPages,
+} from "@/app/(private)/videoteca/videoteca-pagination";
+
+type FolderCard = {
+  id: string;
+  name: string;
+  updatedAt: string;
+  fileCount: number;
+  tags: string[];
+};
+
+type FolderContextMenuState = {
+  folderId: string;
+  x: number;
+  y: number;
+};
+
+export default function VideotecaPage() {
+  const router = useRouter();
+  const { showLoader, hideLoader } = useLoading();
+  const { showToast } = useToast();
+  const [folders, setFolders] = useState<FolderCard[]>([]);
+  const [isFoldersLoading, setIsFoldersLoading] = useState(true);
+  const [foldersLoadError, setFoldersLoadError] = useState<string | null>(null);
+  const [foldersReloadNonce, setFoldersReloadNonce] = useState(0);
+  const [folderContextMenu, setFolderContextMenu] =
+    useState<FolderContextMenuState | null>(null);
+  const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
+  const [activeDeleteFolder, setActiveDeleteFolder] =
+    useState<FolderCard | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [draftFolderName, setDraftFolderName] = useState("");
+  const [newFolderName, setNewFolderName] = useState("");
+  const [folderMutationError, setFolderMutationError] = useState<string | null>(null);
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+  const [isRenamingFolder, setIsRenamingFolder] = useState(false);
+  const [isDeletingFolder, setIsDeletingFolder] = useState(false);
+  const [sortCriterion, setSortCriterion] = useState<"Más recientes" | "A-Z" | "Más archivos" | "Menos archivos">("Más recientes");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const editingFolder = editingFolderId
+    ? (folders.find((folder) => folder.id === editingFolderId) ?? null)
+    : null;
+
+  const activeContextMenuFolder = folderContextMenu
+    ? (folders.find((folder) => folder.id === folderContextMenu.folderId) ?? null)
+    : null;
+
+  const sortedFolders = useMemo(() => {
+    return [...folders].sort((a, b) => {
+      switch (sortCriterion) {
+        case "Más recientes":
+          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+        case "A-Z":
+          return a.name.localeCompare(b.name);
+        case "Más archivos":
+          return b.fileCount - a.fileCount;
+        case "Menos archivos":
+          return a.fileCount - b.fileCount;
+      }
+    });
+  }, [folders, sortCriterion]);
+
+  const folderIds = useMemo(() => sortedFolders.map((f) => f.id), [sortedFolders]);
+
+  const pagination = useMemo(
+    () => getVideotecaPage(folderIds, currentPage, VIDEOTECA_PAGE_SIZE),
+    [folderIds, currentPage],
+  );
+
+  const visibleFolders = useMemo(
+    () => sortedFolders.filter((folder) => pagination.visibleFolders.includes(folder.id)),
+    [sortedFolders, pagination.visibleFolders],
+  );
+
+  const hasPrevPage = pagination.currentPage > 1;
+  const hasNextPage = pagination.currentPage < pagination.totalPages;
+
+  const closeFolderContextMenu = () => {
+    setFolderContextMenu(null);
+  };
+
+  const getSafeMenuPosition = (x: number, y: number) => {
+    const MENU_WIDTH = 176;
+    const MENU_HEIGHT = 108;
+    const EDGE_OFFSET = 12;
+
+    const maxX = Math.max(
+      EDGE_OFFSET,
+      window.innerWidth - MENU_WIDTH - EDGE_OFFSET,
+    );
+    const maxY = Math.max(
+      EDGE_OFFSET,
+      window.innerHeight - MENU_HEIGHT - EDGE_OFFSET,
+    );
+
+    return {
+      x: Math.min(Math.max(EDGE_OFFSET, x), maxX),
+      y: Math.min(Math.max(EDGE_OFFSET, y), maxY),
+    };
+  };
+
+  const openFolderContextMenu = (folderId: string, x: number, y: number) => {
+    const safePosition = getSafeMenuPosition(x, y);
+
+    setFolderContextMenu({
+      folderId,
+      x: safePosition.x,
+      y: safePosition.y,
+    });
+  };
+
+  const handleFolderMenuButtonClick = (
+    event: React.MouseEvent<HTMLButtonElement>,
+    folder: FolderCard,
+  ) => {
+    event.stopPropagation();
+
+    if (folderContextMenu?.folderId === folder.id) {
+      closeFolderContextMenu();
+      return;
+    }
+
+    const triggerRect = event.currentTarget.getBoundingClientRect();
+
+    openFolderContextMenu(folder.id, triggerRect.right - 6, triggerRect.bottom + 8);
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    setIsFoldersLoading(true);
+    setFoldersLoadError(null);
+
+    showLoader("videoteca-folders-load", { text: "Cargando videoteca..." });
+
+    void fetchVideotecaFolders(fetch)
+      .then((backendFolders) => {
+        if (!isMounted) return;
+        setFolders(backendFolders);
+      })
+      .catch((error) => {
+        if (!isMounted) return;
+
+        setFolders([]);
+        showToast('error', error instanceof Error ? error.message : "No se pudieron cargar las carpetas de videoteca.");
+      })
+      .finally(() => {
+        if (!isMounted) return;
+        hideLoader("videoteca-folders-load");
+        setIsFoldersLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [foldersReloadNonce]);
+
+  useEffect(() => {
+    if (!folderContextMenu) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+
+      if (target.closest('[data-folder-context-menu="true"]')) return;
+      if (target.closest('[data-folder-menu-trigger="true"]')) return;
+
+      closeFolderContextMenu();
+    };
+
+    const handleContextMenu = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+      if (target.closest('[data-folder-card="true"]')) return;
+
+      closeFolderContextMenu();
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeFolderContextMenu();
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [folderContextMenu]);
+
+  useEffect(() => {
+    if (!folderContextMenu) return;
+
+    const exists = folders.some((folder) => folder.id === folderContextMenu.folderId);
+    if (!exists) {
+      closeFolderContextMenu();
+    }
+  }, [folders, folderContextMenu]);
+
+  useEffect(() => {
+    setCurrentPage((page) =>
+      clampVideotecaPage(page, getVideotecaTotalPages(sortedFolders.length, VIDEOTECA_PAGE_SIZE)),
+    );
+  }, [sortedFolders.length]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sortCriterion]);
+
+  const openEditModal = (folder: FolderCard) => {
+    closeFolderContextMenu();
+    setFolderMutationError(null);
+    setEditingFolderId(folder.id);
+    setDraftFolderName(folder.name);
+  };
+
+  const closeEditModal = (force = false) => {
+    if (isRenamingFolder && !force) return;
+    setEditingFolderId(null);
+    setDraftFolderName("");
+    setFolderMutationError(null);
+  };
+
+  const handleConfirmEdit = async () => {
+    const nextName = normalizeFolderName(draftFolderName);
+    if (!editingFolderId || !nextName) return;
+
+    setFolderMutationError(null);
+
+    try {
+      showLoader("videoteca-folder-rename", { text: "Renombrando carpeta..." });
+      const updatedFolder = await renameVideotecaFolder(fetch, editingFolderId, {
+        name: nextName,
+      });
+
+      setFolders((currentFolders) =>
+        currentFolders.map((folder) =>
+          folder.id === editingFolderId ? updatedFolder : folder,
+        ),
+      );
+
+      showToast('success', 'Carpeta renombrada correctamente.');
+      closeEditModal(true);
+} catch (error) {
+      showToast('error', error instanceof Error ? error.message : "No se pudo editar la carpeta.");
+    } finally {
+      hideLoader("videoteca-folder-rename");
+    }
+  };
+
+  const openDeleteModal = (folder: FolderCard) => {
+    closeFolderContextMenu();
+    setFolderMutationError(null);
+    setActiveDeleteFolder(folder);
+  };
+
+  const closeDeleteModal = (force = false) => {
+    if (isDeletingFolder && !force) return;
+    setActiveDeleteFolder(null);
+    setFolderMutationError(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!activeDeleteFolder) return;
+
+    setFolderMutationError(null);
+
+    try {
+      showLoader("videoteca-folder-delete", { text: "Eliminando carpeta..." });
+      await deleteVideotecaFolder(fetch, activeDeleteFolder.id);
+      setFolders((currentFolders) =>
+        currentFolders.filter((folder) => folder.id !== activeDeleteFolder.id),
+      );
+      showToast('success', 'Carpeta eliminada correctamente.');
+      closeDeleteModal(true);
+} catch (error) {
+      showToast('error', error instanceof Error ? error.message : "No se pudo eliminar la carpeta.");
+    } finally {
+      hideLoader("videoteca-folder-delete");
+    }
+  };
+
+  const openCreateModal = () => {
+    setFolderMutationError(null);
+    setIsCreateModalOpen(true);
+    setNewFolderName("");
+  };
+
+  const closeCreateModal = (force = false) => {
+    if (isCreatingFolder && !force) return;
+    setIsCreateModalOpen(false);
+    setNewFolderName("");
+    setFolderMutationError(null);
+  };
+
+  const handleConfirmCreate = async () => {
+    const folderName = normalizeFolderName(newFolderName);
+
+    if (!folderName) return;
+
+    setFolderMutationError(null);
+
+    try {
+      showLoader("videoteca-folder-create", { text: "Creando carpeta..." });
+      const createdFolder = await createVideotecaFolder(fetch, { name: folderName });
+
+      setFolders((currentFolders) => [createdFolder, ...currentFolders]);
+      showToast('success', 'Carpeta creada correctamente.');
+      closeCreateModal(true);
+} catch (error) {
+      showToast('error', error instanceof Error ? error.message : "No se pudo crear la carpeta.");
+    } finally {
+      hideLoader("videoteca-folder-create");
+    }
+  };
+
+  const openFolder = (folderId: string) => {
+    router.push(`/videoteca/${folderId}`);
+  };
+
+  const retryLoadFolders = () => {
+    setFoldersReloadNonce((currentNonce) => currentNonce + 1);
+  };
+
+  return (
+    <section className={styles.page}>
+      <PrivateBreadcrumb current="Videoteca" />
+      <PrivateTopbar title="Gestión de Videoteca" subtitle="Administra tus fotos, videos y carpetas de manera eficiente en un solo lugar." />
+
+      <div className={styles.content}>
+        <section className={styles.controlsRow}>
+          <div className={styles.controlsMain}>
+            <div className={styles.filtersWrap}>
+              <label className={styles.sortWrap}>
+                <select
+                  value={sortCriterion}
+                  onChange={(event) =>
+                    setSortCriterion(
+                      event.target.value as typeof sortCriterion,
+                    )
+                  }
+                  aria-label="Ordenar carpetas"
+                >
+                  <option>Más recientes</option>
+                  <option>A-Z</option>
+                  <option>Más archivos</option>
+                  <option>Menos archivos</option>
+                </select>
+                <MaterialSymbol
+                  name="expand_more"
+                  className={styles.selectIcon}
+                  weight={500}
+                  opticalSize={18}
+                />
+              </label>
+            </div>
+
+            <div
+              className={styles.viewToggle}
+              role="group"
+              aria-label="Cambiar vista de carpetas"
+            >
+              <button
+                type="button"
+                className={`${styles.viewButton} ${styles.viewButtonActive}`}
+                aria-label="Vista de grilla"
+              >
+                <MaterialSymbol
+                  name="grid_view"
+                  className={styles.viewIcon}
+                  weight={500}
+                  opticalSize={20}
+                />
+              </button>
+              <button
+                type="button"
+                className={styles.viewButton}
+                aria-label="Vista de lista"
+              >
+                <MaterialSymbol
+                  name="view_list"
+                  className={styles.viewIcon}
+                  weight={500}
+                  opticalSize={20}
+                />
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className={styles.createFolderButton}
+            onClick={openCreateModal}
+          >
+            <MaterialSymbol
+              name="create_new_folder"
+              className={styles.createFolderIcon}
+              fill={1}
+              weight={500}
+              opticalSize={20}
+            />
+            <span>+ Nueva carpeta</span>
+          </button>
+        </section>
+
+        <section className={styles.folderGrid}>
+          {isFoldersLoading ? (
+            <div className={styles.folderGridState} role="status" aria-live="polite">
+              <MaterialSymbol
+                name="progress_activity"
+                className={styles.folderGridStateIcon}
+                weight={500}
+                opticalSize={22}
+              />
+              <p>Cargando carpetas de videoteca...</p>
+            </div>
+          ) : foldersLoadError ? (
+            <div className={styles.folderGridState} role="alert" aria-live="assertive">
+              <MaterialSymbol
+                name="warning"
+                className={styles.folderGridStateIcon}
+                weight={500}
+                opticalSize={22}
+              />
+              <p>{foldersLoadError}</p>
+              <button
+                type="button"
+                className={styles.folderGridRetryButton}
+                onClick={retryLoadFolders}
+              >
+                Reintentar
+              </button>
+            </div>
+          ) : folders.length === 0 ? (
+            <div className={styles.folderGridState} role="status" aria-live="polite">
+              <MaterialSymbol
+                name="folder_open"
+                className={styles.folderGridStateIcon}
+                weight={500}
+                opticalSize={22}
+              />
+              <h3 className={styles.folderGridStateTitle}>
+                Todavía no hay carpetas en la videoteca
+              </h3>
+              <p>Creá la primera carpeta para empezar a organizar tus videos.</p>
+              <button
+                type="button"
+                className={styles.folderGridPrimaryButton}
+                onClick={openCreateModal}
+              >
+                <MaterialSymbol
+                  name="create_new_folder"
+                  className={styles.folderGridPrimaryButtonIcon}
+                  weight={500}
+                  opticalSize={18}
+                />
+                Nueva carpeta
+              </button>
+            </div>
+          ) : (
+            <div className={styles.folderGridInner}>
+              {visibleFolders.map((folder) => (
+                <article
+                  key={folder.id}
+                  className={styles.folderCard}
+                  data-folder-card="true"
+                  onContextMenu={(event) => {
+                    event.preventDefault();
+                    openFolderContextMenu(folder.id, event.clientX, event.clientY);
+                  }}
+                  onClick={() => openFolder(folder.id)}
+                >
+                  <div className={styles.cardHead}>
+                    <span className={styles.folderIconWrap}>
+                      <MaterialSymbol
+                        name="folder"
+                        className={styles.folderIcon}
+                        fill={1}
+                        weight={500}
+                        opticalSize={22}
+                      />
+                    </span>
+
+                    <div className={styles.cardActions}>
+                      <button
+                        type="button"
+                        className={styles.cardMenuTriggerButton}
+                        data-folder-menu-trigger="true"
+                        aria-label={`Abrir menú de opciones de ${folder.name}`}
+                        aria-haspopup="menu"
+                        aria-expanded={folderContextMenu?.folderId === folder.id}
+                        onDoubleClick={(event) => event.stopPropagation()}
+                        onClick={(event) => handleFolderMenuButtonClick(event, folder)}
+                      >
+                        <MaterialSymbol
+                          name="more_vert"
+                          className={styles.cardMenuTriggerIcon}
+                          weight={500}
+                          opticalSize={18}
+                        />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className={styles.cardBody}>
+                    <h3>
+                      <button
+                        type="button"
+                        className={styles.folderNameButton}
+                        aria-label={`Abrir carpeta ${folder.name}`}
+                      >
+                        {folder.name}
+                      </button>
+                    </h3>
+
+                    <div className={styles.cardFooter}>
+                      <span className={styles.filesCount}>
+                        <MaterialSymbol
+                          name="video_library"
+                          className={styles.filesIcon}
+                          weight={500}
+                          opticalSize={16}
+                        />
+                        {folder.fileCount} archivos
+                      </span>
+
+                      <div className={styles.tags}>
+                        {folder.tags.map((tag) => (
+                          <span key={`${folder.id}-${tag}`} className={styles.tag}>
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              ))}
+
+              {pagination.currentPage === 1 ? (
+                <button
+                  type="button"
+                  className={styles.addCard}
+                  onClick={openCreateModal}
+                  aria-label="Crear carpeta"
+                >
+                  <span className={styles.addCardIconWrap}>
+                    <MaterialSymbol
+                      name="create_new_folder"
+                      className={styles.addCardIcon}
+                      weight={500}
+                      opticalSize={24}
+                    />
+                  </span>
+                  <p>Crear carpeta</p>
+                </button>
+              ) : null}
+            </div>
+          )}
+
+          {folders.length > VIDEOTECA_PAGE_SIZE ? (
+            <div className={styles.paginationWrap}>
+              <footer className={styles.paginationFooter} aria-label="Paginación de carpetas">
+                <p className={styles.paginationStatus}>
+                  PÁGINA {pagination.currentPage} DE {pagination.totalPages}
+                </p>
+
+                <div className={styles.paginationControls}>
+                  <button
+                    type="button"
+                    className={styles.paginationButton}
+                    onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                    disabled={!hasPrevPage}
+                  >
+                    Anterior
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.paginationButton}
+                    onClick={() => setCurrentPage((page) => Math.min(pagination.totalPages, page + 1))}
+                    disabled={!hasNextPage}
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              </footer>
+            </div>
+          ) : null}
+        </section>
+
+        <section className={styles.featuredSection}>
+          <h2>Videos recientes destacados</h2>
+
+          <div className={styles.featuredGrid}>
+            <article className={styles.masterCard}>
+              <img
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhWWoE49lN5SVlc01PdlApLpKxO0qJD1GtcDGyQXM9CmTU7ukxomyZRlxXcyuBiPDOPDExU1qXNcxNuarc6n8L3BuLGhYSHGHyUKJP2o2ltzvxx9OZ_L2xicOX04EC_9Ptk8c_awkgwqdXSsxqEAkt6tD7cuvnreMI0uBju6YBjPQKmjmv9YIKkRlfP49-_FOe0tsuetJCWz59byW3MKXSWQKT3h26JYPDl7-J5AYWIu6P1RIkogPE9mDs5PE2Yn_8jDRy_AaTs3kv"
+                alt="Atleta realizando sentadilla con barra"
+              />
+
+              <div className={styles.masterOverlay} aria-hidden="true" />
+
+              <div className={styles.masterContent}>
+                <span className={styles.masterBadge}>Masterclass</span>
+                <h3>ESTABILIDAD DE CORE NIVEL 3</h3>
+                <p>
+                  Explicación técnica detallada sobre la activación del
+                  transverso abdominal durante cargas máximas.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className={styles.playButton}
+                aria-label="Reproducir video destacado"
+              >
+                <MaterialSymbol
+                  name="play_arrow"
+                  className={styles.playIcon}
+                  fill={1}
+                  weight={500}
+                  opticalSize={36}
+                />
+              </button>
+            </article>
+
+            <article className={styles.tipCard}>
+              <div className={styles.tipCopy}>
+                <MaterialSymbol
+                  name="tips_and_updates"
+                  className={styles.tipIcon}
+                  fill={1}
+                  weight={500}
+                  opticalSize={36}
+                />
+                <h3>Tip del día: Movilidad de Tobillo</h3>
+                <p>
+                  El 80% de los problemas en sentadilla profunda derivan de una
+                  dorsiflexión limitada. Revisá la carpeta de Mobility
+                  Foundations para ver el nuevo video explicativo.
+                </p>
+              </div>
+
+              <button type="button" className={styles.tipButton}>
+                Ver carpeta
+              </button>
+            </article>
+          </div>
+        </section>
+      </div>
+
+      <button type="button" className={styles.fab} aria-label="Subir video">
+        <MaterialSymbol
+          name="cloud_upload"
+          className={styles.fabIcon}
+          fill={1}
+          weight={500}
+          opticalSize={24}
+        />
+      </button>
+
+      <div className={styles.localGlowPrimary} aria-hidden="true" />
+      <div className={styles.localGlowSecondary} aria-hidden="true" />
+
+      {activeContextMenuFolder && folderContextMenu ? (
+        <div
+          className={styles.folderContextMenu}
+          role="menu"
+          aria-label={`Opciones para ${activeContextMenuFolder.name}`}
+          data-folder-context-menu="true"
+          style={{
+            left: `${folderContextMenu.x}px`,
+            top: `${folderContextMenu.y}px`,
+          }}
+        >
+          <button
+            type="button"
+            className={styles.folderContextMenuItem}
+            role="menuitem"
+            onClick={() => openEditModal(activeContextMenuFolder)}
+          >
+            <MaterialSymbol
+              name="edit"
+              className={styles.folderContextMenuItemIcon}
+              weight={500}
+              opticalSize={18}
+            />
+            Editar
+          </button>
+
+          <button
+            type="button"
+            className={`${styles.folderContextMenuItem} ${styles.folderContextMenuItemDelete}`}
+            role="menuitem"
+            onClick={() => openDeleteModal(activeContextMenuFolder)}
+          >
+            <MaterialSymbol
+              name="delete"
+              className={styles.folderContextMenuItemIcon}
+              weight={500}
+              opticalSize={18}
+            />
+            Eliminar
+          </button>
+        </div>
+      ) : null}
+
+      {editingFolder ? (
+        <div
+          className={styles.modalOverlay}
+          role="presentation"
+          onClick={() => closeEditModal()}
+        >
+          <div
+            className={styles.editModal}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Editar carpeta ${editingFolder.name}`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className={styles.modalHeader}>
+              <div>
+                <h2>Editar carpeta</h2>
+                <p>Actualizá el nombre para mantener tu videoteca ordenada.</p>
+              </div>
+
+              <button
+                type="button"
+                className={styles.modalCloseButton}
+                aria-label="Cerrar modal"
+                onClick={() => closeEditModal()}
+              >
+                <MaterialSymbol
+                  name="close"
+                  className={styles.modalCloseIcon}
+                  weight={500}
+                  opticalSize={22}
+                />
+              </button>
+            </header>
+
+            <div className={styles.modalBody}>
+              <label className={styles.modalField}>
+                <span>Nombre de la carpeta</span>
+                <input
+                  type="text"
+                  value={draftFolderName}
+                  onChange={(event) => setDraftFolderName(event.target.value)}
+                  placeholder="Ej: Movilidad avanzada"
+                />
+              </label>
+              {folderMutationError ? (
+                <p className={styles.modalInlineError}>{folderMutationError}</p>
+              ) : null}
+            </div>
+
+            <footer className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.modalCancelGhostButton}
+                onClick={() => closeCreateModal()}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                className={styles.modalConfirmButton}
+                onClick={handleConfirmEdit}
+                disabled={!normalizeFolderName(draftFolderName)}
+              >
+                <MaterialSymbol
+                  name="save"
+                  className={styles.confirmIcon}
+                  fill={1}
+                  weight={500}
+                  opticalSize={18}
+                />
+                Guardar cambios
+              </button>
+            </footer>
+          </div>
+        </div>
+      ) : null}
+
+      {isCreateModalOpen ? (
+        <div
+          className={styles.modalOverlay}
+          role="presentation"
+          onClick={() => closeCreateModal()}
+        >
+          <div
+            className={styles.editModal}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Crear carpeta"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className={styles.modalHeader}>
+              <div>
+                <h2>Crear carpeta</h2>
+                <p>Prepará una nueva carpeta para organizar contenido de la videoteca.</p>
+              </div>
+
+              <button
+                type="button"
+                className={styles.modalCloseButton}
+                aria-label="Cerrar modal"
+                onClick={() => closeCreateModal()}
+              >
+                <MaterialSymbol
+                  name="close"
+                  className={styles.modalCloseIcon}
+                  weight={500}
+                  opticalSize={22}
+                />
+              </button>
+            </header>
+
+            <div className={styles.modalBody}>
+              <label className={styles.modalField}>
+                <span>Nombre de la carpeta</span>
+                <input
+                  type="text"
+                  value={newFolderName}
+                  onChange={(event) => setNewFolderName(event.target.value)}
+                  placeholder="Ej: Movilidad avanzada"
+                  autoFocus
+                />
+              </label>
+              {folderMutationError ? (
+                <p className={styles.modalInlineError}>{folderMutationError}</p>
+              ) : null}
+            </div>
+
+            <footer className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.modalCancelGhostButton}
+                onClick={() => closeCreateModal()}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                className={styles.modalConfirmButton}
+                onClick={handleConfirmCreate}
+                disabled={!normalizeFolderName(newFolderName)}
+              >
+                <MaterialSymbol
+                  name="create_new_folder"
+                  className={styles.confirmIcon}
+                  fill={1}
+                  weight={500}
+                  opticalSize={18}
+                />
+                Crear carpeta
+              </button>
+            </footer>
+          </div>
+        </div>
+      ) : null}
+
+      {activeDeleteFolder ? (
+      <DestructiveConfirmationModal
+          ariaLabel={`Eliminar carpeta ${activeDeleteFolder.name}`}
+          title="¿Eliminar carpeta?"
+          description="Esta acción elimina la carpeta de esta videoteca y no se puede deshacer desde esta vista."
+          headerAlignment="center"
+          density="compact"
+          confirmLabel="Eliminar carpeta"
+          errorMessage={folderMutationError}
+          isPending={false}
+          pendingConfirmLabel="Eliminando..."
+          onConfirm={handleConfirmDelete}
+          onCancel={closeDeleteModal}
+          targetCard={
+            <>
+              <div>
+                <small>Videoteca</small>
+                <strong>{activeDeleteFolder.name}</strong>
+              </div>
+
+              <em>
+                {activeDeleteFolder.fileCount} archivos
+              </em>
+            </>
+          }
+        />
+      ) : null}
+    </section>
+  );
+}
