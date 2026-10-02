@@ -1,7 +1,8 @@
 type UserRow = {
+  kind: "user" | "invitation";
   id: string;
   version: number;
-  accountStatus: ApiUser["status"];
+  accountStatus: ApiUser["status"] | null;
   photo: string;
   firstName: string;
   lastName: string;
@@ -11,7 +12,7 @@ type UserRow = {
   phone: string;
   roleLabel: string;
   role: "student" | "trainer" | "admin";
-  status: "Activo" | "Inactivo";
+  status: "Activo" | "Inactivo" | "Enviada" | "Vencida";
   studentStatus: "ACTIVE" | "INACTIVE" | "BLOCKED" | null;
   studentStatusLabel: string;
   trainerId: string | null;
@@ -99,10 +100,13 @@ export type ApiInvitation = {
   email: string;
   firstName: string;
   lastName: string;
-  trainerId: string;
+  role: "ADMIN" | "TRAINER" | "STUDENT";
+  trainerId: string | null;
   status: "PENDING" | "SENT" | "CONSUMED" | "EXPIRED" | "REVOKED";
+  deliveryStatus: "PENDING" | "SENT" | "FAILED" | null;
   expiresAt: string | null;
   createdAt: string;
+  version: number;
 };
 
 export type InvitationsApiResponse =
@@ -175,6 +179,7 @@ export const mapApiUserToRow = (user: ApiUser): UserRow => {
   const normalizedPhotoUrl = typeof user.photoUrl === "string" && user.photoUrl.trim().length > 0 ? user.photoUrl : null;
 
   return {
+    kind: "user",
     id: user.id,
     version: user.version,
     accountStatus: user.status,
@@ -199,6 +204,78 @@ export const mapApiUserToRow = (user: ApiUser): UserRow => {
     createdAt: formatCreatedAt(user.createdAt),
     updatedAt: formatCreatedAt(user.updatedAt),
   };
+};
+
+const invitationTimestamp = (invitation: ApiInvitation) => {
+  const timestamp = new Date(invitation.createdAt).getTime();
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+};
+
+export const mergeUsersAndInvitations = (
+  users: UserRow[],
+  invitations: ApiInvitation[],
+  now = new Date(),
+): UserRow[] => {
+  const userEmails = new Set(users.map((user) => user.email.trim().toLowerCase()));
+  const latestInvitations = new Map<string, ApiInvitation>();
+
+  for (const invitation of invitations) {
+    const email = invitation.email.trim().toLowerCase();
+    const current = latestInvitations.get(email);
+
+    if (!current || invitationTimestamp(invitation) > invitationTimestamp(current)) {
+      latestInvitations.set(email, invitation);
+    }
+  }
+
+  const invitationRows = Array.from(latestInvitations.values()).flatMap((invitation) => {
+    const email = invitation.email.trim().toLowerCase();
+    if (
+      userEmails.has(email) ||
+      invitation.deliveryStatus !== "SENT" ||
+      invitation.status === "CONSUMED" ||
+      invitation.status === "REVOKED"
+    ) {
+      return [];
+    }
+
+    const expiresAt = invitation.expiresAt ? new Date(invitation.expiresAt) : null;
+    const isExpired = invitation.status === "EXPIRED" ||
+      !expiresAt ||
+      Number.isNaN(expiresAt.getTime()) ||
+      expiresAt.getTime() <= now.getTime();
+    const initials = getInitials(invitation.firstName, invitation.lastName);
+    const fullName = `${invitation.firstName} ${invitation.lastName}`.trim();
+
+    return [{
+      kind: "invitation" as const,
+      id: invitation.id,
+      version: invitation.version,
+      accountStatus: null,
+      photo: toAvatarDataUri(initials),
+      firstName: invitation.firstName,
+      lastName: invitation.lastName,
+      name: fullName,
+      fullName,
+      email: invitation.email,
+      phone: "",
+      roleLabel: mapRoleLabel(invitation.role),
+      role: mapRole(invitation.role),
+      status: isExpired ? "Vencida" as const : "Enviada" as const,
+      studentStatus: null,
+      studentStatusLabel: "",
+      trainerId: invitation.trainerId,
+      birthDate: "",
+      gender: "",
+      heightCm: "",
+      weightKg: "",
+      initials,
+      createdAt: formatCreatedAt(invitation.createdAt),
+      updatedAt: "",
+    }];
+  });
+
+  return [...users, ...invitationRows];
 };
 
 export const fetchUsersRuntime = async (fetchImpl: typeof fetch): Promise<UserRow[]> => {
@@ -262,6 +339,46 @@ export const fetchInvitationsRuntime = async (fetchImpl: typeof fetch): Promise<
 
   return payload.data;
 };
+
+const runInvitationAction = async (
+  fetchImpl: typeof fetch,
+  invitationId: string,
+  expectedVersion: number,
+  action: "resend" | "revoke",
+): Promise<void> => {
+  const response = await fetchImpl(
+    `/api/invitations/${encodeURIComponent(invitationId)}/${action}`,
+    {
+      method: action === "resend" ? "POST" : "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(
+        action === "resend"
+          ? { expectedVersion }
+          : { expectedVersion, reason: "Revocada desde la gestión de usuarios" },
+      ),
+    },
+  );
+  const payload = await response.json().catch(() => null);
+
+  if (!response.ok || payload?.success !== true) {
+    const fallback = action === "resend"
+      ? "No se pudo enviar la invitación."
+      : "No se pudo revocar la invitación.";
+    throw new Error(typeof payload?.error?.message === "string" ? payload.error.message : fallback);
+  }
+};
+
+export const resendInvitationRuntime = (
+  fetchImpl: typeof fetch,
+  invitationId: string,
+  expectedVersion: number,
+) => runInvitationAction(fetchImpl, invitationId, expectedVersion, "resend");
+
+export const revokeInvitationRuntime = (
+  fetchImpl: typeof fetch,
+  invitationId: string,
+  expectedVersion: number,
+) => runInvitationAction(fetchImpl, invitationId, expectedVersion, "revoke");
 
 export const createInvitationRuntime = async (
   fetchImpl: typeof fetch,

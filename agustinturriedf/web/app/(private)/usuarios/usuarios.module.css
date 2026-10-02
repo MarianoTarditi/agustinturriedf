@@ -495,6 +495,15 @@
   background: rgba(207, 194, 213, 0.35);
 }
 
+.invitationSentDot {
+  background: #7dd3fc;
+  box-shadow: 0 0 8px rgba(125, 211, 252, 0.7);
+}
+
+.invitationExpiredDot {
+  background: #fdb969;
+}
+
 .statusActive {
   font-weight: 500;
   font-size: 0.875rem;
@@ -503,6 +512,20 @@
 .statusInactive {
   color: rgba(207, 194, 213, 0.55);
   font-size: 0.875rem;
+}
+
+.invitationSent,
+.invitationExpired {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.invitationSent {
+  color: #bae6fd;
+}
+
+.invitationExpired {
+  color: #fdb969;
 }
 
 .moreButton {
@@ -545,6 +568,32 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
+}
+
+.invitationActionButton {
+  border: 1px solid rgba(222, 183, 255, 0.28);
+  border-radius: 0.4rem;
+  padding: 0.42rem 0.72rem;
+  background: rgba(123, 44, 191, 0.14);
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.invitationActionButton:hover:not(:disabled) {
+  background: rgba(123, 44, 191, 0.24);
+}
+
+.invitationActionButton:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.revokeInvitationButton {
+  border-color: rgba(255, 180, 171, 0.28);
+  background: rgba(147, 0, 10, 0.12);
+  color: #ffb4ab;
 }
 
 .deleteActionButton {
@@ -659,45 +708,6 @@
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(6px);
 }
-
-.invitationDialogOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 120;
-  display: grid;
-  place-items: center;
-  padding: 1rem;
-  background: rgba(0, 0, 0, 0.8);
-}
-
-.invitationDialog {
-  width: min(100%, 32rem);
-  display: grid;
-  gap: 1rem;
-  padding: 2rem;
-  border: 1px solid rgba(123, 44, 191, 0.35);
-  border-radius: 0.7rem;
-  background: var(--surface);
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.62);
-}
-
-.invitationDialog h2,
-.invitationDialog p { margin: 0; }
-
-.invitationDialogActions,
-.invitationActions { display: flex; gap: 0.5rem; }
-
-.invitationDialogActions button,
-.invitationActions button {
-  border: 1px solid rgba(76, 67, 83, 0.5);
-  border-radius: 0.4rem;
-  padding: 0.45rem 0.7rem;
-  background: transparent;
-  color: var(--on-surface);
-  cursor: pointer;
-}
-
-.invitationDialogActions button:last-child { background: var(--primary-container); }
 
 .createModal,
 .detailModal,

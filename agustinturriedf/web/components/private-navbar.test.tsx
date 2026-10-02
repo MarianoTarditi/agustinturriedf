@@ -29,19 +29,12 @@ describe("PrivateNavbar", () => {
     expect(screen.getByRole("link", { name: "Equipo" })).toHaveAttribute("href", "/usuarios/equipo");
     expect(screen.getByRole("link", { name: "Equipo" }).className).toContain("linkActive");
     expect(screen.getByRole("link", { name: "Usuarios" }).className).not.toContain("linkActive");
-    expect(screen.getByRole("link", { name: "Invitaciones" })).toHaveAttribute("href", "/usuarios/invitaciones");
+    expect(screen.queryByRole("link", { name: "Invitaciones" })).not.toBeInTheDocument();
 
     rerender(<PrivateNavbar currentUser={{ name: "Trainer", role: "TRAINER" } as any} />);
 
     expect(screen.queryByRole("link", { name: "Equipo" })).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Invitaciones" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Invitaciones" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Usuarios" })).toHaveAttribute("href", "/usuarios");
-  });
-
-  it("makes Invitations active without leaving Usuarios active", () => {
-    usePathnameMock.mockReturnValue("/usuarios/invitaciones");
-    render(<PrivateNavbar currentUser={{ name: "Trainer", role: "TRAINER" } as any} />);
-    expect(screen.getByRole("link", { name: "Invitaciones" }).className).toContain("linkActive");
-    expect(screen.getByRole("link", { name: "Usuarios" }).className).not.toContain("linkActive");
   });
 });

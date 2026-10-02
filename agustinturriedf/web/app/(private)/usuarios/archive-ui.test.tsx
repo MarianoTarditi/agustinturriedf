@@ -32,7 +32,14 @@ beforeEach(() => {
   vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
     if (init?.method === "PATCH") return archive(url, init);
     if (init?.method === "POST") return createInvitation();
-    return Response.json({ success: true, data: url === "/api/users" ? [student, trainer] : { defaultMonthlyAmountInCents: 1000 } });
+    return Response.json({
+      success: true,
+      data: url === "/api/users"
+        ? [student, trainer]
+        : url === "/api/invitations"
+          ? []
+          : { defaultMonthlyAmountInCents: 1000 },
+    });
   }));
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });

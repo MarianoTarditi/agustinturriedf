@@ -2,7 +2,14 @@ import { describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import { archiveUserRuntime, createInvitationRuntime, fetchUsersRuntime } from "@/app/(private)/usuarios/runtime";
+import {
+  archiveUserRuntime,
+  createInvitationRuntime,
+  fetchUsersRuntime,
+  mergeUsersAndInvitations,
+  resendInvitationRuntime,
+  revokeInvitationRuntime,
+} from "@/app/(private)/usuarios/runtime";
 
 describe("usuarios runtime", () => {
   it("archives with the current version and trimmed reason", async () => {
@@ -110,6 +117,55 @@ describe("usuarios runtime", () => {
     });
 
     await expect(fetchUsersRuntime(fetchMock as unknown as typeof fetch)).rejects.toThrow("Cuenta bloqueada");
+  });
+
+  it("adds only the newest delivered invitation per unregistered email", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(Response.json({ success: true, data: [{
+      id: "u-1", status: "ACTIVE", version: 1, firstName: "Ana", lastName: "User",
+      email: "registered@example.com", role: "STUDENT", createdAt: "2026-01-01", updatedAt: "2026-01-01",
+      studentProfile: { trainerId: "trainer-1", status: "ACTIVE" },
+    }] }));
+    const userRows = await fetchUsersRuntime(fetchMock);
+    const base = {
+      email: "invited@example.com", firstName: "Inés", lastName: "Invitada", role: "STUDENT" as const,
+      trainerId: "trainer-1", deliveryStatus: "SENT" as const, expiresAt: "2026-10-05T00:00:00.000Z",
+      version: 1,
+    };
+
+    const rows = mergeUsersAndInvitations(userRows, [
+      { ...base, id: "old", status: "PENDING", createdAt: "2026-09-01T00:00:00.000Z" },
+      { ...base, id: "new", status: "PENDING", createdAt: "2026-09-02T00:00:00.000Z", version: 2 },
+      { ...base, id: "registered", email: "REGISTERED@example.com", status: "PENDING", createdAt: "2026-09-03T00:00:00.000Z" },
+      { ...base, id: "pending", email: "pending@example.com", status: "PENDING", deliveryStatus: "PENDING", createdAt: "2026-09-04T00:00:00.000Z" },
+      { ...base, id: "failed", email: "failed@example.com", status: "PENDING", deliveryStatus: "FAILED", createdAt: "2026-09-04T00:00:00.000Z" },
+    ], new Date("2026-10-01T00:00:00.000Z"));
+
+    expect(rows).toHaveLength(2);
+    expect(rows[1]).toMatchObject({ kind: "invitation", id: "new", status: "Enviada", name: "Inés Invitada" });
+  });
+
+  it("derives expired invitation rows from expiresAt", () => {
+    const [row] = mergeUsersAndInvitations([], [{
+      id: "inv-expired", email: "expired@example.com", firstName: "Eva", lastName: "Vencida",
+      role: "STUDENT", trainerId: "trainer-1", status: "PENDING", deliveryStatus: "SENT",
+      expiresAt: "2026-09-30T00:00:00.000Z", createdAt: "2026-09-01T00:00:00.000Z", version: 4,
+    }], new Date("2026-10-01T00:00:00.000Z"));
+
+    expect(row).toMatchObject({ id: "inv-expired", status: "Vencida", version: 4 });
+  });
+
+  it.each([
+    ["resend", resendInvitationRuntime, "POST", { expectedVersion: 3 }],
+    ["revoke", revokeInvitationRuntime, "DELETE", { expectedVersion: 3, reason: "Revocada desde la gestión de usuarios" }],
+  ] as const)("runs the %s invitation action", async (action, runtime, method, body) => {
+    const fetchMock = vi.fn().mockResolvedValue(Response.json({ success: true, data: { id: "inv-1" } }));
+
+    await runtime(fetchMock, "inv/1", 3);
+
+    expect(fetchMock).toHaveBeenCalledWith(`/api/invitations/inv%2F1/${action}`, expect.objectContaining({
+      method,
+      body: JSON.stringify(body),
+    }));
   });
 
   it("creates invitation through /api/invitations endpoint", async () => {

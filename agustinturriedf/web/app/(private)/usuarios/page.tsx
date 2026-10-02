@@ -11,12 +11,16 @@ import { useToast } from "@/components/toast-provider";
 import {
   createInvitationRuntime,
   archiveUserRuntime,
+  fetchInvitationsRuntime,
   fetchPaymentConfigRuntime,
   fetchUsersRuntime,
+  mergeUsersAndInvitations,
+  resendInvitationRuntime,
+  revokeInvitationRuntime,
   type UserRow,
 } from "@/app/(private)/usuarios/runtime";
 
-type ModalType = "create" | "detail" | "edit" | "delete";
+type ModalType = "create" | "detail" | "edit" | "delete" | "revokeInvitation";
 
 type SortKey = "name" | "email" | "role" | "status";
 type SortDirection = "ascending" | "descending";
@@ -309,6 +313,8 @@ export default function UsuariosPage() {
   const [isCreatingStudent, setIsCreatingStudent] = useState(false);
   const [isDeletingUser, setIsDeletingUser] = useState(false);
   const [deleteUserError, setDeleteUserError] = useState<string | null>(null);
+  const [invitationActionId, setInvitationActionId] = useState<string | null>(null);
+  const [invitationActionError, setInvitationActionError] = useState<string | null>(null);
   const archivePending = useRef(false);
   const [defaultMonthlyAmountInCents, setDefaultMonthlyAmountInCents] = useState<number | null>(null);
   const [paymentConfigError, setPaymentConfigError] = useState<string | null>(null);
@@ -321,14 +327,15 @@ export default function UsuariosPage() {
   };
 
   const closeModal = () => {
-    if (isCreatingStudent || isDeletingUser) return;
+    if (isCreatingStudent || isDeletingUser || invitationActionId) return;
 
     if (activeModal === "create") {
       resetCreateStudentModalState();
     }
 
-    if (activeModal === "delete") {
+    if (activeModal === "delete" || activeModal === "revokeInvitation") {
       setDeleteUserError(null);
+      setInvitationActionError(null);
       setActiveUser(null);
     }
 
@@ -373,6 +380,42 @@ export default function UsuariosPage() {
     }
   };
 
+  const handleResendInvitation = async (invitation: UserRow) => {
+    try {
+      setInvitationActionId(invitation.id);
+      await resendInvitationRuntime(fetch, invitation.id, invitation.version);
+      setUsers((current) => current.filter((row) => row.id !== invitation.id));
+      showToast("success", "Invitación enviada nuevamente.");
+    } catch (error) {
+      showToast(
+        "error",
+        error instanceof Error ? error.message : "No se pudo enviar la invitación.",
+      );
+    } finally {
+      setInvitationActionId(null);
+    }
+  };
+
+  const handleRevokeInvitationConfirm = async () => {
+    if (!activeUser || activeUser.kind !== "invitation") return;
+
+    try {
+      setInvitationActionId(activeUser.id);
+      setInvitationActionError(null);
+      await revokeInvitationRuntime(fetch, activeUser.id, activeUser.version);
+      setUsers((current) => current.filter((row) => row.id !== activeUser.id));
+      setActiveUser(null);
+      setActiveModal(null);
+      showToast("success", "Invitación revocada.");
+    } catch (error) {
+      setInvitationActionError(
+        error instanceof Error ? error.message : "No se pudo revocar la invitación.",
+      );
+    } finally {
+      setInvitationActionId(null);
+    }
+  };
+
   const handleCreateStudentFieldChange = (
     field: CreateStudentFieldKey,
     value: string,
@@ -412,7 +455,9 @@ export default function UsuariosPage() {
       return;
     }
 
-    const trainerCandidate = users.find((user) => user.role === "trainer");
+    const trainerCandidate = users.find(
+      (user) => user.kind === "user" && user.role === "trainer" && user.status === "Activo",
+    );
 
     if (!trainerCandidate) {
       setCreateStudentSubmitError(
@@ -474,15 +519,20 @@ export default function UsuariosPage() {
         setUsersError(null);
         setPaymentConfigError(null);
 
-        const [usersResult, paymentConfigResult] = await Promise.allSettled([
+        const [usersResult, invitationsResult, paymentConfigResult] = await Promise.allSettled([
           fetchUsersRuntime(fetch),
+          fetchInvitationsRuntime(fetch),
           fetchPaymentConfigRuntime(fetch),
         ]);
 
         if (cancelled) return;
 
         if (usersResult.status === "fulfilled") {
-          setUsers(usersResult.value);
+          setUsers(
+            invitationsResult.status === "fulfilled"
+              ? mergeUsersAndInvitations(usersResult.value, invitationsResult.value)
+              : usersResult.value,
+          );
         } else {
           setUsersError(
             usersResult.reason instanceof Error
@@ -523,15 +573,15 @@ export default function UsuariosPage() {
   }, []);
 
   const activeStudents = users.filter(
-    (user) => user.role === "student" && user.status === "Activo",
+    (user) => user.kind === "user" && user.role === "student" && user.status === "Activo",
   ).length;
   const inactiveStudents = users.filter(
-    (user) => user.role === "student" && user.status !== "Activo",
+    (user) => user.kind === "user" && user.role === "student" && user.status !== "Activo",
   ).length;
   const managementUsers = users.filter(
-    (user) => user.role === "admin" || user.role === "trainer",
+    (user) => user.kind === "user" && (user.role === "admin" || user.role === "trainer"),
   ).length;
-  const totalUsers = users.length;
+  const totalUsers = users.filter((user) => user.kind === "user").length;
   const filteredUsers = useMemo(() => {
     const normalizedQuery = normalizeSearchValue(searchQuery.trim());
 
@@ -603,7 +653,7 @@ export default function UsuariosPage() {
 
     window.addEventListener("keydown", onEsc);
     return () => window.removeEventListener("keydown", onEsc);
-  }, [activeModal, isCreatingStudent, isDeletingUser]);
+  }, [activeModal, isCreatingStudent, isDeletingUser, invitationActionId]);
 
   return (
     <section className={styles.page}>
@@ -675,7 +725,7 @@ export default function UsuariosPage() {
           <div className={styles.tableToolbar}>
             <div className={styles.tableToolbarInfo}>
               <div className={styles.tableTitleRow}>
-                <h3>{totalUsers} usuarios totales</h3>
+                <h3>{users.length} usuarios totales</h3>
               </div>
 
               <label className={styles.searchField}>
@@ -785,7 +835,7 @@ export default function UsuariosPage() {
                     <tr key={user.id}>
                       <td>
                         <div
-                          className={`${styles.avatarWrap} ${user.status === "Inactivo" ? styles.avatarInactive : ""}`}
+                          className={`${styles.avatarWrap} ${user.status !== "Activo" ? styles.avatarInactive : ""}`}
                         >
                           <img
                             src={user.photo}
@@ -796,14 +846,14 @@ export default function UsuariosPage() {
                       </td>
                       <td>
                         <span
-                          className={`${styles.userName} ${user.status === "Inactivo" ? styles.userNameInactive : ""}`}
+                          className={`${styles.userName} ${user.status !== "Activo" ? styles.userNameInactive : ""}`}
                         >
                           {user.name}
                         </span>
                       </td>
                       <td>
                         <span
-                          className={`${styles.userEmail} ${user.status === "Inactivo" ? styles.userEmailInactive : ""}`}
+                          className={`${styles.userEmail} ${user.status !== "Activo" ? styles.userEmailInactive : ""}`}
                         >
                           {user.email}
                         </span>
@@ -818,13 +868,25 @@ export default function UsuariosPage() {
                       <td>
                         <span className={styles.statusWrap}>
                           <span
-                            className={`${styles.statusDot} ${user.status === "Activo" ? styles.active : styles.inactive}`}
+                            className={`${styles.statusDot} ${
+                              user.status === "Activo"
+                                ? styles.active
+                                : user.status === "Enviada"
+                                  ? styles.invitationSentDot
+                                  : user.status === "Vencida"
+                                    ? styles.invitationExpiredDot
+                                    : styles.inactive
+                            }`}
                           />
                           <span
                             className={
                               user.status === "Activo"
                                 ? styles.statusActive
-                                : styles.statusInactive
+                                : user.status === "Enviada"
+                                  ? styles.invitationSent
+                                  : user.status === "Vencida"
+                                    ? styles.invitationExpired
+                                    : styles.statusInactive
                             }
                           >
                             {user.status}
@@ -833,30 +895,58 @@ export default function UsuariosPage() {
                       </td>
                       <td className={styles.alignRight}>
                         <div className={styles.rowActionsInline}>
-                          <button
-                            className={styles.moreButton}
-                            type="button"
-                            aria-label={`Ver detalle de ${user.name}`}
-                            onClick={() => openUserModal("detail", user)}
-                          >
-                            <MaterialSymbol name="visibility" className={styles.rowActionIcon} weight={500} opticalSize={20} />
-                          </button>
-                          <button
-                            className={styles.moreButton}
-                            type="button"
-                            aria-label={`Editar usuario ${user.name}`}
-                            onClick={() => openUserModal("edit", user)}
-                          >
-                            <MaterialSymbol name="edit_note" className={styles.rowActionIcon} weight={500} opticalSize={20} />
-                          </button>
-                          <button
-                            className={`${styles.moreButton} ${styles.deleteActionButton}`}
-                            type="button"
-                            aria-label={`Archivar alumno ${user.name}`}
-                            onClick={() => openUserModal("delete", user)}
-                          >
-                            <MaterialSymbol name="archive" className={styles.rowActionIcon} weight={500} opticalSize={20} />
-                          </button>
+                          {user.kind === "invitation" ? (
+                            user.status === "Enviada" ? (
+                              <button
+                                className={`${styles.invitationActionButton} ${styles.revokeInvitationButton}`}
+                                type="button"
+                                disabled={invitationActionId === user.id}
+                                onClick={() => {
+                                  setInvitationActionError(null);
+                                  setActiveUser(user);
+                                  setActiveModal("revokeInvitation");
+                                }}
+                              >
+                                Revocar
+                              </button>
+                            ) : (
+                              <button
+                                className={styles.invitationActionButton}
+                                type="button"
+                                disabled={invitationActionId === user.id}
+                                onClick={() => void handleResendInvitation(user)}
+                              >
+                                {invitationActionId === user.id ? "Enviando..." : "Enviar"}
+                              </button>
+                            )
+                          ) : (
+                            <>
+                              <button
+                                className={styles.moreButton}
+                                type="button"
+                                aria-label={`Ver detalle de ${user.name}`}
+                                onClick={() => openUserModal("detail", user)}
+                              >
+                                <MaterialSymbol name="visibility" className={styles.rowActionIcon} weight={500} opticalSize={20} />
+                              </button>
+                              <button
+                                className={styles.moreButton}
+                                type="button"
+                                aria-label={`Editar usuario ${user.name}`}
+                                onClick={() => openUserModal("edit", user)}
+                              >
+                                <MaterialSymbol name="edit_note" className={styles.rowActionIcon} weight={500} opticalSize={20} />
+                              </button>
+                              <button
+                                className={`${styles.moreButton} ${styles.deleteActionButton}`}
+                                type="button"
+                                aria-label={`Archivar alumno ${user.name}`}
+                                onClick={() => openUserModal("delete", user)}
+                              >
+                                <MaterialSymbol name="archive" className={styles.rowActionIcon} weight={500} opticalSize={20} />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -902,7 +992,7 @@ export default function UsuariosPage() {
         </section>
       </div>
 
-      {activeModal && activeModal !== "delete" ? (
+      {activeModal && activeModal !== "delete" && activeModal !== "revokeInvitation" ? (
         <div
           className={styles.modalOverlay}
           role="presentation"
@@ -1616,6 +1706,28 @@ export default function UsuariosPage() {
                 <span className={styles.archiveStatus}>{activeUser.status}</span>
               </div>
             </>
+          }
+        />
+      ) : null}
+
+      {activeModal === "revokeInvitation" && activeUser?.kind === "invitation" ? (
+        <DestructiveConfirmationModal
+          ariaLabel={`Revocar invitación de ${activeUser.name}`}
+          title="¿Revocar invitación?"
+          description="El enlace de activación dejará de ser válido y no podrá utilizarse para crear la cuenta."
+          density="compact"
+          confirmLabel="Revocar invitación"
+          pendingConfirmLabel="Revocando..."
+          isPending={invitationActionId === activeUser.id}
+          errorMessage={invitationActionError}
+          onConfirm={handleRevokeInvitationConfirm}
+          onCancel={closeModal}
+          targetCard={
+            <div className={styles.archiveIdentity}>
+              <small>Invitación enviada</small>
+              <strong>{activeUser.name}</strong>
+              <span className={styles.archiveEmail}>{activeUser.email}</span>
+            </div>
           }
         />
       ) : null}

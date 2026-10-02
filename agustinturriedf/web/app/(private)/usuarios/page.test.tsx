@@ -1,5 +1,5 @@
 import React from "react";
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { ToastProvider } from "@/components/toast-provider";
 import UsuariosPage from "./page";
@@ -80,7 +80,11 @@ beforeEach(() => {
   vi.stubGlobal("React", React);
   vi.stubGlobal("fetch", vi.fn(async (url: string) => Response.json({
     success: true,
-    data: url === "/api/users" ? users : { defaultMonthlyAmountInCents: 1000 },
+    data: url === "/api/users"
+      ? users
+      : url === "/api/invitations"
+        ? []
+        : { defaultMonthlyAmountInCents: 1000 },
   })));
 });
 
@@ -216,4 +220,61 @@ it("shows a readable user profile with explicit empty values", async () => {
   expect(within(dialog).getAllByText("Sin registrar")).toHaveLength(5);
   expect(within(dialog).queryByText("cm")).not.toBeInTheDocument();
   expect(within(dialog).queryByText("kg")).not.toBeInTheDocument();
+});
+
+it("shows invitation states in Estado and runs only their matching actions", async () => {
+  const invitations = [
+    {
+      id: "inv-sent", email: "sent@example.com", firstName: "Sara", lastName: "Enviada",
+      role: "STUDENT", trainerId: "user-3", status: "PENDING", deliveryStatus: "SENT",
+      expiresAt: "2099-10-03T00:00:00.000Z", createdAt: "2026-10-01T00:00:00.000Z", version: 2,
+    },
+    {
+      id: "inv-expired", email: "expired@example.com", firstName: "Eva", lastName: "Vencida",
+      role: "STUDENT", trainerId: "user-3", status: "PENDING", deliveryStatus: "SENT",
+      expiresAt: "2020-10-01T00:00:00.000Z", createdAt: "2026-10-01T00:00:00.000Z", version: 3,
+    },
+    {
+      id: "inv-hidden", email: "pending@example.com", firstName: "Pia", lastName: "Pendiente",
+      role: "STUDENT", trainerId: "user-3", status: "PENDING", deliveryStatus: "PENDING",
+      expiresAt: "2099-10-03T00:00:00.000Z", createdAt: "2026-10-01T00:00:00.000Z", version: 1,
+    },
+  ];
+  const fetchMock = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+    const url = String(input);
+    if (url === "/api/users") return Response.json({ success: true, data: [users[2]] });
+    if (url === "/api/invitations") return Response.json({ success: true, data: invitations });
+    if (url === "/api/payments/config") return Response.json({ success: true, data: { defaultMonthlyAmountInCents: 1000 } });
+    if (init?.method === "POST" || init?.method === "DELETE") return Response.json({ success: true, data: { id: "invitation" } });
+    return Response.json({ success: false, error: { message: "Unexpected request" } }, { status: 500 });
+  });
+  vi.stubGlobal("fetch", fetchMock);
+
+  render(<ToastProvider><UsuariosPage /></ToastProvider>);
+  await screen.findByText("3 usuarios totales");
+
+  const sentRow = screen.getByText("sent@example.com").closest("tr")!;
+  const expiredRow = screen.getByText("expired@example.com").closest("tr")!;
+  expect(within(sentRow).getByText("Enviada")).toBeInTheDocument();
+  expect(within(sentRow).getByRole("button", { name: "Revocar" })).toBeInTheDocument();
+  expect(within(expiredRow).getByText("Vencida")).toBeInTheDocument();
+  expect(within(expiredRow).getByRole("button", { name: "Enviar" })).toBeInTheDocument();
+  expect(screen.queryByText("pending@example.com")).not.toBeInTheDocument();
+  expect(within(sentRow).queryByRole("button", { name: /Ver detalle/ })).not.toBeInTheDocument();
+
+  fireEvent.click(within(expiredRow).getByRole("button", { name: "Enviar" }));
+  await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+    "/api/invitations/inv-expired/resend",
+    expect.objectContaining({ method: "POST", body: JSON.stringify({ expectedVersion: 3 }) }),
+  ));
+  expect(screen.queryByText("expired@example.com")).not.toBeInTheDocument();
+
+  fireEvent.click(within(sentRow).getByRole("button", { name: "Revocar" }));
+  const dialog = screen.getByRole("dialog", { name: "Revocar invitación de Sara Enviada" });
+  fireEvent.click(within(dialog).getByRole("button", { name: "Revocar invitación" }));
+  await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+    "/api/invitations/inv-sent/revoke",
+    expect.objectContaining({ method: "DELETE" }),
+  ));
+  expect(screen.queryByText("sent@example.com")).not.toBeInTheDocument();
 });

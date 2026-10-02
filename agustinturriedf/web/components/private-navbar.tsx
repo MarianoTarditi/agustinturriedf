@@ -43,12 +43,6 @@ const navItems: NavItem[] = [
     roles: ["ADMIN"],
   },
   {
-    href: "/usuarios/invitaciones",
-    label: "Invitaciones",
-    icon: "mail",
-    roles: ["ADMIN", "TRAINER"],
-  },
-  {
     href: "/pagos",
     label: "Pagos",
     icon: "payments",
