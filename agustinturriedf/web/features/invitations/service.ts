@@ -62,6 +62,12 @@ const requireEligibleInvitation = (invitation: any, now: Date) => {
   }
 };
 
+const requireResendableInvitation = (invitation: any) => {
+  if (!invitation || !["PENDING", "SENT", "EXPIRED"].includes(invitation.status)) {
+    throw new ApiError("Invitation cannot be changed", 409, "CONFLICT");
+  }
+};
+
 export class InvitationService {
   async create(actor: AuthenticatedUser, input: Omit<CreateInvitationInput, "role"> & { role?: CreateInvitationInput["role"] }) {
     requireRole(actor, ["ADMIN", "TRAINER"], "Solo ADMIN y TRAINER pueden crear invitaciones");
@@ -115,7 +121,7 @@ export class InvitationService {
     if (!invitation) throw new ApiError("Invitation not found", 404, "NOT_FOUND");
     ensureActorCanManage(actor, invitation);
     const now = new Date();
-    requireEligibleInvitation(invitation, now);
+    requireResendableInvitation(invitation);
 
     const rawToken = generateToken();
     const expiresAt = addHours(now, TOKEN_EXPIRATION_HOURS);
@@ -128,7 +134,7 @@ export class InvitationService {
       await auditRepository.append(buildAuditEvent({ eventType: "INVITATION_RESENT", invitationId: invitation.id, actor: { type: "USER", userId: actor.id }, summary: { deliveryStatus: "PENDING" } }), transaction as any);
       await outboxRepository.enqueue({ messageType: "EMAIL", resourceType: "INVITATION", resourceId: invitation.id, idempotencyKey: `invitation:${invitation.id}:resend:${invitation.version + 1}`, payloadEncrypted: encryptPayload({ to: invitation.email, activationUrl: buildActivationUrl(rawToken), expiresAt: expiresAt.toISOString() }, outboxKey()) }, transaction as any);
     });
-    return this.toSafeDTO({ ...invitation, expiresAt, deliveryStatus: "PENDING", version: invitation.version + 1 });
+    return this.toSafeDTO({ ...invitation, status: "PENDING", expiresAt, deliveryStatus: "PENDING", version: invitation.version + 1 });
   }
 
   async requestReplacement(rawEmail: string) {
@@ -305,7 +311,7 @@ export class InvitationService {
   }
 
   private toSafeDTO(invitation: any) {
-    return { id: invitation.id, email: invitation.email, role: invitation.role, trainerId: invitation.trainerId, status: invitation.status, deliveryStatus: invitation.deliveryStatus, expiresAt: invitation.expiresAt, createdAt: invitation.createdAt, version: invitation.version };
+    return { id: invitation.id, email: invitation.email, firstName: invitation.firstName, lastName: invitation.lastName, role: invitation.role, trainerId: invitation.trainerId, status: invitation.status, deliveryStatus: invitation.deliveryStatus, expiresAt: invitation.expiresAt, createdAt: invitation.createdAt, version: invitation.version };
   }
 }
 

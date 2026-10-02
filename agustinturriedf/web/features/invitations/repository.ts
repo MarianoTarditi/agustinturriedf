@@ -143,7 +143,7 @@ export class InvitationRepository {
     return prismaInvitations.invitation.findMany({
       where: { ...(input.trainerId ? { trainerId: input.trainerId } : {}), ...(input.role ? { role: input.role } : {}), ...(input.status ? { status: input.status } : {}) },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-      select: { id: true, email: true, role: true, trainerId: true, status: true, deliveryStatus: true, expiresAt: true, createdAt: true, version: true },
+      select: { id: true, email: true, firstName: true, lastName: true, role: true, trainerId: true, status: true, deliveryStatus: true, expiresAt: true, createdAt: true, version: true },
     });
   }
 
@@ -160,7 +160,7 @@ export class InvitationRepository {
       },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: query.limit + 1,
-      select: { id: true, email: true, role: true, trainerId: true, status: true, deliveryStatus: true, expiresAt: true, createdAt: true, version: true },
+      select: { id: true, email: true, firstName: true, lastName: true, role: true, trainerId: true, status: true, deliveryStatus: true, expiresAt: true, createdAt: true, version: true },
     });
     const items = invitations.slice(0, query.limit);
     const last = items.at(-1);
@@ -172,11 +172,11 @@ export class InvitationRepository {
       where: {
         id: input.invitationId,
         version: input.expectedVersion,
-        status: { in: ["PENDING", "SENT"] },
+        status: { in: ["PENDING", "SENT", "EXPIRED"] },
         tokenHash: { not: null },
-        expiresAt: { gt: input.now },
       },
       data: {
+        status: "PENDING",
         tokenHash: input.tokenHash,
         expiresAt: input.expiresAt,
         deliveryStatus: input.deliveryStatus,

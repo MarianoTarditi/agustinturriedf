@@ -99,6 +99,37 @@ describe("invitationRepository", () => {
     );
   });
 
+  it("atomically renews expired invitations without requiring an unexpired timestamp", async () => {
+    const updateMany = vi.fn().mockResolvedValue({ count: 1 });
+    const now = new Date("2026-10-01T00:00:00.000Z");
+    const expiresAt = new Date("2026-10-03T00:00:00.000Z");
+
+    await invitationRepository.resendIfCurrent({
+      invitationId: "inv-expired",
+      expectedVersion: 4,
+      now,
+      tokenHash: "new-hash",
+      expiresAt,
+      deliveryStatus: "PENDING",
+    }, { invitation: { updateMany } } as any);
+
+    expect(updateMany).toHaveBeenCalledWith({
+      where: {
+        id: "inv-expired",
+        version: 4,
+        status: { in: ["PENDING", "SENT", "EXPIRED"] },
+        tokenHash: { not: null },
+      },
+      data: {
+        status: "PENDING",
+        tokenHash: "new-hash",
+        expiresAt,
+        deliveryStatus: "PENDING",
+        version: { increment: 1 },
+      },
+    });
+  });
+
   it("uses a signed cursor bound to queue scope and stable descending ordering", async () => {
     process.env.NEXTAUTH_SECRET = "invitation-queue-test-secret";
     const invitation = { id: "inv-1", email: "ana@example.com", role: "STUDENT", trainerId: "trainer-1", status: "PENDING", deliveryStatus: "PENDING", expiresAt: new Date(), createdAt: new Date("2026-01-01T00:00:00.000Z"), version: 1 };

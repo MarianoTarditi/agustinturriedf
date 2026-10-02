@@ -310,6 +310,36 @@ describe("invitationService", () => {
     expect(result).not.toHaveProperty("tokenHash");
   });
 
+  it("renews an expired invitation before queueing its replacement email", async () => {
+    findByIdMock.mockResolvedValue({
+      id: "inv-expired",
+      trainerId: "c123456789012345678901234",
+      email: "student@example.com",
+      firstName: "Ana",
+      lastName: "Gomez",
+      status: "EXPIRED",
+      role: "STUDENT",
+      version: 5,
+      expiresAt: new Date(Date.now() - 1000),
+      createdAt: new Date(),
+    });
+    resendIfCurrentMock.mockResolvedValue(true);
+
+    const result = await invitationService.resend(
+      "inv-expired",
+      { id: "c123456789012345678901234", role: "TRAINER" } as any,
+      5,
+    );
+
+    expect(resendIfCurrentMock).toHaveBeenCalledWith(
+      expect.objectContaining({ invitationId: "inv-expired", expectedVersion: 5, deliveryStatus: "PENDING" }),
+      expect.any(Object),
+    );
+    expect(result).toMatchObject({ status: "PENDING", deliveryStatus: "PENDING", version: 6 });
+    expect(new Date(result.expiresAt).getTime()).toBeGreaterThan(Date.now());
+    expect(enqueueOutboxMock).toHaveBeenCalledOnce();
+  });
+
   const replacementHarness = () => {
     let committed = {
       invitation: { id: "inv-1", email: "student@example.com", status: "PENDING", tokenHash: "previous-hash", version: 3 },
