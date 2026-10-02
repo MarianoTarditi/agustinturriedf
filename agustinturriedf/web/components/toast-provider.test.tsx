@@ -78,6 +78,24 @@ describe("ToastProvider", () => {
       expect(screen.getByText("Success message")).toBeInTheDocument();
     });
 
+    it("uses one polite atomic status region for the active toast container", () => {
+      render(
+        <ToastProvider>
+          <ToastTestConsumer />
+        </ToastProvider>
+      );
+
+      act(() => {
+        screen.getByTestId("show-success").click();
+      });
+
+      const liveRegions = screen.getAllByRole("status");
+      expect(liveRegions).toHaveLength(1);
+      expect(liveRegions[0]).toHaveAttribute("aria-live", "polite");
+      expect(liveRegions[0]).toHaveAttribute("aria-atomic", "true");
+      expect(screen.getByTestId("kinetic-toast")).not.toHaveAttribute("role");
+    });
+
     it("renders an error toast with correct message", () => {
       render(
         <ToastProvider>

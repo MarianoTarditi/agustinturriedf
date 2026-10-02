@@ -22,8 +22,6 @@ const resolveStudentProfileId = async (context: PaymentRouteContext) => {
   return parsedParams.data.studentProfileId;
 };
 
-const resolveTrainerId = (actor: Awaited<ReturnType<typeof requireSession>>) => actor.id;
-
 export const PATCH = async (request: Request, context: PaymentRouteContext) => {
   try {
     const actor = await requireSession();
@@ -37,10 +35,11 @@ export const PATCH = async (request: Request, context: PaymentRouteContext) => {
       throw new ApiError("Validation failed", 400, "VALIDATION_ERROR", parsedPayload.error.flatten());
     }
 
-    const updatedCurrentPayment = await paymentsService.editCurrentPayment(resolveTrainerId(actor), {
+    const updatedCurrentPayment = await paymentsService.editCurrentPayment({ id: actor.id, role: actor.role as "ADMIN" | "TRAINER" }, {
       studentProfileId,
       amountInCents: parsedPayload.data.amountInCents,
       startDate: parseBuenosAiresDateInput(parsedPayload.data.startDate),
+      expectedCurrentPaymentVersion: parsedPayload.data.expectedCurrentPaymentVersion,
     });
 
     return apiSuccess(updatedCurrentPayment);

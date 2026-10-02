@@ -2,9 +2,68 @@ import { describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import { createInvitationRuntime, fetchUsersRuntime } from "@/app/(private)/usuarios/runtime";
+import { archiveUserRuntime, createInvitationRuntime, fetchUsersRuntime } from "@/app/(private)/usuarios/runtime";
 
 describe("usuarios runtime", () => {
+  it("archives with the current version and trimmed reason", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(Response.json({ success: true, data: { id: "u/1", status: "ARCHIVED", version: 8 } }));
+    await archiveUserRuntime(fetchMock, "u/1", 7, "  Account closure  ");
+    expect(fetchMock).toHaveBeenCalledWith("/api/users/u%2F1/transitions", expect.objectContaining({
+      method: "PATCH", body: JSON.stringify({ targetStatus: "ARCHIVED", expectedVersion: 7, reason: "Account closure" }),
+    }));
+  });
+
+  it.each(["", "   ", "x".repeat(501)])("rejects invalid reason before fetching: %s", async (reason) => {
+    const fetchMock = vi.fn();
+    await expect(archiveUserRuntime(fetchMock, "u-1", 7, reason)).rejects.toThrow("motivo");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it.each([undefined, 0, 1.5, NaN])("never invents an invalid version: %s", async (version) => {
+    const fetchMock = vi.fn();
+    await expect(archiveUserRuntime(fetchMock, "u-1", version as number, "Closure")).rejects.toThrow("versión");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it.each(["", "<html>Error</html>", "null", "{}", '{"success":true}', '{"success":false,"error":{}}'])
+    ("handles malformed or empty archive responses: %s", async (body) => {
+      const fetchMock = vi.fn().mockResolvedValue(new Response(body));
+      await expect(archiveUserRuntime(fetchMock, "u-1", 7, "Closure")).rejects.toThrow("No se pudo confirmar");
+    });
+
+  it.each([403, 409, 500])("preserves API error messages (%s)", async (status) => {
+    const fetchMock = vi.fn().mockResolvedValue(Response.json({ success: false, error: { message: "Account version is stale" } }, { status }));
+    await expect(archiveUserRuntime(fetchMock, "u-1", 7, "Closure")).rejects.toThrow("Account version is stale");
+  });
+
+  it.each([
+    { id: "other", status: "ARCHIVED", version: 8 },
+    { id: "u-1", status: "ACTIVE", version: 8 },
+    { id: "u-1", status: "ARCHIVED", version: 7 },
+    { id: "u-1", status: "ARCHIVED", version: 6 },
+    { id: "u-1", status: "ARCHIVED", version: 8.5 },
+    { id: "u-1", status: "ARCHIVED", version: "8" },
+  ])("rejects an unconfirmed archive response: %j", async (data) => {
+    const fetchMock = vi.fn().mockResolvedValue(Response.json({ success: true, data }));
+    await expect(archiveUserRuntime(fetchMock, "u-1", 7, "Archivado desde la gestión de usuarios.")).rejects.toThrow("No se pudo confirmar");
+  });
+
+  it.each(["", "<html>Gateway error</html>"])("handles non-JSON HTTP failures: %s", async (body) => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(body, { status: 502 }));
+    await expect(archiveUserRuntime(fetchMock, "u-1", 7, "Closure")).rejects.toThrow("No se pudo confirmar");
+  });
+
+  it("excludes archived users on reload and uses canonical account status", async () => {
+    const user = { id: "u-1", firstName: "Ana", lastName: "Gomez", role: "STUDENT", version: 9, studentProfile: { status: "ACTIVE" } };
+    const fetchMock = vi.fn().mockImplementation(async () => Response.json({ success: true, data: [
+      { ...user, status: "INACTIVE" }, { ...user, id: "archived", status: "ARCHIVED" },
+    ] }));
+    for (let i = 0; i < 2; i++) {
+      const rows = await fetchUsersRuntime(fetchMock);
+      expect(rows).toHaveLength(1);
+      expect(rows[0]).toMatchObject({ id: "u-1", status: "Inactivo", version: 9 });
+    }
+  });
   it("fetches users and maps first row for render", async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
@@ -13,6 +72,8 @@ describe("usuarios runtime", () => {
         data: [
           {
             id: "u-1",
+            status: "ACTIVE",
+            version: 7,
             firstName: "Ana",
             lastName: "Gomez",
             email: "ana@example.com",

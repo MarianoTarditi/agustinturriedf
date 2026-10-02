@@ -10,9 +10,10 @@
     "agustinturriedf/web"
   ],
   "scripts": {
-    "dev": "concurrently -n landing,web -c cyan,magenta \"npm run dev --workspace @agustinturriedf/landing\" \"npm run dev --workspace @agustinturriedf/web\"",
+    "dev": "concurrently -n landing,web,outbox -c cyan,magenta,yellow \"npm run dev --workspace @agustinturriedf/landing\" \"npm run dev --workspace @agustinturriedf/web\" \"npm run dev:outbox --workspace @agustinturriedf/web\"",
     "dev:landing": "npm run dev --workspace @agustinturriedf/landing",
-    "dev:web": "npm run dev --workspace @agustinturriedf/web"
+    "dev:web": "npm run dev --workspace @agustinturriedf/web",
+    "dev:outbox": "npm run dev:outbox --workspace @agustinturriedf/web"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

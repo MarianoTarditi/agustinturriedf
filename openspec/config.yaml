@@ -1,0 +1,106 @@
+schema: spec-driven
+
+session:
+  execution_mode: auto
+  artifact_store: openspec
+  delivery_strategy: ask-on-risk
+  review_threshold_changed_lines: 400
+
+context: |
+  Workspace: npm workspaces on Node.js >=22.12.0.
+  Applications: Astro 6 landing site and Next.js 15 App Router web application.
+  Web architecture: feature modules, route handlers, repository/service separation, Prisma, and role/ownership authorization.
+  Language and style: strict TypeScript; follow existing project structure and conventions.
+  Testing: Vitest is available only in the web workspace; no workspace-wide test command exists.
+
+strict_tdd: false
+
+testing:
+  detected: 2026-09-13
+  workspace_test_command: null
+  strict_tdd_reason: No explicit workspace-level test command covers every in-scope project.
+  baseline:
+    status: failing
+    note: The web Vitest run reported route-test failures, zero-test suites, and exceeded the 120-second initialization limit.
+  projects:
+    - path: .
+      role: workspace orchestrator
+      stack: npm workspaces
+      test:
+        command: null
+        framework: null
+        layers:
+          unit: false
+          integration: false
+          e2e: false
+      coverage:
+        command: null
+      quality:
+        linter: null
+        type_checker: null
+        formatter: null
+      build_command: null
+    - path: agustinturriedf/landing
+      role: public landing application
+      stack: Astro 6, Tailwind CSS 4, Vercel adapter
+      test:
+        command: null
+        framework: null
+        layers:
+          unit: false
+          integration: false
+          e2e: false
+      coverage:
+        command: null
+      quality:
+        linter: null
+        type_checker: null
+        formatter: null
+      build_command: npm run build --workspace @agustinturriedf/landing
+    - path: agustinturriedf/web
+      role: authenticated web application
+      stack: Next.js 15, React 19, TypeScript 5.8, Prisma 6, NextAuth 5 beta, Zod 4
+      test:
+        command: npm test --workspace @agustinturriedf/web
+        framework: Vitest 4.1.4 with jsdom and Testing Library
+        layers:
+          unit: true
+          integration: true
+          e2e: false
+      coverage:
+        command: null
+      quality:
+        linter: npm run lint --workspace @agustinturriedf/web
+        type_checker: null
+        formatter: null
+      build_command: npm run build --workspace @agustinturriedf/web
+
+rules:
+  proposal:
+    - Include a rollback plan for risky changes.
+    - Identify affected workspace projects explicitly.
+  specs:
+    - Use Given/When/Then scenarios.
+    - Use RFC 2119 keywords for normative requirements.
+  design:
+    - Follow existing architecture and project boundaries.
+    - Document significant decisions and their rationale.
+    - Include sequence diagrams for complex flows.
+  tasks:
+    - Group work by phase with hierarchical numbering.
+    - Keep tasks independently verifiable and completable in one session.
+  apply:
+    guidelines:
+      - Follow existing code patterns and workspace boundaries.
+      - Use the relevant project-local commands when no workspace-wide command exists.
+    tdd: false
+    test_command: ""
+  verify:
+    test_command: ""
+    build_command: ""
+    coverage_threshold: 0
+    guidelines:
+      - Report the known failing web-test baseline separately from regressions.
+      - Verify each affected project with its declared local commands.
+  archive:
+    - Warn before merging destructive deltas.

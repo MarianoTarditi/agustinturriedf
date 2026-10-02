@@ -33,6 +33,7 @@ describe("POST /api/payments/register", () => {
         studentProfileId: "ck7m7x3k50000abcd1234efgh",
         amountInCents: 3_000_000,
         paymentDate: "2026-04-21",
+        expectedCurrentPaymentVersion: 1,
       }),
     });
 
@@ -42,11 +43,11 @@ describe("POST /api/payments/register", () => {
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
     expect(registerPaymentMock).toHaveBeenCalledWith(
-      "trainer-1",
-      "trainer-1",
+      { id: "trainer-1", role: "TRAINER" },
       expect.objectContaining({
         studentProfileId: "ck7m7x3k50000abcd1234efgh",
         amountInCents: 3_000_000,
+        expectedCurrentPaymentVersion: 1,
       })
     );
   });

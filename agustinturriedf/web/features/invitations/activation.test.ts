@@ -29,7 +29,7 @@ const invitation = (role = "STUDENT", overrides: Record<string, unknown> = {}) =
 });
 
 const initial = (role?: string, overrides?: Record<string, unknown>) => ({
-  invitation: invitation(role, overrides), sessions: [], users: [], profiles: [], configs: [], audits: [], outbox: [],
+  invitation: invitation(role, overrides), sessions: [], users: [], profiles: [], debts: [], audits: [], outbox: [],
   failInvitationConsume: false, failAudit: false, failOutbox: false,
 });
 
@@ -62,6 +62,16 @@ const transaction = (staged: State) => ({
       return { count: 1 };
     },
   },
+  paymentConfig: {
+    findUniqueOrThrow: async () => ({ id: "GLOBAL", defaultMonthlyAmountInCents: 3_000_000, version: 1 }),
+  },
+  currentPayment: {
+    create: async ({ data }: any) => {
+      const payment = { id: `payment-${staged.debts.length + 1}`, ...data };
+      staged.debts.push(payment);
+      return payment;
+    },
+  },
 });
 
 const database = {
@@ -75,7 +85,7 @@ const database = {
 
 const primitive = () => new ActivationPrimitives(() => now, () => session, database);
 const activate = () => primitive().activate({ session, password: "Password1" });
-const effects = () => ({ users: state.users, profiles: state.profiles, configs: state.configs, audits: state.audits, outbox: state.outbox });
+const effects = () => ({ users: state.users, profiles: state.profiles, debts: state.debts, audits: state.audits, outbox: state.outbox });
 
 describe("activation primitives staged transaction harness", () => {
   beforeEach(() => {
@@ -88,7 +98,6 @@ describe("activation primitives staged transaction harness", () => {
       if (input.studentProfile) {
         user.studentProfile = { id: `profile-${tx.state.profiles.length + 1}`, trainerId: input.studentProfile.trainerId };
         tx.state.profiles.push(user.studentProfile);
-        tx.state.configs.push({ trainerId: input.studentProfile.trainerId });
       }
       return user;
     });
@@ -123,7 +132,7 @@ describe("activation primitives staged transaction harness", () => {
     await primitive().exchange(token);
     state.invitation.tokenHash = digest("resend-token");
     await expect(activate()).rejects.toMatchObject({ code: "INVALID_OR_EXPIRED_TOKEN" });
-    expect(effects()).toEqual({ users: [], profiles: [], configs: [], audits: [], outbox: [] });
+    expect(effects()).toEqual({ users: [], profiles: [], debts: [], audits: [], outbox: [] });
 
     state.invitation.tokenHash = null;
     state.invitation.status = "REVOKED";
@@ -137,7 +146,7 @@ describe("activation primitives staged transaction harness", () => {
 
     await expect(activate()).rejects.toMatchObject({ code: "INVALID_OR_EXPIRED_TOKEN" });
     expect(state.sessions[0].consumedAt).toBeNull();
-    expect(effects()).toEqual({ users: [], profiles: [], configs: [], audits: [], outbox: [] });
+    expect(effects()).toEqual({ users: [], profiles: [], debts: [], audits: [], outbox: [] });
   });
 
   it.each(["audit", "outbox"])("discards all staged state when %s persistence fails", async (failure) => {
@@ -156,9 +165,9 @@ describe("activation primitives staged transaction harness", () => {
 
     expect(state.users[0].role).toBe(role);
     expect(state.profiles).toHaveLength(role === "STUDENT" ? 1 : 0);
-    expect(state.configs).toHaveLength(role === "STUDENT" ? 1 : 0);
+    expect(state.debts).toHaveLength(role === "STUDENT" ? 1 : 0);
     expect(state.outbox).toHaveLength(role === "STUDENT" ? 1 : 0);
-    expect(state.audits).toHaveLength(1);
+    expect(state.audits).toHaveLength(role === "STUDENT" ? 2 : 1);
     await expect(activate()).rejects.toMatchObject({ code: "INVALID_OR_EXPIRED_TOKEN" });
   });
 });

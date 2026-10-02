@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import { auditRepository } from "@/features/audit/repository";
 import { buildAuditEvent } from "@/features/audit/event-factory";
 import { lockTrainerAssignmentCoordination } from "@/features/users/assignment-coordination";
-import { addDays, normalizeToBuenosAiresDay } from "@/features/payments/timezone";
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 import { ApiError } from "@/lib/http/api-response";
@@ -12,7 +11,6 @@ type Role = "ADMIN" | "TRAINER" | "STUDENT";
 type StudentStatus = "ACTIVE" | "INACTIVE" | "BLOCKED";
 type ProfileGender = "MALE" | "FEMALE" | "NON_BINARY" | "OTHER";
 type AccountStatus = "ACTIVE" | "INACTIVE" | "BLOCKED" | "ARCHIVED";
-const DEFAULT_MONTHLY_AMOUNT_IN_CENTS = 3_000_000;
 
 const userWithProfileInclude = {
   studentProfile: true,
@@ -189,8 +187,8 @@ export class UserRepository {
     });
   }
 
-  async findByEmail(email: string) {
-    return prisma.user.findUnique({
+  async findByEmail(email: string, transaction: any = prisma) {
+    return transaction.user.findUnique({
       where: { email },
       include: userWithProfileInclude,
     });
@@ -235,32 +233,6 @@ export class UserRepository {
         },
         include: userWithProfileInclude,
       });
-
-      if (createdUser.role === "STUDENT" && createdUser.studentProfile && input.studentProfile?.trainerId) {
-        const trainerConfig = await transaction.trainerConfig.upsert({
-          where: {
-            trainerId: createdUser.studentProfile.trainerId,
-          },
-          update: {},
-          create: {
-            trainerId: createdUser.studentProfile.trainerId,
-            defaultMonthlyAmountInCents: DEFAULT_MONTHLY_AMOUNT_IN_CENTS,
-          },
-        });
-
-        const startDate = normalizeToBuenosAiresDay(
-          input.studentProfile?.initialPaymentStartDate ?? createdUser.createdAt
-        );
-
-        await transaction.currentPayment.create({
-          data: {
-            studentProfileId: createdUser.studentProfile.id,
-            amountInCents: trainerConfig.defaultMonthlyAmountInCents,
-            startDate,
-            dueDate: addDays(startDate, 30),
-          },
-        });
-      }
 
       return createdUser;
     };

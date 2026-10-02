@@ -198,6 +198,9 @@ function ToastContainer({ queue, onDismiss, onMouseEnter, onMouseLeave, hoveredI
 
   return (
     <div
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
       style={{
         position: "fixed",
         top: "1rem",

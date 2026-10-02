@@ -13,6 +13,7 @@ import {
   formatDateEsAr,
   mapDaysToExpireLabel,
   mapRowStatusLabel,
+  PaymentRuntimeError,
   registerPaymentRuntime,
   runRegisterWarningDecision,
   type RegisterPaymentInput,
@@ -29,10 +30,13 @@ type DashboardRow = {
   fullName: string;
   email: string;
   phone: string;
-  amountInCents: number;
+  monthlyAmountInCents: number;
+  outstandingAmountInCents: number;
   startDate: string;
-  dueDate: string;
+  nextChargeDate: string;
+  overdueSinceDate: string | null;
   daysToExpire: number;
+  currentPaymentVersion: number;
   paymentStatus: "CURRENT" | "DUE_SOON" | "OVERDUE";
   statusLabel: string;
   initials: string;
@@ -46,10 +50,12 @@ const PAYMENT_VIEWS: Array<{ value: PaymentView; label: string }> = [
 ];
 
 const toIsoLocalDate = (value: Date) => {
-  const year = value.getFullYear();
-  const month = `${value.getMonth() + 1}`.padStart(2, "0");
-  const day = `${value.getDate()}`.padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Argentina/Buenos_Aires",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(value);
 };
 
 const formatAmountInput = (value: string) => value.replace(/[^0-9]/g, "");
@@ -77,6 +83,8 @@ export default function PagosPage() {
   const [cards, setCards] = useState({
     collectedCount: 0,
     collectedAmountInCents: 0,
+    outstandingCount: 0,
+    outstandingAmountInCents: 0,
     dueSoonCount: 0,
     overdueCount: 0,
     overdueAmountInCents: 0,
@@ -99,6 +107,8 @@ export default function PagosPage() {
   const [isEditing, setIsEditing] = useState(false);
 
   const [globalAmountDraft, setGlobalAmountDraft] = useState("");
+  const [globalConfigVersion, setGlobalConfigVersion] = useState(1);
+  const [canEditGlobalAmount, setCanEditGlobalAmount] = useState(false);
   const [globalAmountError, setGlobalAmountError] = useState<string | null>(null);
   const [isSavingGlobalAmount, setIsSavingGlobalAmount] = useState(false);
 
@@ -119,24 +129,31 @@ export default function PagosPage() {
           fullName: row.fullName,
           email: row.email,
           phone: row.phone ?? "",
-          amountInCents: row.amountInCents,
+          monthlyAmountInCents: row.monthlyAmountInCents,
+          outstandingAmountInCents: row.outstandingAmountInCents,
           startDate: row.startDate,
-          dueDate: row.dueDate,
+          nextChargeDate: row.nextChargeDate,
+          overdueSinceDate: row.overdueSinceDate,
           daysToExpire: row.daysToExpire,
+          currentPaymentVersion: row.currentPaymentVersion,
           paymentStatus: row.paymentStatus,
           statusLabel: mapRowStatusLabel(row.studentStatus, row.paymentStatus),
           initials: buildInitials(row.fullName),
         }))
       );
+      setGlobalConfigVersion(payload.config.version);
+      setCanEditGlobalAmount(payload.config.canEdit);
 
       setGlobalAmountDraft((current) =>
         current.length > 0
           ? current
           : centsToAmountInput(payload.config.defaultMonthlyAmountInCents)
       );
+      return payload;
     } catch (fetchError) {
       setError(fetchError instanceof Error ? fetchError.message : "No se pudo cargar la vista de pagos.");
       setRows([]);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -172,6 +189,8 @@ export default function PagosPage() {
         }
 
         setGlobalAmountDraft(centsToAmountInput(config.defaultMonthlyAmountInCents));
+        setGlobalConfigVersion(config.version);
+        setCanEditGlobalAmount(config.canEdit);
         setGlobalAmountError(null);
       } catch (configError) {
         if (cancelled) {
@@ -209,15 +228,22 @@ export default function PagosPage() {
 
       const updatedConfig = await updatePaymentConfigRuntime(fetch, {
         defaultMonthlyAmountInCents: nextAmountInCents,
+        expectedVersion: globalConfigVersion,
       });
 
       setGlobalAmountDraft(centsToAmountInput(updatedConfig.defaultMonthlyAmountInCents));
+      setGlobalConfigVersion(updatedConfig.version);
     } catch (configError) {
       setGlobalAmountError(
         configError instanceof Error
           ? configError.message
           : "No se pudo guardar la configuración general de pagos."
       );
+      if (configError instanceof PaymentRuntimeError && configError.code === "PAYMENT_CONFIG_CONFLICT") {
+        const latest = await fetchPaymentConfigRuntime(fetch);
+        setGlobalAmountDraft(centsToAmountInput(latest.defaultMonthlyAmountInCents));
+        setGlobalConfigVersion(latest.version);
+      }
     } finally {
       setIsSavingGlobalAmount(false);
     }
@@ -243,7 +269,7 @@ export default function PagosPage() {
 
   const openRegisterModal = (row?: DashboardRow) => {
     setRegisterStudentProfileId(row?.studentProfileId ?? "");
-    setRegisterAmount(row ? String(Math.round(row.amountInCents / 100)) : "");
+    setRegisterAmount(row ? centsToAmountInput(row.outstandingAmountInCents) : "");
     setRegisterPaymentDate(toIsoLocalDate(new Date()));
     setRegisterError(null);
     setRegisterWarningPayload(null);
@@ -261,6 +287,17 @@ export default function PagosPage() {
       await loadDashboard(view);
     } catch (submitError) {
       setRegisterError(submitError instanceof Error ? submitError.message : "No se pudo registrar el pago.");
+      if (submitError instanceof PaymentRuntimeError && ["PAYMENT_CONFLICT", "PAYMENT_AMOUNT_MISMATCH", "NO_OUTSTANDING_DEBT"].includes(submitError.code)) {
+        const refreshed = await loadDashboard(view);
+        const latest = refreshed?.rows.find((row) => row.studentProfileId === registerStudentProfileId);
+        if (latest) setRegisterAmount(centsToAmountInput(latest.outstandingAmountInCents));
+        if (submitError.code === "PAYMENT_AMOUNT_MISMATCH") {
+          const expected = (submitError.details as { expectedAmountInCents?: unknown } | undefined)?.expectedAmountInCents;
+          if (typeof expected === "number" && Number.isSafeInteger(expected) && expected > 0) {
+            setRegisterAmount(centsToAmountInput(expected));
+          }
+        }
+      }
     } finally {
       setIsRegistering(false);
     }
@@ -291,13 +328,8 @@ export default function PagosPage() {
       studentProfileId: registerStudentProfileId,
       amountInCents,
       paymentDate: registerPaymentDate,
+      expectedCurrentPaymentVersion: selectedRow?.currentPaymentVersion ?? 0,
     };
-    const warningPayload = buildRegisterWarningPayload(selectedRow, registerPayload);
-
-    if (warningPayload) {
-      setRegisterWarningPayload(warningPayload);
-      return;
-    }
 
     await submitRegisterPayment(registerPayload);
   };
@@ -327,7 +359,7 @@ export default function PagosPage() {
   const openEditModal = (row: DashboardRow) => {
     setEditingPayment(row);
     setEditStartDate(toIsoLocalDate(new Date(row.startDate)));
-    setEditAmount(String(Math.round(row.amountInCents / 100)));
+    setEditAmount(centsToAmountInput(row.monthlyAmountInCents));
     setEditError(null);
   };
 
@@ -369,12 +401,17 @@ export default function PagosPage() {
         studentProfileId: editingPayment.studentProfileId,
         amountInCents,
         startDate: editStartDate,
+        expectedCurrentPaymentVersion: editingPayment.currentPaymentVersion,
       });
 
       closeEditModal();
       await loadDashboard(view);
     } catch (submitError) {
       setEditError(submitError instanceof Error ? submitError.message : "No se pudo editar el pago.");
+      if (submitError instanceof PaymentRuntimeError && submitError.code === "PAYMENT_CONFLICT") {
+        await loadDashboard(view);
+        setEditingPayment(null);
+      }
     } finally {
       setIsEditing(false);
     }
@@ -400,6 +437,19 @@ export default function PagosPage() {
             <h3 className={styles.metricLabel}>Pagos Cobrados</h3>
             <p className={styles.metricValue}>
               {cards.collectedCount} <span className={styles.metricDetail_primary}>{formatCurrencyARS(cards.collectedAmountInCents)}</span>
+            </p>
+          </article>
+
+          <article className={styles.metricCard}>
+            <div className={styles.metricGlow} aria-hidden="true" />
+            <div className={styles.metricTop}>
+              <span className={`${styles.metricIcon} ${styles.metricIcon_warning}`}>
+                <MaterialSymbol name="account_balance_wallet" className={styles.metricSymbol} weight={500} opticalSize={20} />
+              </span>
+            </div>
+            <h3 className={styles.metricLabel}>Deuda pendiente</h3>
+            <p className={styles.metricValue}>
+              {cards.outstandingCount} <span className={styles.metricDetail_warning}>{formatCurrencyARS(cards.outstandingAmountInCents)}</span>
             </p>
           </article>
 
@@ -464,18 +514,18 @@ export default function PagosPage() {
                       }
                     }}
                     placeholder="30000"
-                    disabled={isSavingGlobalAmount}
+                     disabled={isSavingGlobalAmount || !canEditGlobalAmount}
                   />
                 </div>
               </label>
 
-              <button
+              {canEditGlobalAmount ? <button
                 type="submit"
                 className={`${styles.createButton} ${styles.configSaveButton}`}
                 disabled={isSavingGlobalAmount}
               >
                 {isSavingGlobalAmount ? "Guardando..." : "Guardar"}
-              </button>
+              </button> : <p className={styles.subtleText}>Solo lectura</p>}
             </div>
             {globalAmountError ? <p className={styles.subtleText}>{globalAmountError}</p> : null}
           </form>
@@ -508,8 +558,9 @@ export default function PagosPage() {
                     <th>Alumno</th>
                     <th>Email</th>
                     <th>Teléfono</th>
-                    <th>Monto</th>
-                    <th>Próximo Venc.</th>
+                    <th>Deuda pendiente</th>
+                    <th>Monto mensual</th>
+                    <th>Próximo cobro</th>
                     <th>Días a vencer</th>
                     <th>Estado</th>
                     <th className={styles.alignRight}>Acciones</th>
@@ -518,13 +569,13 @@ export default function PagosPage() {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={8} className={styles.subtleText}>
+                      <td colSpan={9} className={styles.subtleText}>
                         Cargando pagos...
                       </td>
                     </tr>
                   ) : rows.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className={styles.subtleText}>
+                      <td colSpan={9} className={styles.subtleText}>
                         No se encontraron pagos para los filtros seleccionados.
                       </td>
                     </tr>
@@ -544,10 +595,13 @@ export default function PagosPage() {
                           <span className={styles.subtleText}>{row.phone || "-"}</span>
                         </td>
                         <td>
-                          <span className={styles.amount}>{formatCurrencyARS(row.amountInCents)}</span>
+                          <span className={styles.amount}>{formatCurrencyARS(row.outstandingAmountInCents)}</span>
                         </td>
                         <td>
-                          <span className={styles.subtleText}>{formatDateEsAr(row.dueDate)}</span>
+                          <span className={styles.subtleText}>{formatCurrencyARS(row.monthlyAmountInCents)}</span>
+                        </td>
+                        <td>
+                          <span className={styles.subtleText}>{formatDateEsAr(row.nextChargeDate)}</span>
                         </td>
                         <td>
                           <span className={styles.subtleText}>{mapDaysToExpireLabel(row.daysToExpire)}</span>
@@ -634,7 +688,12 @@ export default function PagosPage() {
                   <div className={styles.selectWrap}>
                     <select
                       value={registerStudentProfileId}
-                      onChange={(event) => setRegisterStudentProfileId(event.target.value)}
+                       onChange={(event) => {
+                         const studentProfileId = event.target.value;
+                         setRegisterStudentProfileId(studentProfileId);
+                         const selected = rows.find((row) => row.studentProfileId === studentProfileId);
+                         setRegisterAmount(selected ? centsToAmountInput(selected.outstandingAmountInCents) : "");
+                       }}
                       disabled={isRegistering}
                     >
                       <option value="">Seleccionar alumno</option>
@@ -649,14 +708,14 @@ export default function PagosPage() {
                 </label>
 
                 <label className={styles.fieldWrap}>
-                  <span>Monto (ARS)</span>
+                  <span>Deuda pendiente (ARS)</span>
                   <div className={styles.moneyInputWrap}>
                     <i>$</i>
                     <input
                       type="text"
                       value={registerAmount}
-                      onChange={(event) => setRegisterAmount(formatAmountInput(event.target.value))}
                       placeholder="30000"
+                      readOnly
                       disabled={isRegistering}
                     />
                   </div>
@@ -674,7 +733,7 @@ export default function PagosPage() {
 
                 {selectedRegisterRow ? (
                   <label className={`${styles.fieldWrap} ${styles.registerFullRow}`}>
-                    <span>Próximo vencimiento estimado</span>
+                    <span>Próximo cobro después del pago</span>
                     <input type="text" value={formatDateEsAr(new Date(registerPaymentDate || selectedRegisterRow.startDate))} disabled />
                   </label>
                 ) : null}
@@ -743,9 +802,9 @@ export default function PagosPage() {
               <div>
                 <div className={styles.editTitleRow}>
                   <MaterialSymbol name="edit_note" className={styles.editSectionIcon} weight={500} opticalSize={20} />
-                  <h2>Editar Pago</h2>
+                  <h2>Editar próximo ciclo</h2>
                 </div>
-                <p>Modificá el estado actual del ciclo sin crear historial.</p>
+                <p>El monto y la fecha se aplican al próximo ciclo. La deuda existente no cambia.</p>
               </div>
               <button type="button" className={styles.modalCloseButton} aria-label="Cerrar" onClick={closeEditModal}>
                 <MaterialSymbol name="close" className={styles.modalCloseIcon} weight={500} opticalSize={22} />
@@ -760,7 +819,7 @@ export default function PagosPage() {
                 </label>
 
                 <label className={styles.fieldWrap}>
-                  <span>Monto (ARS)</span>
+                  <span>Monto mensual desde el próximo ciclo (ARS)</span>
                   <div className={styles.moneyInputWrap}>
                     <i>$</i>
                     <input
@@ -774,13 +833,18 @@ export default function PagosPage() {
                 </label>
 
                 <label className={styles.fieldWrap}>
-                  <span>Fecha de inicio</span>
+                  <span>Fecha base del próximo cobro</span>
                   <input
                     type="date"
                     value={editStartDate}
                     onChange={(event) => setEditStartDate(event.target.value)}
                     disabled={isEditing}
                   />
+                </label>
+
+                <label className={`${styles.fieldWrap} ${styles.editFullRow}`}>
+                  <span>Deuda pendiente</span>
+                  <input type="text" value={formatCurrencyARS(editingPayment.outstandingAmountInCents)} disabled />
                 </label>
 
                 {editError ? <p className={styles.subtleText}>{editError}</p> : null}

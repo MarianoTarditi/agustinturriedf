@@ -26,6 +26,44 @@ const MIME_TYPE_MAP: Record<string, string> = {
   webm: "video/webm",
 };
 
+type ByteRange = {
+  start: number;
+  end: number;
+};
+
+const parseByteRange = (rangeHeader: string, fileSize: number): ByteRange | null => {
+  if (fileSize <= 0) return null;
+
+  const match = /^bytes=(\d*)-(\d*)$/.exec(rangeHeader.trim());
+  if (!match || (!match[1] && !match[2])) return null;
+
+  const startValue = match[1] ? Number(match[1]) : null;
+  const endValue = match[2] ? Number(match[2]) : null;
+
+  if (
+    (startValue !== null && !Number.isSafeInteger(startValue)) ||
+    (endValue !== null && !Number.isSafeInteger(endValue))
+  ) {
+    return null;
+  }
+
+  if (startValue === null) {
+    if (endValue === null || endValue <= 0) return null;
+
+    return {
+      start: Math.max(fileSize - endValue, 0),
+      end: fileSize - 1,
+    };
+  }
+
+  if (startValue >= fileSize) return null;
+
+  const end = endValue === null ? fileSize - 1 : Math.min(endValue, fileSize - 1);
+  if (end < startValue) return null;
+
+  return { start: startValue, end };
+};
+
 const resolveVideotecaFileId = async (context: VideotecaFileViewRouteContext) => {
   const params = await context.params;
   const parsedParams = videotecaFileIdParamSchema.safeParse(params);
@@ -37,7 +75,7 @@ const resolveVideotecaFileId = async (context: VideotecaFileViewRouteContext) =>
   return parsedParams.data.fileId;
 };
 
-export const GET = async (_request: Request, context: VideotecaFileViewRouteContext) => {
+export const GET = async (request: Request, context: VideotecaFileViewRouteContext) => {
   try {
     const actor = await requireSession();
     const fileId = await resolveVideotecaFileId(context);
@@ -50,18 +88,37 @@ export const GET = async (_request: Request, context: VideotecaFileViewRouteCont
     }
 
     const contentType = MIME_TYPE_MAP[videotecaFile.extension] ?? "application/octet-stream";
-    const fileStream = createReadStream(absolutePath);
+    const rangeHeader = request.headers.get("range");
+    const range = rangeHeader ? parseByteRange(rangeHeader, fileStats.size) : null;
+
+    if (rangeHeader && !range) {
+      return new Response(null, {
+        status: 416,
+        headers: {
+          "Accept-Ranges": "bytes",
+          "Content-Range": `bytes */${fileStats.size}`,
+        },
+      });
+    }
+
+    const fileStream = range
+      ? createReadStream(absolutePath, { start: range.start, end: range.end })
+      : createReadStream(absolutePath);
     const webStream = Readable.toWeb(fileStream) as ReadableStream;
     const headers = new Headers({
       "Content-Type": contentType,
+      "Accept-Ranges": "bytes",
     });
 
-    if (Number.isFinite(fileStats.size) && fileStats.size >= 0) {
+    if (range) {
+      headers.set("Content-Length", String(range.end - range.start + 1));
+      headers.set("Content-Range", `bytes ${range.start}-${range.end}/${fileStats.size}`);
+    } else if (Number.isFinite(fileStats.size) && fileStats.size >= 0) {
       headers.set("Content-Length", String(fileStats.size));
     }
 
     return new Response(webStream, {
-      status: 200,
+      status: range ? 206 : 200,
       headers,
     });
   } catch (error) {

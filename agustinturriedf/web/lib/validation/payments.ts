@@ -39,6 +39,7 @@ export const registerPaymentSchema = z.object({
     .int("amountInCents debe ser un entero")
     .positive("amountInCents debe ser mayor a 0"),
   paymentDate: isoLocalDateSchema,
+  expectedCurrentPaymentVersion: z.number().int().positive(),
 });
 
 export const editPaymentSchema = z.object({
@@ -47,6 +48,7 @@ export const editPaymentSchema = z.object({
     .int("amountInCents debe ser un entero")
     .positive("amountInCents debe ser mayor a 0"),
   startDate: isoLocalDateSchema,
+  expectedCurrentPaymentVersion: z.number().int().positive(),
 });
 
 export const paymentConfigUpdateSchema = z.object({
@@ -54,6 +56,7 @@ export const paymentConfigUpdateSchema = z.object({
     .number()
     .int("defaultMonthlyAmountInCents debe ser un entero")
     .positive("defaultMonthlyAmountInCents debe ser mayor a 0"),
+  expectedVersion: z.number().int().positive(),
 });
 
 export const paymentStudentProfileParamSchema = z.object({

@@ -32,7 +32,7 @@ describe("GET /api/payments", () => {
 
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
-    expect(getDashboardMock).toHaveBeenCalledWith("trainer-1", {
+    expect(getDashboardMock).toHaveBeenCalledWith({ id: "trainer-1", role: "TRAINER" }, {
       view: "ALL",
       query: "ana",
     });

@@ -37,7 +37,10 @@ export const requireSession = async (): Promise<AuthenticatedUser> => {
           trainerId: string;
           status: "ACTIVE" | "INACTIVE" | "BLOCKED";
           currentPayment?: {
+            amountInCents: number;
+            outstandingAmountInCents: number;
             dueDate: Date;
+            overdueSinceDate: Date | null;
           } | null;
         } | null;
       }
@@ -55,6 +58,7 @@ export const requireSession = async (): Promise<AuthenticatedUser> => {
     role: currentUser.role,
     studentStatus: currentUser.studentProfile?.status,
     currentPaymentDueDate: currentUser.studentProfile?.currentPayment?.dueDate,
+    currentPayment: currentUser.studentProfile?.currentPayment ?? undefined,
   });
 
   if (!paymentAccess.canAccess) {

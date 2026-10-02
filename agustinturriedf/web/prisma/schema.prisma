@@ -247,12 +247,23 @@ model TrainerConfig {
   trainer User @relation("TrainerConfigOwner", fields: [trainerId], references: [id], onDelete: Cascade)
 }
 
+model PaymentConfig {
+  id                          String   @id
+  defaultMonthlyAmountInCents Int      @default(3000000)
+  version                     Int      @default(1)
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+}
+
 model CurrentPayment {
   id               String   @id @default(cuid())
   studentProfileId String   @unique
   amountInCents    Int
+  outstandingAmountInCents Int      @default(0)
   startDate        DateTime
   dueDate          DateTime
+  overdueSinceDate DateTime?
+  version          Int      @default(1)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 

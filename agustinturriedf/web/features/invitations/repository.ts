@@ -31,6 +31,19 @@ type VersionedInvitationCommand = {
 
 type InvitationQueueRepositoryQuery = InvitationQueueQuery & { trainerId?: string; roles: readonly ("ADMIN" | "TRAINER" | "STUDENT")[] };
 type InvitationCursor = { scope: string; createdAt: string; id: string };
+type InvitationDeliveryTransaction = {
+  invitation: {
+    findUnique: (input: { where: { id: string }; select: { status: true; tokenHash: true; expiresAt: true } }) => Promise<{
+      status: CreateInvitationRepositoryInput["status"];
+      tokenHash: string | null;
+      expiresAt: Date | null;
+    } | null>;
+    updateMany: (input: {
+      where: { id: string; status: { in: readonly ["PENDING", "SENT"] }; tokenHash: string; expiresAt: { gt: Date } };
+      data: { deliveryStatus: "SENT" | "FAILED" };
+    }) => Promise<{ count: number }>;
+  };
+};
 
 const queueSecret = () => {
   const secret = process.env.NEXTAUTH_SECRET;
@@ -61,8 +74,19 @@ export class InvitationRepository {
     return transaction.invitation.create({ data: input });
   }
 
-  async findByEmail(email: string) {
-    return prismaInvitations.invitation.findFirst({ where: { email } });
+  async lockIssuanceForEmail(email: string, transaction: any) {
+    await transaction.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${email}))`;
+  }
+
+  async findActiveByEmail(email: string, now: Date, transaction = prismaInvitations) {
+    return transaction.invitation.findFirst({
+      where: {
+        email,
+        status: { in: ["PENDING", "SENT"] },
+        tokenHash: { not: null },
+        expiresAt: { gt: now },
+      },
+    });
   }
 
   async findPendingReplacementByEmail(email: string) {
@@ -77,6 +101,29 @@ export class InvitationRepository {
 
   async findById(invitationId: string) {
     return prismaInvitations.invitation.findUnique({ where: { id: invitationId } });
+  }
+
+  async findDeliveryState(invitationId: string, transaction: InvitationDeliveryTransaction = prismaInvitations) {
+    return transaction.invitation.findUnique({
+      where: { id: invitationId },
+      select: { status: true, tokenHash: true, expiresAt: true },
+    });
+  }
+
+  async projectDeliveryStatusIfCurrent(
+    input: { invitationId: string; tokenHash: string; now: Date; deliveryStatus: "SENT" | "FAILED" },
+    transaction: InvitationDeliveryTransaction
+  ) {
+    const result = await transaction.invitation.updateMany({
+      where: {
+        id: input.invitationId,
+        status: { in: ["PENDING", "SENT"] },
+        tokenHash: input.tokenHash,
+        expiresAt: { gt: input.now },
+      },
+      data: { deliveryStatus: input.deliveryStatus },
+    });
+    return result.count === 1;
   }
 
   async listByTrainer(trainerId: string) {

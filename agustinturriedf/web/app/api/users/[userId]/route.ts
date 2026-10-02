@@ -53,5 +53,7 @@ export const PATCH = async (request: Request, context: UserRouteContext) => {
 };
 
 export const DELETE = async (_request: Request, context: UserRouteContext) => {
-  return new Response(null, { status: 405, headers: { Allow: "GET, PATCH" } });
+  const response = handleApiError(new ApiError("Physical deletion is disabled. Archive the account instead.", 405, "PHYSICAL_DELETE_DISABLED"));
+  response.headers.set("Allow", "GET, PATCH");
+  return response;
 };

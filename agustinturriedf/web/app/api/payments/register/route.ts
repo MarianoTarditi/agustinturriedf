@@ -5,8 +5,6 @@ import { requireSession } from "@/features/auth/session";
 import { ApiError, apiSuccess, handleApiError } from "@/lib/http/api-response";
 import { registerPaymentSchema } from "@/lib/validation/payments";
 
-const resolveTrainerId = (actor: Awaited<ReturnType<typeof requireSession>>) => actor.id;
-
 export const POST = async (request: Request) => {
   try {
     const actor = await requireSession();
@@ -19,10 +17,11 @@ export const POST = async (request: Request) => {
       throw new ApiError("Validation failed", 400, "VALIDATION_ERROR", parsedPayload.error.flatten());
     }
 
-    const result = await paymentsService.registerPayment(resolveTrainerId(actor), actor.id, {
+    const result = await paymentsService.registerPayment({ id: actor.id, role: actor.role as "ADMIN" | "TRAINER" }, {
       studentProfileId: parsedPayload.data.studentProfileId,
       amountInCents: parsedPayload.data.amountInCents,
       paymentDate: parseBuenosAiresDateInput(parsedPayload.data.paymentDate),
+      expectedCurrentPaymentVersion: parsedPayload.data.expectedCurrentPaymentVersion,
     });
 
     return apiSuccess(result);

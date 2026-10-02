@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev": "next dev --port 3010",
+    "dev:outbox": "node --env-file=.env.local --import tsx scripts/run-outbox-worker.ts",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

@@ -1,21 +1,26 @@
 "use client";
 
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import styles from "@/app/(private)/usuarios/usuarios.module.css";
 import { z } from "zod";
 import { DestructiveConfirmationModal } from "@/components/destructive-confirmation-modal";
 import { MaterialSymbol } from "@/components/material-symbol";
 import { PrivateBreadcrumb } from "@/components/private-breadcrumb";
 import { PrivateTopbar } from "@/components/private-topbar";
+import { useToast } from "@/components/toast-provider";
 import {
   createInvitationRuntime,
-  deleteUserRuntime,
+  archiveUserRuntime,
   fetchPaymentConfigRuntime,
   fetchUsersRuntime,
   type UserRow,
 } from "@/app/(private)/usuarios/runtime";
 
 type ModalType = "create" | "detail" | "edit" | "delete";
+
+type SortKey = "name" | "email" | "role" | "status";
+type SortDirection = "ascending" | "descending";
+type SortState = { key: SortKey; direction: SortDirection } | null;
 
 type CreateStudentFieldKey =
   | "firstName"
@@ -35,6 +40,17 @@ type CreateStudentValidationErrors = Partial<
 >;
 
 type CreateStudentFormState = Record<CreateStudentFieldKey, string>;
+
+const userCollator = new Intl.Collator("es-AR", {
+  sensitivity: "base",
+  numeric: true,
+});
+
+const normalizeSearchValue = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLocaleLowerCase("es-AR");
 
 const emptyCreateStudentForm: CreateStudentFormState = {
   firstName: "",
@@ -228,11 +244,58 @@ function DotIcon() {
   return <span className={styles.dot} aria-hidden="true" />;
 }
 
+type SortableHeaderProps = {
+  label: string;
+  sortKey: SortKey;
+  sortState: SortState;
+  onSort: (key: SortKey) => void;
+};
+
+function SortableHeader({
+  label,
+  sortKey,
+  sortState,
+  onSort,
+}: SortableHeaderProps) {
+  const direction = sortState?.key === sortKey ? sortState.direction : null;
+  const nextDirection = direction === "ascending" ? "descendente" : "ascendente";
+  const icon = direction === "ascending"
+    ? "arrow_upward"
+    : direction === "descending"
+      ? "arrow_downward"
+      : "unfold_more";
+
+  return (
+    <th
+      aria-sort={direction ?? "none"}
+      className={direction ? styles.activeSortHeader : undefined}
+    >
+      <button
+        type="button"
+        className={styles.headerSortButton}
+        aria-label={`Ordenar ${label} ${nextDirection}`}
+        onClick={() => onSort(sortKey)}
+      >
+        <span>{label}</span>
+        <MaterialSymbol
+          name={icon}
+          className={styles.sortDirectionIcon}
+          weight={500}
+          opticalSize={18}
+        />
+      </button>
+    </th>
+  );
+}
+
 export default function UsuariosPage() {
   const PAGE_SIZE = 4;
+  const { showToast } = useToast();
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [usersError, setUsersError] = useState<string | null>(null);
+  const [sortState, setSortState] = useState<SortState>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
   const [activeUser, setActiveUser] = useState<UserRow | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -246,6 +309,7 @@ export default function UsuariosPage() {
   const [isCreatingStudent, setIsCreatingStudent] = useState(false);
   const [isDeletingUser, setIsDeletingUser] = useState(false);
   const [deleteUserError, setDeleteUserError] = useState<string | null>(null);
+  const archivePending = useRef(false);
   const [defaultMonthlyAmountInCents, setDefaultMonthlyAmountInCents] = useState<number | null>(null);
   const [paymentConfigError, setPaymentConfigError] = useState<string | null>(null);
 
@@ -281,17 +345,18 @@ export default function UsuariosPage() {
   };
 
   const handleDeleteUserConfirm = async () => {
-    if (!activeUser || isDeletingUser) {
+    if (!activeUser || archivePending.current) {
       return;
     }
 
     const userId = activeUser.id;
 
     try {
+      archivePending.current = true;
       setIsDeletingUser(true);
       setDeleteUserError(null);
 
-      await deleteUserRuntime(fetch, userId);
+      await archiveUserRuntime(fetch, userId, activeUser.version, "Archivado desde la gestión de usuarios.");
 
       setUsers((current) => current.filter((user) => user.id !== userId));
       setActiveUser(null);
@@ -300,9 +365,10 @@ export default function UsuariosPage() {
       setDeleteUserError(
         error instanceof Error
           ? error.message
-          : "No se pudo eliminar el usuario.",
+          : "No se pudo archivar el usuario.",
       );
     } finally {
+      archivePending.current = false;
       setIsDeletingUser(false);
     }
   };
@@ -384,6 +450,10 @@ export default function UsuariosPage() {
         studentStatus: "ACTIVE",
       });
 
+      showToast(
+        "success",
+        "Invitación creada. El email de activación quedó en cola.",
+      );
       resetCreateStudentModalState();
       setActiveModal(null);
     } catch (error) {
@@ -404,26 +474,40 @@ export default function UsuariosPage() {
         setUsersError(null);
         setPaymentConfigError(null);
 
-        if (!cancelled) {
-          const [usersRows, paymentConfig] = await Promise.all([
-            fetchUsersRuntime(fetch),
-            fetchPaymentConfigRuntime(fetch),
-          ]);
+        const [usersResult, paymentConfigResult] = await Promise.allSettled([
+          fetchUsersRuntime(fetch),
+          fetchPaymentConfigRuntime(fetch),
+        ]);
 
-          setUsers(usersRows);
-          setDefaultMonthlyAmountInCents(paymentConfig.defaultMonthlyAmountInCents);
-        }
-      } catch (error) {
-        if (!cancelled) {
-          const resolvedMessage =
-            error instanceof Error
-              ? error.message
-              : "No se pudo cargar la lista de usuarios.";
+        if (cancelled) return;
 
-          setUsersError(resolvedMessage);
-          setPaymentConfigError(resolvedMessage);
+        if (usersResult.status === "fulfilled") {
+          setUsers(usersResult.value);
+        } else {
+          setUsersError(
+            usersResult.reason instanceof Error
+              ? usersResult.reason.message
+              : "No se pudo cargar la lista de usuarios.",
+          );
           setUsers([]);
         }
+
+        if (paymentConfigResult.status === "fulfilled") {
+          setDefaultMonthlyAmountInCents(
+            paymentConfigResult.value.defaultMonthlyAmountInCents,
+          );
+        } else {
+          setPaymentConfigError(
+            paymentConfigResult.reason instanceof Error
+              ? paymentConfigResult.reason.message
+              : "No se pudo cargar la configuración de pagos.",
+          );
+        }
+      } catch {
+        if (cancelled) return;
+
+        setUsersError("No se pudo cargar la lista de usuarios.");
+        setUsers([]);
       } finally {
         if (!cancelled) {
           setLoadingUsers(false);
@@ -448,12 +532,61 @@ export default function UsuariosPage() {
     (user) => user.role === "admin" || user.role === "trainer",
   ).length;
   const totalUsers = users.length;
-  const totalPages = Math.max(1, Math.ceil(users.length / PAGE_SIZE));
+  const filteredUsers = useMemo(() => {
+    const normalizedQuery = normalizeSearchValue(searchQuery.trim());
+
+    if (!normalizedQuery) {
+      return users;
+    }
+
+    return users.filter((user) =>
+      normalizeSearchValue(user.name).includes(normalizedQuery) ||
+      normalizeSearchValue(user.email).includes(normalizedQuery),
+    );
+  }, [searchQuery, users]);
+  const sortedUsers = useMemo(() => {
+    if (!sortState) {
+      return filteredUsers;
+    }
+
+    const directionMultiplier = sortState.direction === "ascending" ? 1 : -1;
+
+    return filteredUsers
+      .map((user, index) => ({ user, index }))
+      .sort((left, right) => {
+        const comparison = userCollator.compare(
+          left.user[sortState.key],
+          right.user[sortState.key],
+        );
+
+        return comparison === 0
+          ? left.index - right.index
+          : comparison * directionMultiplier;
+      })
+      .map(({ user }) => user);
+  }, [filteredUsers, sortState]);
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
   const safeCurrentPage = Math.min(currentPage, totalPages);
-  const paginatedUsers = users.slice(
+  const paginatedUsers = sortedUsers.slice(
     (safeCurrentPage - 1) * PAGE_SIZE,
     safeCurrentPage * PAGE_SIZE,
   );
+
+  const handleSort = (key: SortKey) => {
+    setSortState((current) => ({
+      key,
+      direction:
+        current?.key === key && current.direction === "ascending"
+          ? "descending"
+          : "ascending",
+    }));
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+  };
 
   useEffect(() => {
     if (currentPage !== safeCurrentPage) {
@@ -493,7 +626,6 @@ export default function UsuariosPage() {
                   opticalSize={20}
                 />
               </span>
-              <span className={styles.metricBadge}>Tiempo real</span>
             </div>
             <h3 className={styles.metricLabel}>Alumnos activos</h3>
             <p className={styles.metricValue}>
@@ -541,22 +673,44 @@ export default function UsuariosPage() {
 
         <section className={styles.tableSection}>
           <div className={styles.tableToolbar}>
-            <div className={styles.tableTitleRow}>
-              <h3>{totalUsers} usuarios totales</h3>
-              <DotIcon />
-              <span>Lista actualizada</span>
-            </div>
+            <div className={styles.tableToolbarInfo}>
+              <div className={styles.tableTitleRow}>
+                <h3>{totalUsers} usuarios totales</h3>
+              </div>
 
-            <div className={styles.tableActions}>
-              <button type="button" className={styles.sortButton}>
+              <label className={styles.searchField}>
                 <MaterialSymbol
-                  name="sort"
-                  className={styles.actionIcon}
+                  name="search"
+                  className={styles.searchIcon}
                   weight={450}
                   opticalSize={20}
                 />
-                Ordenar vista
-              </button>
+                <span className={styles.srOnly}>Buscar usuarios por nombre o email</span>
+                <input
+                  type="search"
+                  value={searchQuery}
+                  placeholder="Buscar por nombre o email"
+                  onChange={(event) => handleSearchChange(event.target.value)}
+                />
+                {searchQuery ? (
+                  <button
+                    type="button"
+                    className={styles.clearSearchButton}
+                    aria-label="Limpiar búsqueda"
+                    onClick={() => handleSearchChange("")}
+                  >
+                    <MaterialSymbol
+                      name="close"
+                      className={styles.clearSearchIcon}
+                      weight={500}
+                      opticalSize={18}
+                    />
+                  </button>
+                ) : null}
+              </label>
+            </div>
+
+            <div className={styles.tableActions}>
               <button
                 type="button"
                 className={styles.createButton}
@@ -582,10 +736,30 @@ export default function UsuariosPage() {
               <thead>
                 <tr>
                   <th>Foto</th>
-                  <th>Usuario</th>
-                  <th>Email</th>
-                  <th>Roles</th>
-                  <th>Estado</th>
+                  <SortableHeader
+                    label="Usuario"
+                    sortKey="name"
+                    sortState={sortState}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    label="Email"
+                    sortKey="email"
+                    sortState={sortState}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    label="Roles"
+                    sortKey="role"
+                    sortState={sortState}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    label="Estado"
+                    sortKey="status"
+                    sortState={sortState}
+                    onSort={handleSort}
+                  />
                   <th className={styles.alignRight}>Acciones</th>
                 </tr>
               </thead>
@@ -601,6 +775,10 @@ export default function UsuariosPage() {
                 ) : users.length === 0 ? (
                   <tr>
                     <td colSpan={6}>No hay usuarios para mostrar.</td>
+                  </tr>
+                ) : filteredUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan={6}>No se encontraron usuarios.</td>
                   </tr>
                 ) : (
                   paginatedUsers.map((user) => (
@@ -674,10 +852,10 @@ export default function UsuariosPage() {
                           <button
                             className={`${styles.moreButton} ${styles.deleteActionButton}`}
                             type="button"
-                            aria-label={`Eliminar alumno ${user.name}`}
+                            aria-label={`Archivar alumno ${user.name}`}
                             onClick={() => openUserModal("delete", user)}
                           >
-                            <MaterialSymbol name="delete" className={styles.rowActionIcon} weight={500} opticalSize={20} />
+                            <MaterialSymbol name="archive" className={styles.rowActionIcon} weight={500} opticalSize={20} />
                           </button>
                         </div>
                       </td>
@@ -1119,19 +1297,24 @@ export default function UsuariosPage() {
 
               <div className={styles.detailBody}>
                 <section className={styles.profileHero}>
-                  <div className={styles.heroAvatarWrap}>
-                    <div className={styles.heroAvatar}>
-                      {activeUser.initials}
-                    </div>
-                    <div className={styles.heroStatusPill}>
-                      <span aria-hidden="true" />
-                      {activeUser.status}
-                    </div>
+                  <div className={styles.heroAvatar} aria-hidden="true">
+                    {activeUser.initials}
                   </div>
-                  <div>
+                  <div className={styles.profileHeroCopy}>
+                    <span className={styles.profileEyebrow}>Ficha de usuario</span>
                     <h3>{activeUser.name}</h3>
                     <div className={styles.profileBadges}>
-                      <span>{activeUser.role}</span>
+                      <span>{activeUser.roleLabel}</span>
+                      <span
+                        className={`${styles.profileStatusBadge} ${
+                          activeUser.status === "Activo"
+                            ? styles.profileStatusActive
+                            : styles.profileStatusInactive
+                        }`}
+                      >
+                        <i aria-hidden="true" />
+                        {activeUser.status}
+                      </span>
                     </div>
                   </div>
                 </section>
@@ -1147,29 +1330,32 @@ export default function UsuariosPage() {
                       />
                       <h4>Información Personal</h4>
                     </header>
-                    <div className={styles.personalCard}>
+                    <dl className={styles.personalCard}>
                       <div>
-                        <label>Nombre Completo</label>
-                        <p>{activeUser.fullName}</p>
+                        <dt>Nombre completo</dt>
+                        <dd>{activeUser.fullName}</dd>
                       </div>
                       <div>
-                        <label>Rol</label>
-                        <p>{activeUser.roleLabel}</p>
+                        <dt>Rol</dt>
+                        <dd>{activeUser.roleLabel}</dd>
+                      </div>
+                      <div className={styles.detailFieldWide}>
+                        <dt>Email</dt>
+                        <dd>{activeUser.email}</dd>
                       </div>
                       <div>
-                        <label>Email</label>
-                        <p>{activeUser.email}</p>
+                        <dt>Teléfono</dt>
+                        <dd className={activeUser.phone ? undefined : styles.detailEmpty}>
+                          {activeUser.phone || "Sin registrar"}
+                        </dd>
                       </div>
                       <div>
-                        <label>Teléfono</label>
-                        <p>{activeUser.phone}</p>
+                        <dt>Estado de alumno</dt>
+                        <dd className={activeUser.studentStatusLabel ? undefined : styles.detailEmpty}>
+                          {activeUser.studentStatusLabel || "Sin registrar"}
+                        </dd>
                       </div>
-                      <div>
-                        <label>Estado de alumno</label>
-                        <p>{activeUser.studentStatusLabel}</p>
-                      </div>
-                      <div></div>
-                    </div>
+                    </dl>
                   </article>
 
                   <article className={styles.detailSection}>
@@ -1182,46 +1368,52 @@ export default function UsuariosPage() {
                       />
                       <h4>Físico &amp; Biometría</h4>
                     </header>
-                    <div className={styles.metricsGrid}>
+                    <dl className={styles.metricsGrid}>
                       <div>
-                        <label>Género</label>
-                        <p>{activeUser.gender}</p>
+                        <dt>Género</dt>
+                        <dd className={activeUser.gender ? undefined : styles.detailEmpty}>
+                          {activeUser.gender || "Sin registrar"}
+                        </dd>
                       </div>
                       <div>
-                        <label>Fecha Nac.</label>
-                        <p>{activeUser.birthDate}</p>
+                        <dt>Fecha de nacimiento</dt>
+                        <dd className={activeUser.birthDate ? undefined : styles.detailEmpty}>
+                          {activeUser.birthDate || "Sin registrar"}
+                        </dd>
                       </div>
                       <div>
-                        <label>Altura</label>
-                        <p>
-                          {activeUser.heightCm === "—"
-                            ? "—"
-                            : `${activeUser.heightCm} cm`}
-                        </p>
+                        <dt>Altura</dt>
+                        <dd className={activeUser.heightCm ? undefined : styles.detailEmpty}>
+                          {activeUser.heightCm ? `${activeUser.heightCm} cm` : "Sin registrar"}
+                        </dd>
                       </div>
                       <div>
-                        <label>Peso</label>
-                        <p>
-                          {activeUser.weightKg === "—"
-                            ? "—"
-                            : `${activeUser.weightKg} kg`}
-                        </p>
+                        <dt>Peso</dt>
+                        <dd className={activeUser.weightKg ? undefined : styles.detailEmpty}>
+                          {activeUser.weightKg ? `${activeUser.weightKg} kg` : "Sin registrar"}
+                        </dd>
                       </div>
-                    </div>
+                    </dl>
                   </article>
                 </section>
               </div>
 
               <footer className={styles.detailFooter}>
-                <div>
+                <div className={styles.detailAudit}>
                   <MaterialSymbol
                     name="schedule"
                     className={styles.detailFooterIcon}
                     weight={500}
                     opticalSize={16}
                   />
-                  <span>Creado: {activeUser.createdAt}</span>
-                  <span>Actualizado: {activeUser.updatedAt}</span>
+                  <span>
+                    <small>Creado</small>
+                    <strong>{activeUser.createdAt || "Sin registrar"}</strong>
+                  </span>
+                  <span>
+                    <small>Actualizado</small>
+                    <strong>{activeUser.updatedAt || "Sin registrar"}</strong>
+                  </span>
                 </div>
                 <div className={styles.detailFooterActions}>
                   <button
@@ -1399,13 +1591,14 @@ export default function UsuariosPage() {
 
       {activeModal === "delete" && activeUser ? (
         <DestructiveConfirmationModal
-          ariaLabel={`Eliminar alumno ${activeUser.name}`}
-          title="¿Eliminar alumno?"
-          description="Esta acción es permanente y no se puede deshacer. Se eliminarán todos los datos, rutinas y registros de pagos asociados a este usuario."
-          headerAlignment="center"
+          className={styles.archiveModal}
+          ariaLabel={`Archivar alumno ${activeUser.name}`}
+          title="¿Archivar alumno?"
+          description="El alumno dejará de aparecer en la lista y no podrá acceder a su cuenta. Sus datos, rutinas y pagos se conservarán."
+          headerAlignment="start"
           density="compact"
-          confirmLabel="Eliminar alumno"
-          pendingConfirmLabel="Eliminando..."
+          confirmLabel="Archivar alumno"
+          pendingConfirmLabel="Archivando..."
           isPending={isDeletingUser}
           errorMessage={deleteUserError}
           onConfirm={handleDeleteUserConfirm}
@@ -1416,14 +1609,12 @@ export default function UsuariosPage() {
                 <img src={activeUser.photo} alt={activeUser.name} />
               </div>
 
-              <div>
+              <div className={styles.archiveIdentity}>
                 <small>Gestión de alumnos</small>
                 <strong>{activeUser.name}</strong>
+                <span className={styles.archiveEmail}>{activeUser.email}</span>
+                <span className={styles.archiveStatus}>{activeUser.status}</span>
               </div>
-
-              <em>
-                {activeUser.email} · {activeUser.status}
-              </em>
             </>
           }
         />

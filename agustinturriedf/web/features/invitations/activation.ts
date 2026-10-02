@@ -7,6 +7,7 @@ import { auditRepository } from "@/features/audit/repository";
 import { userRepository } from "@/features/users/repository";
 import { encryptPayload } from "@/features/outbox/crypto";
 import { outboxRepository } from "@/features/outbox/repository";
+import { paymentsRepository } from "@/features/payments/repository";
 import { ApiError } from "@/lib/http/api-response";
 import { prisma } from "@/lib/prisma";
 
@@ -110,6 +111,22 @@ export class ActivationPrimitives {
         },
         transaction
       );
+      if (user.role === "STUDENT" && user.studentProfile) {
+        const payment = await paymentsRepository.initializeCurrentPaymentForStudent({
+          studentProfileId: user.studentProfile.id,
+          startDate: invitation.initialPaymentStartDate ?? now,
+          transaction,
+        });
+        await auditRepository.append(
+          buildAuditEvent({
+            eventType: "STUDENT_DEBT_INITIALIZED",
+            subjectUserId: user.id,
+            actor: { type: "SUBJECT", userId: user.id },
+            summary: { changedFields: ["outstandingAmountInCents"], resourceType: "CurrentPayment", resourceRef: payment.id },
+          }),
+          transaction
+        );
+      }
       await auditRepository.append(
         buildAuditEvent({ eventType: "ACTIVATION_COMPLETED", subjectUserId: user.id, invitationId: invitation.id, actor: { type: "SUBJECT", userId: user.id } }),
         transaction

@@ -13,6 +13,7 @@ vi.mock("@/features/invitations/service", () => ({
 }));
 
 import { GET, POST } from "@/app/api/invitations/route";
+import { ApiError } from "@/lib/http/api-response";
 
 describe("/api/invitations", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -29,7 +30,7 @@ describe("/api/invitations", () => {
     expect(listPageForActorMock).toHaveBeenCalledWith({ id: "t1", role: "TRAINER" }, expect.objectContaining({ search: "ana", status: "PENDING", role: "STUDENT", limit: 2, cursor: "signed" }));
   });
 
-  it("POST returns created invitation", async () => {
+  it("POST returns 201 for an eligible reinvitation", async () => {
     requireSessionMock.mockResolvedValue({ id: "t1", role: "TRAINER" });
     createMock.mockResolvedValue({ id: "inv-1" });
 
@@ -50,5 +51,30 @@ describe("/api/invitations", () => {
 
     expect(response.status).toBe(201);
     expect(body).toEqual({ success: true, data: { id: "inv-1" } });
+  });
+
+  it("POST preserves the active-duplicate 409 contract", async () => {
+    requireSessionMock.mockResolvedValue({ id: "t1", role: "TRAINER" });
+    createMock.mockRejectedValue(new ApiError("Invitation already exists", 409, "CONFLICT"));
+
+    const response = await POST(
+      new Request("http://localhost/api/invitations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: "Ana",
+          lastName: "Gomez",
+          email: "ana@example.com",
+          trainerId: "c123456789012345678901234",
+          initialPaymentStartDate: "2026-05-01",
+        }),
+      })
+    );
+
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toEqual({
+      success: false,
+      error: { message: "Invitation already exists", code: "CONFLICT" },
+    });
   });
 });

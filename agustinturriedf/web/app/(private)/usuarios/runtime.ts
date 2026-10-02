@@ -1,5 +1,7 @@
 type UserRow = {
   id: string;
+  version: number;
+  accountStatus: ApiUser["status"];
   photo: string;
   firstName: string;
   lastName: string;
@@ -43,6 +45,8 @@ type PaymentConfigApiResponse =
 
 export type ApiUser = {
   id: string;
+  status: "ACTIVE" | "INACTIVE" | "BLOCKED" | "ARCHIVED";
+  version: number;
   firstName: string;
   lastName: string;
   email: string;
@@ -56,7 +60,7 @@ export type ApiUser = {
   createdAt: string;
   updatedAt: string;
   studentProfile: {
-    trainerId: string;
+    trainerId: string | null;
     status: "ACTIVE" | "INACTIVE" | "BLOCKED";
   } | null;
 };
@@ -115,13 +119,6 @@ export type CreateInvitationApiResponse =
     }
   | UserApiErrorResponse;
 
-export type DeleteUserApiResponse =
-  | {
-      success: true;
-      data: unknown;
-    }
-  | UserApiErrorResponse;
-
 const toAvatarDataUri = (initials: string) => {
   const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='100%' height='100%' fill='#25153a'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='28' font-weight='700' fill='#e4c2ff'>${initials}</text></svg>`;
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
@@ -139,12 +136,6 @@ const mapRoleLabel = (role: ApiUser["role"]) => {
   if (role === "ADMIN") return "Admin";
   if (role === "TRAINER") return "Trainer";
   return "Student";
-};
-
-const mapStatus = (role: ApiUser["role"], studentProfile: ApiUser["studentProfile"]): UserRow["status"] => {
-  if (role !== "STUDENT") return "Activo";
-  if (!studentProfile || studentProfile.status === "ACTIVE") return "Activo";
-  return "Inactivo";
 };
 
 const mapStudentStatusLabel = (role: ApiUser["role"], studentProfile: ApiUser["studentProfile"]) => {
@@ -185,6 +176,8 @@ export const mapApiUserToRow = (user: ApiUser): UserRow => {
 
   return {
     id: user.id,
+    version: user.version,
+    accountStatus: user.status,
     photo: normalizedPhotoUrl ?? avatar,
     firstName: user.firstName,
     lastName: user.lastName,
@@ -194,7 +187,7 @@ export const mapApiUserToRow = (user: ApiUser): UserRow => {
     phone: user.phone && user.phone.trim().length > 0 ? user.phone : "",
     roleLabel: mapRoleLabel(user.role),
     role: mapRole(user.role),
-    status: mapStatus(user.role, user.studentProfile),
+    status: user.status === "ACTIVE" ? "Activo" : "Inactivo",
     studentStatus: user.studentProfile?.status ?? null,
     studentStatusLabel: mapStudentStatusLabel(user.role, user.studentProfile),
     trainerId: user.studentProfile?.trainerId ?? null,
@@ -224,7 +217,7 @@ export const fetchUsersRuntime = async (fetchImpl: typeof fetch): Promise<UserRo
     throw new Error(message);
   }
 
-  return payload.data.map(mapApiUserToRow);
+  return payload.data.filter((user) => user.status !== "ARCHIVED").map(mapApiUserToRow);
 };
 
 export const createStudentRuntime = async (
@@ -313,24 +306,37 @@ export const fetchPaymentConfigRuntime = async (fetchImpl: typeof fetch) => {
   return payload.data;
 };
 
-export const deleteUserRuntime = async (
+export const archiveUserRuntime = async (
   fetchImpl: typeof fetch,
-  userId: string
+  userId: string,
+  expectedVersion: number,
+  reason: string
 ): Promise<void> => {
-  const response = await fetchImpl(`/api/users/${encodeURIComponent(userId)}`, {
-    method: "DELETE",
+  const trimmedReason = reason.trim();
+  if (!trimmedReason || trimmedReason.length > 500) {
+    throw new Error("Indique un motivo de entre 1 y 500 caracteres.");
+  }
+  if (!Number.isInteger(expectedVersion) || expectedVersion < 1) {
+    throw new Error("No se pudo verificar la versión del usuario. Recargue la lista.");
+  }
+
+  const response = await fetchImpl(`/api/users/${encodeURIComponent(userId)}/transitions`, {
+    method: "PATCH",
     headers: {
       "Content-Type": "application/json",
     },
+    body: JSON.stringify({ targetStatus: "ARCHIVED", expectedVersion, reason: trimmedReason }),
   });
 
-  const responsePayload = (await response.json()) as DeleteUserApiResponse;
-
-  if (!response.ok || !responsePayload.success) {
-    const message = responsePayload.success
-      ? "No se pudo eliminar el usuario."
-      : responsePayload.error.message;
-    throw new Error(message);
+  const payload = await response.json().catch(() => null);
+  const fallback = "No se pudo confirmar el archivo del usuario. Recargue la lista antes de reintentar.";
+  if (!response.ok || payload?.success !== true) {
+    const message = payload?.error?.message;
+    throw new Error(typeof message === "string" && message.trim() ? message : fallback);
+  }
+  if (payload.data?.id !== userId || payload.data?.status !== "ARCHIVED" ||
+      !Number.isInteger(payload.data?.version) || payload.data.version <= expectedVersion) {
+    throw new Error(fallback);
   }
 };
 

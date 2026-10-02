@@ -11,7 +11,7 @@ const buenosAiresDateFormatter = new Intl.DateTimeFormat("en-CA", {
   day: "2-digit",
 });
 
-const toUtcMidnightFromDateKey = (dateKey: string) => {
+export const toUtcMidnightFromDateKey = (dateKey: string) => {
   const [yearRaw, monthRaw, dayRaw] = dateKey.split("-");
   const year = Number(yearRaw);
   const month = Number(monthRaw);
@@ -21,6 +21,15 @@ const toUtcMidnightFromDateKey = (dateKey: string) => {
 };
 
 export const toBuenosAiresDateKey = (value: Date) => buenosAiresDateFormatter.format(value);
+
+export const calendarDaysBetween = (start: Date, end: Date) => {
+  const ordinal = (value: Date) => {
+    const [year, month, day] = toBuenosAiresDateKey(value).split("-").map(Number);
+    return Date.UTC(year, month - 1, day) / MILLIS_IN_DAY;
+  };
+
+  return ordinal(end) - ordinal(start);
+};
 
 export const normalizeToBuenosAiresDay = (value: Date) =>
   toUtcMidnightFromDateKey(toBuenosAiresDateKey(value));
@@ -36,10 +45,7 @@ export const parseBuenosAiresDateInput = (value: string) => {
   const month = Number(monthRaw);
   const day = Number(dayRaw);
 
-  const isValidDate =
-    parsedDate.getUTCFullYear() === year &&
-    parsedDate.getUTCMonth() + 1 === month &&
-    parsedDate.getUTCDate() === day;
+  const isValidDate = toBuenosAiresDateKey(parsedDate) === value;
 
   if (!isValidDate) {
     throw new Error("paymentDate debe ser una fecha válida");

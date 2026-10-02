@@ -4,16 +4,18 @@ import { requireSession } from "@/features/auth/session";
 import { ApiError, apiSuccess, handleApiError } from "@/lib/http/api-response";
 import { paymentConfigUpdateSchema } from "@/lib/validation/payments";
 
-const resolveTrainerId = (actor: Awaited<ReturnType<typeof requireSession>>) => actor.id;
-
 export const GET = async () => {
   try {
     const actor = await requireSession();
     requireRole(actor, ["ADMIN", "TRAINER"], "Solo ADMIN y TRAINER pueden consultar configuración de pagos");
 
-    const config = await paymentsService.getTrainerDefaultAmount(resolveTrainerId(actor));
+    const config = await paymentsService.getGlobalPaymentConfig();
 
-    return apiSuccess(config);
+    return apiSuccess({
+      defaultMonthlyAmountInCents: config.defaultMonthlyAmountInCents,
+      version: config.version,
+      canEdit: actor.role === "ADMIN",
+    });
   } catch (error) {
     return handleApiError(error);
   }
@@ -22,7 +24,7 @@ export const GET = async () => {
 export const PATCH = async (request: Request) => {
   try {
     const actor = await requireSession();
-    requireRole(actor, ["ADMIN", "TRAINER"], "Solo ADMIN y TRAINER pueden editar configuración de pagos");
+    requireRole(actor, ["ADMIN"], "Solo ADMIN puede editar configuración de pagos");
 
     const payload = await request.json();
     const parsedPayload = paymentConfigUpdateSchema.safeParse(payload);
@@ -31,9 +33,10 @@ export const PATCH = async (request: Request) => {
       throw new ApiError("Validation failed", 400, "VALIDATION_ERROR", parsedPayload.error.flatten());
     }
 
-    const config = await paymentsService.updateTrainerDefaultAmount(
-      resolveTrainerId(actor),
-      parsedPayload.data.defaultMonthlyAmountInCents
+    const config = await paymentsService.updateGlobalPaymentConfig(
+      actor.id,
+      parsedPayload.data.defaultMonthlyAmountInCents,
+      parsedPayload.data.expectedVersion
     );
 
     return apiSuccess(config);

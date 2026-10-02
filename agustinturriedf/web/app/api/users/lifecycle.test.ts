@@ -23,6 +23,7 @@ vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
 vi.mock("@/features/audit/repository", () => ({ auditRepository: { append: appendMock } }));
 
 import { DELETE, PATCH } from "@/app/api/users/[userId]/transitions/route";
+import { DELETE as deleteUser } from "@/app/api/users/[userId]/route";
 import { UserRepository } from "@/features/users/repository";
 
 const context = {
@@ -37,6 +38,20 @@ const transitionRequest = (payload: Record<string, unknown>) =>
   });
 
 describe("PATCH /api/users/:userId/transitions", () => {
+  it("keeps physical deletion disabled with a JSON error", async () => {
+    const response = await deleteUser(new Request("http://localhost/api/users/u", { method: "DELETE" }), context);
+    expect(response.status).toBe(405);
+    expect(response.headers.get("Allow")).toBe("GET, PATCH");
+    await expect(response.json()).resolves.toMatchObject({ success: false, error: { code: "PHYSICAL_DELETE_DISABLED" } });
+    expect(transitionMock).not.toHaveBeenCalled();
+  });
+
+  it("accepts archive with a trimmed reason and actual version", async () => {
+    transitionMock.mockResolvedValue({ status: "ARCHIVED", version: 8 });
+    const response = await PATCH(transitionRequest({ targetStatus: "ARCHIVED", expectedVersion: 7, reason: "  Closure  " }), context);
+    expect(response.status).toBe(200);
+    expect(transitionMock).toHaveBeenCalledWith(expect.anything(), expect.anything(), { targetStatus: "ARCHIVED", expectedVersion: 7, reason: "Closure" });
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     requireSessionMock.mockResolvedValue({ id: "admin-1", role: "ADMIN" });
@@ -226,6 +241,13 @@ const createAdvisoryLockHarness = (initialUsers: Array<Record<string, any>>) => 
 };
 
 describe("UserRepository.transition", () => {
+  it("archives an active student without physical deletion", async () => {
+    const users = createLifecycleHarness([{ id: "student-1", role: "STUDENT", status: "ACTIVE", version: 7, authVersion: 2, studentProfile: null }]);
+    await new UserRepository().transition({ userId: "student-1", actorId: "admin-1", targetStatus: "ARCHIVED", expectedVersion: 7, reason: "Closure" });
+    expect(users()).toHaveLength(1);
+    expect(users()[0]).toMatchObject({ status: "ARCHIVED", version: 8, authVersion: 3, archiveReason: "Closure", archivedByUserId: "admin-1" });
+    expect(appendMock).toHaveBeenCalledWith(expect.objectContaining({ eventType: "ACCOUNT_ARCHIVED", reason: "Closure" }), expect.anything());
+  });
   beforeEach(() => {
     vi.clearAllMocks();
     appendMock.mockResolvedValue({ id: "audit-1" });

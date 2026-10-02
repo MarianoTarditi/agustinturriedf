@@ -678,11 +678,26 @@
 }
 
 .fileMediaSurface {
+  width: 100%;
   min-height: 13.2rem;
   border-radius: 0.68rem;
   border: 1px solid rgba(255, 255, 255, 0.04);
   position: relative;
   overflow: hidden;
+}
+
+.fileMediaOpenButton {
+  display: block;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fileMediaOpenButton:focus-visible {
+  outline: 2px solid rgba(222, 183, 255, 0.72);
+  outline-offset: 2px;
 }
 
 .fileMediaToneVideo {
@@ -907,6 +922,101 @@
   padding: 1rem;
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(6px);
+}
+
+.mediaViewerOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  background: rgba(5, 4, 7, 0.92);
+  backdrop-filter: blur(10px);
+}
+
+.mediaViewer {
+  width: min(100%, 76rem);
+  max-height: calc(100vh - 2rem);
+  overflow: hidden;
+  border: 1px solid rgba(222, 183, 255, 0.18);
+  border-radius: 0.9rem;
+  background: #0b0a0e;
+  box-shadow: 0 40px 90px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(123, 44, 191, 0.12);
+}
+
+.mediaViewerHeader {
+  min-height: 4.5rem;
+  padding: 0.85rem 1rem 0.85rem 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mediaViewerHeader span {
+  display: block;
+  margin-bottom: 0.15rem;
+  color: rgba(222, 183, 255, 0.7);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.mediaViewerHeader h2 {
+  margin: 0;
+  overflow: hidden;
+  color: var(--on-surface);
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+  font-size: clamp(0.95rem, 2vw, 1.2rem);
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mediaViewerCloseButton {
+  flex: 0 0 auto;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.82);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.mediaViewerCloseButton:hover,
+.mediaViewerCloseButton:focus-visible {
+  border-color: rgba(222, 183, 255, 0.45);
+  color: #f0dfff;
+  outline: none;
+}
+
+.mediaViewerCloseIcon {
+  font-size: 1.25rem;
+}
+
+.mediaViewerStage {
+  height: min(78vh, 52rem);
+  min-height: 16rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(39, 31, 46, 0.44), transparent 64%), #050407;
+}
+
+.mediaViewerImage,
+.mediaViewerVideo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .editModal {
@@ -1203,5 +1313,18 @@
 
   .modalActions {
     flex-direction: column;
+  }
+
+  .mediaViewerOverlay {
+    padding: 0;
+  }
+
+  .mediaViewer {
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .mediaViewerStage {
+    height: calc(100vh - 4.5rem);
   }
 }

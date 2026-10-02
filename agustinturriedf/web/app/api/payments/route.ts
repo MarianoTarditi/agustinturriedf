@@ -4,14 +4,6 @@ import { requireSession } from "@/features/auth/session";
 import { ApiError, apiSuccess, handleApiError } from "@/lib/http/api-response";
 import { paymentDashboardFiltersSchema } from "@/lib/validation/payments";
 
-const resolveTrainerId = (actor: Awaited<ReturnType<typeof requireSession>>) => {
-  if (actor.role === "TRAINER") {
-    return actor.id;
-  }
-
-  return actor.id;
-};
-
 export const GET = async (request: Request) => {
   try {
     const actor = await requireSession();
@@ -27,7 +19,7 @@ export const GET = async (request: Request) => {
       throw new ApiError("Validation failed", 400, "VALIDATION_ERROR", parsedFilters.error.flatten());
     }
 
-    const dashboard = await paymentsService.getDashboard(resolveTrainerId(actor), parsedFilters.data);
+    const dashboard = await paymentsService.getDashboard({ id: actor.id, role: actor.role as "ADMIN" | "TRAINER" }, parsedFilters.data);
 
     return apiSuccess(dashboard);
   } catch (error) {

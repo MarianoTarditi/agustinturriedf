@@ -3,6 +3,7 @@ import { MaterialSymbol } from "@/components/material-symbol";
 import styles from "@/components/destructive-confirmation-modal.module.css";
 
 type DestructiveConfirmationModalProps = {
+  className?: string;
   ariaLabel: string;
   title: string;
   description: string;
@@ -19,6 +20,7 @@ type DestructiveConfirmationModalProps = {
 };
 
 export function DestructiveConfirmationModal({
+  className = "",
   ariaLabel,
   title,
   description,
@@ -45,7 +47,7 @@ export function DestructiveConfirmationModal({
         onCancel();
       }}
     >
-      <div className={deleteModalClassName} role="dialog" aria-modal="true" aria-label={ariaLabel} aria-busy={isPending} onClick={(event) => event.stopPropagation()}>
+      <div className={`${deleteModalClassName} ${className}`} role="dialog" aria-modal="true" aria-label={ariaLabel} aria-busy={isPending} onClick={(event) => event.stopPropagation()}>
         <button type="button" className={styles.deleteClose} aria-label="Cerrar modal" onClick={onCancel} disabled={isPending}>
           <MaterialSymbol name="close" className={styles.modalCloseIcon} weight={500} opticalSize={22} />
         </button>

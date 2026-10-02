@@ -32,6 +32,7 @@ describe("PATCH /api/payments/[studentProfileId]", () => {
       body: JSON.stringify({
         amountInCents: 2_900_000,
         startDate: "2026-04-21",
+        expectedCurrentPaymentVersion: 1,
       }),
     });
 
@@ -45,10 +46,11 @@ describe("PATCH /api/payments/[studentProfileId]", () => {
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
     expect(editCurrentPaymentMock).toHaveBeenCalledWith(
-      "trainer-1",
+      { id: "trainer-1", role: "TRAINER" },
       expect.objectContaining({
         studentProfileId: "ck7m7x3k50000abcd1234efgh",
         amountInCents: 2_900_000,
+        expectedCurrentPaymentVersion: 1,
       })
     );
   });

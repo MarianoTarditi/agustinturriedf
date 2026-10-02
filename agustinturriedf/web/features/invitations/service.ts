@@ -12,6 +12,8 @@ import { ensureStudentRoutineDirectory } from "@/features/routines/storage";
 import { userRepository } from "@/features/users/repository";
 import { encryptPayload } from "@/features/outbox/crypto";
 import { outboxRepository } from "@/features/outbox/repository";
+import { paymentsRepository } from "@/features/payments/repository";
+import { parseBuenosAiresDateInput } from "@/features/payments/timezone";
 import { ApiError } from "@/lib/http/api-response";
 import { prisma } from "@/lib/prisma";
 import {
@@ -39,7 +41,7 @@ const normalizeOptionalDate = (dateValue: string | Date | null | undefined) =>
   typeof dateValue === "string" ? normalizeIsoDateToUtcMidnight(dateValue) : dateValue;
 
 const activationBaseUrl = () => process.env.NEXTAUTH_URL?.trim() || "http://localhost:3010";
-const buildActivationUrl = (token: string) => `${activationBaseUrl()}/activation?token=${encodeURIComponent(token)}`;
+const buildActivationUrl = (token: string) => `${activationBaseUrl()}/activation/exchange?token=${encodeURIComponent(token)}`;
 const outboxKey = () => {
   const value = process.env.OUTBOX_ENCRYPTION_KEY?.trim();
   const id = process.env.OUTBOX_ENCRYPTION_KEY_ID?.trim() || "current";
@@ -77,19 +79,25 @@ export class InvitationService {
     }
 
     const email = normalizeEmail(parsedInput.email);
-    if (await userRepository.findByEmail(email)) throw new ApiError("Email is reserved", 409, "CONFLICT");
-    if (await invitationRepository.findByEmail(email)) throw new ApiError("Invitation already exists", 409, "CONFLICT");
-
-    const rawToken = generateToken();
-    const expiresAt = addHours(new Date(), TOKEN_EXPIRATION_HOURS);
 
     const createdInvitation = await prisma.$transaction(async (transaction) => {
+      await invitationRepository.lockIssuanceForEmail(email, transaction);
+      const now = new Date();
+      if (await userRepository.findByEmail(email, transaction)) throw new ApiError("Email is reserved", 409, "CONFLICT");
+      if (await invitationRepository.findActiveByEmail(email, now, transaction)) {
+        throw new ApiError("Invitation already exists", 409, "CONFLICT");
+      }
+
+      const rawToken = generateToken();
+      const expiresAt = addHours(now, TOKEN_EXPIRATION_HOURS);
       const invitation = await invitationRepository.create({
         firstName: parsedInput.firstName, lastName: parsedInput.lastName, email, role: parsedInput.role,
         phone: parsedInput.phone, birthDate: normalizeOptionalDate(parsedInput.birthDate),
         gender: parsedInput.gender, heightCm: parsedInput.heightCm, weightKg: parsedInput.weightKg,
         trainerId: parsedInput.role === "STUDENT" ? parsedInput.trainerId : null, tokenHash: hashToken(rawToken), expiresAt, status: "PENDING",
-        initialPaymentStartDate: normalizeOptionalDate(parsedInput.initialPaymentStartDate),
+        initialPaymentStartDate: parsedInput.initialPaymentStartDate
+          ? parseBuenosAiresDateInput(parsedInput.initialPaymentStartDate)
+          : undefined,
       }, transaction);
       await auditRepository.append(buildAuditEvent({ eventType: "INVITATION_ISSUED", invitationId: invitation.id, actor: { type: "USER", userId: actor.id }, summary: { changedFields: ["role"], deliveryStatus: "PENDING" } }), transaction as any);
       await outboxRepository.enqueue({ messageType: "EMAIL", resourceType: "INVITATION", resourceId: invitation.id, idempotencyKey: `invitation:${invitation.id}:issue`, payloadEncrypted: encryptPayload({ to: email, activationUrl: buildActivationUrl(rawToken), expiresAt: expiresAt.toISOString() }, outboxKey()) }, transaction as any);
@@ -169,6 +177,7 @@ export class InvitationService {
     if (!invitation) throw new ApiError("Token inválido o expirado", 400, "INVALID_OR_EXPIRED_TOKEN");
 
     const now = new Date();
+    if (!invitation.trainerId) throw new ApiError("Token inválido o expirado", 400, "INVALID_OR_EXPIRED_TOKEN");
     if (isExpired(invitation.expiresAt, now)) {
       await invitationLogger.expired({
         invitationId: invitation.id,
@@ -202,6 +211,18 @@ export class InvitationService {
         },
         transaction
       );
+
+      const payment = await paymentsRepository.initializeCurrentPaymentForStudent({
+        studentProfileId: user.studentProfile!.id,
+        startDate: invitation.initialPaymentStartDate ?? now,
+        transaction,
+      });
+      await auditRepository.append(buildAuditEvent({
+        eventType: "STUDENT_DEBT_INITIALIZED",
+        subjectUserId: user.id,
+        actor: { type: "SUBJECT", userId: user.id },
+        summary: { changedFields: ["outstandingAmountInCents"], resourceType: "CurrentPayment", resourceRef: payment.id },
+      }), transaction as any);
 
       await routinesRepository.ensureFolderForStudent(
         {

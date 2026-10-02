@@ -1,50 +1,44 @@
-import { ApiError } from "@/lib/http/api-response";
-
+import { evaluateEffectivePaymentDebt } from "@/features/payments/debt";
 import {
+  type PaymentActorScope,
+  type PaymentCommandFailure,
   type PaymentDashboardView,
   paymentsRepository,
 } from "@/features/payments/repository";
 import {
-  addDays,
+  calendarDaysBetween,
   getRollingThirtyDayWindow,
-  isDueSoon,
-  isOverdue,
   normalizeToBuenosAiresDay,
   toEndOfDayUtc,
 } from "@/features/payments/timezone";
+import { ApiError } from "@/lib/http/api-response";
 
-export type PaymentDashboardFilters = {
-  query?: string;
-  view?: PaymentDashboardView;
-};
-
+export type PaymentDashboardFilters = { query?: string; view?: PaymentDashboardView };
 export type RegisterPaymentInput = {
   studentProfileId: string;
   amountInCents: number;
   paymentDate: Date;
+  expectedCurrentPaymentVersion: number;
 };
-
 export type EditPaymentInput = {
   studentProfileId: string;
   amountInCents: number;
   startDate: Date;
+  expectedCurrentPaymentVersion: number;
 };
 
 type DashboardRowRecord = {
   id: string;
   status: "ACTIVE" | "INACTIVE" | "BLOCKED";
-  user: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string | null;
-  };
+  user: { id: string; firstName: string; lastName: string; email: string; phone: string | null };
   currentPayment: {
     id: string;
     amountInCents: number;
+    outstandingAmountInCents: number;
     startDate: Date;
     dueDate: Date;
+    overdueSinceDate: Date | null;
+    version: number;
   } | null;
 };
 
@@ -56,57 +50,22 @@ export type PaymentDashboardRowDTO = {
   phone: string | null;
   studentStatus: "ACTIVE" | "INACTIVE" | "BLOCKED";
   paymentStatus: "CURRENT" | "DUE_SOON" | "OVERDUE";
-  amountInCents: number;
+  monthlyAmountInCents: number;
+  outstandingAmountInCents: number;
   startDate: Date;
-  dueDate: Date;
+  nextChargeDate: Date;
+  overdueSinceDate: Date | null;
   daysToExpire: number;
+  currentPaymentVersion: number;
 };
 
-export type PaymentDashboardDTO = {
-  cards: {
-    collectedCount: number;
-    collectedAmountInCents: number;
-    dueSoonCount: number;
-    overdueCount: number;
-    overdueAmountInCents: number;
-    estimatedTotalInCents: number;
-    studentsInEstimatedTotal: number;
-  };
-  rows: PaymentDashboardRowDTO[];
-  config: {
-    trainerId: string;
-    defaultMonthlyAmountInCents: number;
-  };
-  filters: {
-    query: string;
-    view: PaymentDashboardView;
-  };
-};
-
-const resolvePaymentStatus = (dueDate: Date, now: Date) => {
-  if (isOverdue(dueDate, now)) {
-    return "OVERDUE" as const;
-  }
-
-  if (isDueSoon(dueDate, now, 3)) {
-    return "DUE_SOON" as const;
-  }
-
-  return "CURRENT" as const;
-};
-
-const calculateDaysToExpire = (dueDate: Date, now: Date) => {
-  const dueDateAtDayPrecision = normalizeToBuenosAiresDay(dueDate);
-  const today = normalizeToBuenosAiresDay(now);
-
-  return Math.floor((dueDateAtDayPrecision.getTime() - today.getTime()) / (24 * 60 * 60 * 1000));
-};
-
-const mapDashboardRow = (row: DashboardRowRecord, now: Date): PaymentDashboardRowDTO | null => {
-  if (!row.currentPayment) {
-    return null;
-  }
-
+const mapDashboardRow = (row: DashboardRowRecord, evaluationDate: Date): PaymentDashboardRowDTO | null => {
+  if (!row.currentPayment) return null;
+  const effective = evaluateEffectivePaymentDebt(row.currentPayment, evaluationDate);
+  const today = normalizeToBuenosAiresDay(evaluationDate);
+  const daysToExpire = calendarDaysBetween(today, effective.nextChargeDate);
+  const overdue = effective.outstandingAmountInCents > 0 && effective.overdueSinceDate !== null;
+  const dueSoon = daysToExpire >= 0 && daysToExpire <= 3;
   return {
     studentProfileId: row.id,
     userId: row.user.id,
@@ -114,169 +73,99 @@ const mapDashboardRow = (row: DashboardRowRecord, now: Date): PaymentDashboardRo
     email: row.user.email,
     phone: row.user.phone,
     studentStatus: row.status,
-    paymentStatus: resolvePaymentStatus(row.currentPayment.dueDate, now),
-    amountInCents: row.currentPayment.amountInCents,
+    paymentStatus: overdue ? "OVERDUE" : dueSoon ? "DUE_SOON" : "CURRENT",
+    monthlyAmountInCents: row.currentPayment.amountInCents,
+    outstandingAmountInCents: effective.outstandingAmountInCents,
     startDate: row.currentPayment.startDate,
-    dueDate: row.currentPayment.dueDate,
-    daysToExpire: calculateDaysToExpire(row.currentPayment.dueDate, now),
+    nextChargeDate: effective.nextChargeDate,
+    overdueSinceDate: effective.overdueSinceDate,
+    daysToExpire,
+    currentPaymentVersion: row.currentPayment.version,
   };
 };
 
+const matchesView = (row: PaymentDashboardRowDTO, view: PaymentDashboardView) => {
+  if (view === "DUE_TODAY") return row.daysToExpire === 0;
+  if (view === "DUE_THIS_WEEK") return row.daysToExpire >= 0 && row.daysToExpire <= 7;
+  if (view === "OVERDUE") return row.paymentStatus === "OVERDUE";
+  return true;
+};
+
+const commandError = (reason: PaymentCommandFailure, details?: Record<string, number>) => {
+  if (reason === "NOT_FOUND") return new ApiError("Pago actual no encontrado para el alumno", 404, "NOT_FOUND");
+  if (reason === "CONFLICT") return new ApiError("El estado del pago cambió. Actualice la vista e inténtelo nuevamente.", 409, "PAYMENT_CONFLICT");
+  if (reason === "NO_DEBT") return new ApiError("No hay deuda pendiente para pagar.", 409, "NO_OUTSTANDING_DEBT");
+  if (reason === "AMOUNT_MISMATCH") return new ApiError("El monto debe ser exactamente igual a la deuda pendiente.", 409, "PAYMENT_AMOUNT_MISMATCH", details);
+  return new ApiError("La próxima fecha de cobro debe ser futura.", 400, "INVALID_NEXT_CHARGE_DATE");
+};
+
 export class PaymentsService {
-  async getDashboard(trainerId: string, filters: PaymentDashboardFilters = {}, now = new Date()) {
-    const normalizedView: PaymentDashboardView = filters.view ?? "ALL";
-    const normalizedQuery = filters.query?.trim() ?? "";
-    const today = normalizeToBuenosAiresDay(now);
-    const dueThisWeekLimit = addDays(today, 7);
-    const { startDate, endDate } = getRollingThirtyDayWindow(now);
-
-    const [trainerConfig, dashboardRowsRaw, rollingCollectionSummary] = await Promise.all([
-      paymentsRepository.getOrCreateTrainerConfig(trainerId),
-      paymentsRepository.findDashboardRows({
-        trainerId,
-        query: normalizedQuery,
-        view: normalizedView,
-        today,
-        dueThisWeekLimit,
-      }),
-      paymentsRepository.getRollingCollectionSummary({
-        trainerId,
-        query: normalizedQuery,
-        startDate,
-        endDateInclusive: toEndOfDayUtc(endDate),
-      }),
+  async getDashboard(actor: PaymentActorScope, filters: PaymentDashboardFilters = {}, now = new Date()) {
+    const view = filters.view ?? "ALL";
+    const query = filters.query?.trim() ?? "";
+    const evaluationDate = normalizeToBuenosAiresDay(now);
+    const { startDate, endDate } = getRollingThirtyDayWindow(evaluationDate);
+    const [config, rawRows, collected] = await Promise.all([
+      paymentsRepository.getGlobalPaymentConfig(),
+      paymentsRepository.findDashboardRows({ actor, query }),
+      paymentsRepository.getRollingCollectionSummary({ actor, query, startDate, endDateInclusive: toEndOfDayUtc(endDate) }),
     ]);
-
-    const mappedRows = (dashboardRowsRaw as DashboardRowRecord[])
-      .map((row) => mapDashboardRow(row, now))
+    const allRows = (rawRows as DashboardRowRecord[])
+      .map((row) => mapDashboardRow(row, evaluationDate))
       .filter((row): row is PaymentDashboardRowDTO => row !== null);
-
-    const dueSoonCount = mappedRows.filter((row) => row.paymentStatus === "DUE_SOON").length;
-    const overdueRows = mappedRows.filter((row) => row.paymentStatus === "OVERDUE");
-    const overdueAmountInCents = overdueRows.reduce(
-      (accumulator: number, row: PaymentDashboardRowDTO) => accumulator + row.amountInCents,
-      0
-    );
-
-    const estimatedRows = mappedRows.filter((row) => {
-      const normalizedStartDate = normalizeToBuenosAiresDay(row.startDate);
-
-      return (
-        normalizedStartDate.getTime() >= startDate.getTime() &&
-        normalizedStartDate.getTime() <= endDate.getTime()
-      );
-    });
-
-    const estimatedTotalInCents = estimatedRows.reduce(
-      (accumulator: number, row: PaymentDashboardRowDTO) => accumulator + row.amountInCents,
-      0
-    );
-
+    const debtRows = allRows.filter((row) => row.outstandingAmountInCents > 0);
+    const overdueRows = debtRows.filter((row) => row.overdueSinceDate !== null);
+    const estimatedRows = allRows.filter((row) => row.daysToExpire >= 0 && row.daysToExpire <= 29);
     return {
+      evaluationDate,
       cards: {
-        collectedCount: rollingCollectionSummary._count?._all ?? 0,
-        collectedAmountInCents: rollingCollectionSummary._sum?.amountInCents ?? 0,
-        dueSoonCount,
+        collectedCount: collected._count?._all ?? 0,
+        collectedAmountInCents: collected._sum?.amountInCents ?? 0,
+        outstandingCount: debtRows.length,
+        outstandingAmountInCents: debtRows.reduce((sum, row) => sum + row.outstandingAmountInCents, 0),
+        dueSoonCount: allRows.filter((row) => row.daysToExpire >= 0 && row.daysToExpire <= 3).length,
         overdueCount: overdueRows.length,
-        overdueAmountInCents,
-        estimatedTotalInCents,
+        overdueAmountInCents: overdueRows.reduce((sum, row) => sum + row.outstandingAmountInCents, 0),
+        estimatedTotalInCents: estimatedRows.reduce((sum, row) => sum + row.monthlyAmountInCents, 0),
         studentsInEstimatedTotal: estimatedRows.length,
       },
-      rows: mappedRows,
-      config: {
-        trainerId,
-        defaultMonthlyAmountInCents: trainerConfig.defaultMonthlyAmountInCents,
-      },
-      filters: {
-        query: normalizedQuery,
-        view: normalizedView,
-      },
-    } satisfies PaymentDashboardDTO;
+      rows: allRows.filter((row) => matchesView(row, view)),
+      config: { defaultMonthlyAmountInCents: config.defaultMonthlyAmountInCents, version: config.version, canEdit: actor.role === "ADMIN" },
+      filters: { query, view },
+    };
   }
 
-  async registerPayment(trainerId: string, actorId: string, input: RegisterPaymentInput) {
-    if (!input.studentProfileId) {
-      throw new ApiError("studentProfileId es obligatorio", 400, "VALIDATION_ERROR");
-    }
-
-    if (!Number.isInteger(input.amountInCents) || input.amountInCents <= 0) {
-      throw new ApiError("amountInCents debe ser un entero positivo", 400, "VALIDATION_ERROR");
-    }
-
-    const result = await paymentsRepository.registerPayment({
-      trainerId,
-      studentProfileId: input.studentProfileId,
-      amountInCents: input.amountInCents,
-      paymentDate: input.paymentDate,
-      recordedByUserId: actorId,
-    });
-
-    if (!result) {
-      throw new ApiError("Pago actual no encontrado para el alumno", 404, "NOT_FOUND");
-    }
-
-    return result;
+  async registerPayment(actor: PaymentActorScope, input: RegisterPaymentInput) {
+    this.validateCommand(input.studentProfileId, input.amountInCents, input.expectedCurrentPaymentVersion);
+    const result = await paymentsRepository.registerPayment({ ...input, actor });
+    if (!result.ok) throw commandError(result.reason, result.details);
+    return result.value;
   }
 
-  async editCurrentPayment(trainerId: string, input: EditPaymentInput) {
-    if (!input.studentProfileId) {
-      throw new ApiError("studentProfileId es obligatorio", 400, "VALIDATION_ERROR");
-    }
-
-    if (!Number.isInteger(input.amountInCents) || input.amountInCents <= 0) {
-      throw new ApiError("amountInCents debe ser un entero positivo", 400, "VALIDATION_ERROR");
-    }
-
-    const updatedCurrentPayment = await paymentsRepository.editCurrentPayment({
-      trainerId,
-      studentProfileId: input.studentProfileId,
-      amountInCents: input.amountInCents,
-      startDate: input.startDate,
-    });
-
-    if (!updatedCurrentPayment) {
-      throw new ApiError("Pago actual no encontrado para el alumno", 404, "NOT_FOUND");
-    }
-
-    return updatedCurrentPayment;
+  async editCurrentPayment(actor: PaymentActorScope, input: EditPaymentInput, now = new Date()) {
+    this.validateCommand(input.studentProfileId, input.amountInCents, input.expectedCurrentPaymentVersion);
+    const result = await paymentsRepository.editCurrentPayment({ ...input, actor, evaluationDate: now });
+    if (!result.ok) throw commandError(result.reason, result.details);
+    return result.value;
   }
 
-  async getTrainerDefaultAmount(trainerId: string) {
-    return paymentsRepository.getOrCreateTrainerConfig(trainerId);
+  async getGlobalPaymentConfig() {
+    return paymentsRepository.getGlobalPaymentConfig();
   }
 
-  async updateTrainerDefaultAmount(trainerId: string, defaultMonthlyAmountInCents: number) {
-    if (!Number.isInteger(defaultMonthlyAmountInCents) || defaultMonthlyAmountInCents <= 0) {
-      throw new ApiError(
-        "defaultMonthlyAmountInCents debe ser un entero positivo",
-        400,
-        "VALIDATION_ERROR"
-      );
+  async updateGlobalPaymentConfig(actorId: string, amountInCents: number, expectedVersion: number) {
+    if (!Number.isInteger(amountInCents) || amountInCents <= 0 || !Number.isInteger(expectedVersion) || expectedVersion <= 0) {
+      throw new ApiError("La configuración de pagos no es válida", 400, "VALIDATION_ERROR");
     }
-
-    return paymentsRepository.updateTrainerDefaultAmount(trainerId, defaultMonthlyAmountInCents);
+    const config = await paymentsRepository.updateGlobalPaymentConfig({ amountInCents, expectedVersion, actorId });
+    if (!config) throw new ApiError("La configuración de pagos cambió. Actualice la vista e inténtelo nuevamente.", 409, "PAYMENT_CONFIG_CONFLICT");
+    return config;
   }
 
-  async initializeCurrentPaymentForStudent(
-    trainerId: string,
-    studentProfileId: string,
-    startDate: Date,
-    amountInCents?: number
-  ) {
-    if (!studentProfileId) {
-      throw new ApiError("studentProfileId es obligatorio", 400, "VALIDATION_ERROR");
+  private validateCommand(studentProfileId: string, amountInCents: number, expectedVersion: number) {
+    if (!studentProfileId || !Number.isInteger(amountInCents) || amountInCents <= 0 || !Number.isInteger(expectedVersion) || expectedVersion <= 0) {
+      throw new ApiError("Los datos del pago no son válidos", 400, "VALIDATION_ERROR");
     }
-
-    if (amountInCents !== undefined && (!Number.isInteger(amountInCents) || amountInCents <= 0)) {
-      throw new ApiError("amountInCents debe ser un entero positivo", 400, "VALIDATION_ERROR");
-    }
-
-    return paymentsRepository.initializeCurrentPaymentForStudent({
-      trainerId,
-      studentProfileId,
-      startDate,
-      amountInCents,
-    });
   }
 }
 

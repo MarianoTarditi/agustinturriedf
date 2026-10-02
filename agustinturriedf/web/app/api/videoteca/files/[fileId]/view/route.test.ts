@@ -34,15 +34,26 @@ vi.mock("@/features/videoteca/storage", () => ({
 
 vi.mock("node:fs/promises", () => ({
   stat: statMock,
+  default: {
+    stat: statMock,
+  },
 }));
 
 vi.mock("node:fs", () => ({
   createReadStream: createReadStreamMock,
+  default: {
+    createReadStream: createReadStreamMock,
+  },
 }));
 
 vi.mock("node:stream", () => ({
   Readable: {
     toWeb: toWebMock,
+  },
+  default: {
+    Readable: {
+      toWeb: toWebMock,
+    },
   },
 }));
 
@@ -164,6 +175,59 @@ describe("GET /api/videoteca/files/[fileId]/view", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toBe("video/mp4");
     expect(response.headers.get("content-disposition")).toBeNull();
+    expect(response.headers.get("accept-ranges")).toBe("bytes");
+  });
+
+  it("streams a requested video byte range", async () => {
+    requireSessionMock.mockResolvedValue({ id: "student-1", role: "STUDENT" });
+    getFileMock.mockResolvedValue({
+      id: "file-2",
+      extension: "mp4",
+      path: "folder-1/video--file-2.mp4",
+    });
+    getVideotecaAbsolutePathMock.mockReturnValue("/tmp/folder-1/video--file-2.mp4");
+    statMock.mockResolvedValue({ size: 100, isFile: () => true });
+    const nodeStream = { kind: "node-stream" };
+    createReadStreamMock.mockReturnValue(nodeStream);
+    toWebMock.mockReturnValue(new ReadableStream());
+
+    const response = await GET(
+      new Request("http://localhost/api/videoteca/files/file-2/view", {
+        headers: { Range: "bytes=10-19" },
+      }),
+      { params: Promise.resolve({ fileId: "file-2" }) },
+    );
+
+    expect(response.status).toBe(206);
+    expect(response.headers.get("accept-ranges")).toBe("bytes");
+    expect(response.headers.get("content-range")).toBe("bytes 10-19/100");
+    expect(response.headers.get("content-length")).toBe("10");
+    expect(createReadStreamMock).toHaveBeenCalledWith(
+      "/tmp/folder-1/video--file-2.mp4",
+      { start: 10, end: 19 },
+    );
+  });
+
+  it("rejects an unsatisfiable byte range", async () => {
+    requireSessionMock.mockResolvedValue({ id: "student-1", role: "STUDENT" });
+    getFileMock.mockResolvedValue({
+      id: "file-2",
+      extension: "mp4",
+      path: "folder-1/video--file-2.mp4",
+    });
+    getVideotecaAbsolutePathMock.mockReturnValue("/tmp/folder-1/video--file-2.mp4");
+    statMock.mockResolvedValue({ size: 100, isFile: () => true });
+
+    const response = await GET(
+      new Request("http://localhost/api/videoteca/files/file-2/view", {
+        headers: { Range: "bytes=100-120" },
+      }),
+      { params: Promise.resolve({ fileId: "file-2" }) },
+    );
+
+    expect(response.status).toBe(416);
+    expect(response.headers.get("content-range")).toBe("bytes */100");
+    expect(createReadStreamMock).not.toHaveBeenCalled();
   });
 
   it("maps ENOENT storage misses to NOT_FOUND", async () => {

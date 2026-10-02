@@ -15,8 +15,9 @@ describe("pagos runtime config", () => {
       json: async () => ({
         success: true,
         data: {
-          trainerId: "trainer-1",
           defaultMonthlyAmountInCents: 3_000_000,
+          version: 1,
+          canEdit: true,
         },
       }),
     });
@@ -36,8 +37,9 @@ describe("pagos runtime config", () => {
       json: async () => ({
         success: true,
         data: {
-          trainerId: "trainer-1",
           defaultMonthlyAmountInCents: 3_200_000,
+          version: 2,
+          canEdit: true,
         },
       }),
     });
@@ -46,6 +48,7 @@ describe("pagos runtime config", () => {
       fetchMock as unknown as typeof fetch,
       {
         defaultMonthlyAmountInCents: 3_200_000,
+        expectedVersion: 1,
       }
     );
 
@@ -101,6 +104,7 @@ describe("pagos runtime warning", () => {
         studentProfileId: "student-1",
         amountInCents: 3_000_000,
         paymentDate: "2026-04-23",
+        expectedCurrentPaymentVersion: 1,
       }
     );
 
@@ -129,6 +133,7 @@ describe("pagos runtime warning", () => {
         studentProfileId: "student-1",
         amountInCents: 3_000_000,
         paymentDate: "2026-04-23",
+        expectedCurrentPaymentVersion: 1,
       }
     );
 
@@ -146,6 +151,7 @@ describe("pagos runtime warning", () => {
       studentProfileId: "student-1",
       amountInCents: 3_000_000,
       paymentDate: "2026-04-23",
+      expectedCurrentPaymentVersion: 1,
     });
   });
 });

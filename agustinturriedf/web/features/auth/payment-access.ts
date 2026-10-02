@@ -1,4 +1,5 @@
 import { isOverdue } from "@/features/payments/timezone";
+import { evaluateEffectivePaymentDebt, type PaymentDebtState } from "@/features/payments/debt";
 
 export type PaymentStatus = "CURRENT" | "OVERDUE" | "NO_CYCLE";
 export type AccessBlockReason = "ADMIN_INACTIVE" | "ADMIN_BLOCKED" | "PAYMENT_OVERDUE";
@@ -33,6 +34,7 @@ export const evaluatePaymentAccess = (input: {
   role: "ADMIN" | "TRAINER" | "STUDENT";
   studentStatus?: "ACTIVE" | "INACTIVE" | "BLOCKED";
   currentPaymentDueDate?: Date;
+  currentPayment?: PaymentDebtState;
   now?: Date;
 }): PaymentAccessEvaluation => {
   if (input.role !== "STUDENT") {
@@ -44,11 +46,20 @@ export const evaluatePaymentAccess = (input: {
 
   const adminBlockReason = resolveAdminBlockReason(input.studentStatus);
 
-  const paymentStatus: PaymentStatus = input.currentPaymentDueDate
-    ? isOverdue(input.currentPaymentDueDate, input.now)
+  const effectiveDebt = input.currentPayment &&
+    Number.isSafeInteger(input.currentPayment.amountInCents) &&
+    Number.isSafeInteger(input.currentPayment.outstandingAmountInCents)
+    ? evaluateEffectivePaymentDebt(input.currentPayment, input.now ?? new Date())
+    : null;
+  const paymentStatus: PaymentStatus = effectiveDebt
+    ? effectiveDebt.outstandingAmountInCents > 0 && effectiveDebt.overdueSinceDate !== null
       ? "OVERDUE"
       : "CURRENT"
-    : "NO_CYCLE";
+    : input.currentPaymentDueDate
+      ? isOverdue(input.currentPaymentDueDate, input.now)
+        ? "OVERDUE"
+        : "CURRENT"
+      : "NO_CYCLE";
 
   if (adminBlockReason) {
     return {

@@ -42,7 +42,10 @@ export const authorizeCredentials = async (credentials: RawCredentials) => {
           trainerId: string;
           status: "ACTIVE" | "INACTIVE" | "BLOCKED";
           currentPayment?: {
+            amountInCents: number;
+            outstandingAmountInCents: number;
             dueDate: Date;
+            overdueSinceDate: Date | null;
           } | null;
         } | null;
       }
@@ -66,6 +69,7 @@ export const authorizeCredentials = async (credentials: RawCredentials) => {
     role: user.role,
     studentStatus: user.studentProfile?.status,
     currentPaymentDueDate: user.studentProfile?.currentPayment?.dueDate,
+    currentPayment: user.studentProfile?.currentPayment ?? undefined,
   });
 
   if (!paymentAccess.canAccess) {

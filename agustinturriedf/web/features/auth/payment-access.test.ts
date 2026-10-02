@@ -32,6 +32,21 @@ describe("evaluatePaymentAccess", () => {
     });
   });
 
+  it("does not block immediate activation debt before its first boundary", () => {
+    const result = evaluatePaymentAccess({
+      role: "STUDENT",
+      studentStatus: "ACTIVE",
+      currentPayment: {
+        amountInCents: 3_000_000,
+        outstandingAmountInCents: 3_000_000,
+        dueDate: new Date("2026-05-31T03:00:00.000Z"),
+        overdueSinceDate: null,
+      },
+      now: new Date("2026-05-01T12:00:00.000Z"),
+    });
+    expect(result).toEqual({ paymentStatus: "CURRENT", canAccess: true });
+  });
+
   it("preserves legacy BLOCKED as admin block by default policy", () => {
     const result = evaluatePaymentAccess({
       role: "STUDENT",

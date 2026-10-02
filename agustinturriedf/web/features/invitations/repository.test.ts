@@ -48,6 +48,36 @@ describe("invitationRepository", () => {
     expect(createMock).toHaveBeenCalledWith({ data: expect.objectContaining({ email: "student@example.com", tokenHash: "hash" }) });
   });
 
+  it("acquires a transaction-scoped advisory lock with a parameterized tagged template", async () => {
+    const executeRaw = vi.fn().mockResolvedValue(0);
+    const email = "student@example.com";
+
+    await invitationRepository.lockIssuanceForEmail(email, { $executeRaw: executeRaw });
+
+    expect(executeRaw).toHaveBeenCalledOnce();
+    const [strings, value] = executeRaw.mock.calls[0];
+    expect(Array.from(strings)).toEqual(["SELECT pg_advisory_xact_lock(hashtext(", "))"]);
+    expect(value).toBe(email);
+    expect(Array.from(strings).join("")).not.toContain(email);
+  });
+
+  it("finds only usable invitations with the supplied transaction and clock", async () => {
+    const now = new Date("2026-09-27T12:00:00.000Z");
+    const findFirst = vi.fn().mockResolvedValue({ id: "inv-active" });
+    const transaction = { invitation: { findFirst } };
+
+    await invitationRepository.findActiveByEmail("student@example.com", now, transaction as any);
+
+    expect(findFirst).toHaveBeenCalledWith({
+      where: {
+        email: "student@example.com",
+        status: { in: ["PENDING", "SENT"] },
+        tokenHash: { not: null },
+        expiresAt: { gt: now },
+      },
+    });
+  });
+
   it("looks up invitation by token hash", async () => {
     findUniqueMock.mockResolvedValue({ id: "inv-1" });
 

@@ -16,6 +16,10 @@ describe("payments timezone helpers", () => {
     expect(parsedDate.toISOString()).toBe("2026-04-21T03:00:00.000Z");
   });
 
+  it("preserves the submitted calendar key rather than shifting it back one day", () => {
+    expect(parseBuenosAiresDateInput("2026-05-01").toISOString()).toBe("2026-05-01T03:00:00.000Z");
+  });
+
   it("rejects invalid BA ISO date input", () => {
     expect(() => parseBuenosAiresDateInput("2026-02-31")).toThrow("paymentDate debe ser una fecha válida");
   });

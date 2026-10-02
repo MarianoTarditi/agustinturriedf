@@ -9,6 +9,13 @@ type ApiErrorResponse = {
   };
 };
 
+export class PaymentRuntimeError extends Error {
+  constructor(message: string, readonly code: string, readonly details?: unknown) {
+    super(message);
+    this.name = "PaymentRuntimeError";
+  }
+}
+
 type PaymentDashboardRow = {
   studentProfileId: string;
   userId: string;
@@ -17,16 +24,20 @@ type PaymentDashboardRow = {
   phone: string | null;
   studentStatus: "ACTIVE" | "INACTIVE" | "BLOCKED";
   paymentStatus: "CURRENT" | "DUE_SOON" | "OVERDUE";
-  amountInCents: number;
+  monthlyAmountInCents: number;
+  outstandingAmountInCents: number;
   startDate: string;
-  dueDate: string;
+  nextChargeDate: string;
+  overdueSinceDate: string | null;
   daysToExpire: number;
+  currentPaymentVersion: number;
 };
 
 export type RegisterPaymentInput = {
   studentProfileId: string;
   amountInCents: number;
   paymentDate: string;
+  expectedCurrentPaymentVersion: number;
 };
 
 export type RegisterWarningPayload = RegisterPaymentInput & {
@@ -38,6 +49,8 @@ type PaymentsDashboardData = {
   cards: {
     collectedCount: number;
     collectedAmountInCents: number;
+    outstandingCount: number;
+    outstandingAmountInCents: number;
     dueSoonCount: number;
     overdueCount: number;
     overdueAmountInCents: number;
@@ -46,8 +59,9 @@ type PaymentsDashboardData = {
   };
   rows: PaymentDashboardRow[];
   config: {
-    trainerId: string;
     defaultMonthlyAmountInCents: number;
+    version: number;
+    canEdit: boolean;
   };
   filters: {
     query: string;
@@ -69,9 +83,10 @@ type RegisterPaymentResponse =
         currentPayment: {
           id: string;
           studentProfileId: string;
-          amountInCents: number;
+          outstandingAmountInCents: number;
           startDate: string;
           dueDate: string;
+          version: number;
         };
       };
     }
@@ -86,6 +101,7 @@ type EditPaymentResponse =
         amountInCents: number;
         startDate: string;
         dueDate: string;
+        version: number;
       };
     }
   | ApiErrorResponse;
@@ -94,8 +110,9 @@ type PaymentConfigResponse =
   | {
       success: true;
       data: {
-        trainerId: string;
         defaultMonthlyAmountInCents: number;
+        version: number;
+        canEdit: boolean;
       };
     }
   | ApiErrorResponse;
@@ -110,13 +127,15 @@ export const formatCurrencyARS = (amountInCents: number) => {
 };
 
 export const formatDateEsAr = (value: string | Date) => {
-  const date = typeof value === "string" ? new Date(value) : value;
+  const date = typeof value === "string"
+    ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T03:00:00.000Z` : value)
+    : value;
 
   if (Number.isNaN(date.getTime())) {
     return "-";
   }
 
-  return date.toLocaleDateString("es-AR");
+  return date.toLocaleDateString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" });
 };
 
 export const mapDaysToExpireLabel = (daysToExpire: number) => {
@@ -180,6 +199,7 @@ export const buildRegisterWarningPayload = (
     studentProfileId: input.studentProfileId,
     amountInCents: input.amountInCents,
     paymentDate: input.paymentDate,
+    expectedCurrentPaymentVersion: input.expectedCurrentPaymentVersion,
     fullName: row.fullName,
     daysToExpire: row.daysToExpire,
   };
@@ -200,6 +220,7 @@ export const runRegisterWarningDecision = async (
     studentProfileId: input.warningPayload.studentProfileId,
     amountInCents: input.warningPayload.amountInCents,
     paymentDate: input.warningPayload.paymentDate,
+    expectedCurrentPaymentVersion: input.warningPayload.expectedCurrentPaymentVersion,
   });
 
   return true;
@@ -266,8 +287,8 @@ export const registerPaymentRuntime = async (
   const payload = (await response.json()) as RegisterPaymentResponse;
 
   if (!response.ok || !payload.success) {
-    const message = payload.success ? "No se pudo registrar el pago" : payload.error.message;
-    throw new Error(message);
+    if (payload.success) throw new Error("No se pudo registrar el pago");
+    throw new PaymentRuntimeError(payload.error.message, payload.error.code, payload.error.details);
   }
 
   return payload.data;
@@ -279,6 +300,7 @@ export const editPaymentRuntime = async (
     studentProfileId: string;
     amountInCents: number;
     startDate: string;
+    expectedCurrentPaymentVersion: number;
   }
 ) => {
   const response = await fetchImpl(`/api/payments/${encodeURIComponent(input.studentProfileId)}`, {
@@ -289,14 +311,15 @@ export const editPaymentRuntime = async (
     body: JSON.stringify({
       amountInCents: input.amountInCents,
       startDate: input.startDate,
+      expectedCurrentPaymentVersion: input.expectedCurrentPaymentVersion,
     }),
   });
 
   const payload = (await response.json()) as EditPaymentResponse;
 
   if (!response.ok || !payload.success) {
-    const message = payload.success ? "No se pudo editar el pago" : payload.error.message;
-    throw new Error(message);
+    if (payload.success) throw new Error("No se pudo editar el pago");
+    throw new PaymentRuntimeError(payload.error.message, payload.error.code, payload.error.details);
   }
 
   return payload.data;
@@ -327,6 +350,7 @@ export const updatePaymentConfigRuntime = async (
   fetchImpl: typeof fetch,
   input: {
     defaultMonthlyAmountInCents: number;
+    expectedVersion: number;
   }
 ) => {
   const response = await fetchImpl("/api/payments/config", {
@@ -340,10 +364,8 @@ export const updatePaymentConfigRuntime = async (
   const payload = (await response.json()) as PaymentConfigResponse;
 
   if (!response.ok || !payload.success) {
-    const message = payload.success
-      ? "No se pudo guardar la configuración general de pagos"
-      : payload.error.message;
-    throw new Error(message);
+    if (payload.success) throw new Error("No se pudo guardar la configuración general de pagos");
+    throw new PaymentRuntimeError(payload.error.message, payload.error.code, payload.error.details);
   }
 
   return payload.data;

@@ -76,6 +76,7 @@ export default function VideotecaFolderPage() {
   const [isRenamingFile, setIsRenamingFile] = useState(false);
   const [isDeletingFile, setIsDeletingFile] = useState(false);
   const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
+  const [viewerFileId, setViewerFileId] = useState<string | null>(null);
   const [folderContextMenu, setFolderContextMenu] = useState<{
     folderId: string;
     x: number;
@@ -130,6 +131,14 @@ export default function VideotecaFolderPage() {
         ? files.find((file) => file.id === fileContextMenu.fileId) ?? null
         : null,
     [files, fileContextMenu],
+  );
+
+  const viewerFile = useMemo(
+    () =>
+      viewerFileId
+        ? files.find((file) => file.id === viewerFileId) ?? null
+        : null,
+    [files, viewerFileId],
   );
 
   const editingFolder = useMemo(
@@ -195,7 +204,7 @@ export default function VideotecaFolderPage() {
 
   function getSafeMenuPosition(x: number, y: number) {
     const MENU_WIDTH = 184;
-    const MENU_HEIGHT = 152;
+    const MENU_HEIGHT = 196;
     const EDGE_OFFSET = 12;
 
     const maxX = Math.max(
@@ -309,6 +318,7 @@ export default function VideotecaFolderPage() {
     setEditingFileId(null);
     setDraftFileName("");
     setActiveDeleteFileId(null);
+    setViewerFileId(null);
     setFolderContextMenu(null);
     setEditingFolderId(null);
     setDraftFolderName("");
@@ -328,6 +338,22 @@ export default function VideotecaFolderPage() {
       prevSelectedIds.filter((selectedId) => files.some((file) => file.id === selectedId)),
     );
   }, [files]);
+
+  useEffect(() => {
+    if (!viewerFileId) return;
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setViewerFileId(null);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [viewerFileId]);
 
   useEffect(() => {
     return () => {
@@ -577,6 +603,19 @@ export default function VideotecaFolderPage() {
     } finally {
       setDownloadingFileId(null);
     }
+  }
+
+  function openFileViewer(file: VideotecaFile) {
+    closeFileContextMenu();
+    setViewerFileId(file.id);
+  }
+
+  function closeFileViewer() {
+    setViewerFileId(null);
+  }
+
+  function handleViewerMediaError() {
+    showToast("error", "No se pudo abrir el archivo seleccionado.");
   }
 
   function openFolder(folderEntryId: string) {
@@ -1403,7 +1442,12 @@ export default function VideotecaFolderPage() {
                   }}
                 >
                   <div className={styles.fileMedia}>
-                    <div className={`${styles.fileMediaSurface} ${mediaToneClass}`}>
+                    <button
+                      type="button"
+                      className={`${styles.fileMediaSurface} ${styles.fileMediaOpenButton} ${mediaToneClass}`}
+                      onClick={() => openFileViewer(file)}
+                      aria-label={`Abrir ${file.type === "video" ? "video" : "imagen"} ${file.name}`}
+                    >
                       {file.thumbnailUrl ? (
                         <img
                           src={file.thumbnailUrl}
@@ -1445,7 +1489,7 @@ export default function VideotecaFolderPage() {
                           <p className={styles.cardMeta}>Actualizado {file.updatedAt}</p>
                         </div>
                       </div>
-                    </div>
+                    </button>
 
                     <label
                       className={`${styles.fileSelectionButton} ${isSelected ? styles.fileSelectionButtonSelected : ""}`}
@@ -1571,6 +1615,21 @@ export default function VideotecaFolderPage() {
             type="button"
             className={styles.fileContextMenuItem}
             role="menuitem"
+            onClick={() => openFileViewer(activeContextMenuFile)}
+          >
+            <MaterialSymbol
+              name="open_in_full"
+              className={styles.fileContextMenuIcon}
+              weight={500}
+              opticalSize={18}
+            />
+            Abrir
+          </button>
+
+          <button
+            type="button"
+            className={styles.fileContextMenuItem}
+            role="menuitem"
             onClick={() => openRenameModal(activeContextMenuFile)}
           >
             <MaterialSymbol
@@ -1612,6 +1671,66 @@ export default function VideotecaFolderPage() {
             />
             Eliminar
           </button>
+        </div>
+      ) : null}
+
+      {viewerFile ? (
+        <div
+          className={styles.mediaViewerOverlay}
+          role="presentation"
+          onClick={closeFileViewer}
+        >
+          <div
+            className={styles.mediaViewer}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="videoteca-media-viewer-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className={styles.mediaViewerHeader}>
+              <div>
+                <span>{viewerFile.type === "video" ? "Video" : "Imagen"}</span>
+                <h2 id="videoteca-media-viewer-title">{viewerFile.name}</h2>
+              </div>
+
+              <button
+                type="button"
+                className={styles.mediaViewerCloseButton}
+                aria-label="Cerrar visor"
+                onClick={closeFileViewer}
+                autoFocus
+              >
+                <MaterialSymbol
+                  name="close"
+                  className={styles.mediaViewerCloseIcon}
+                  weight={500}
+                  opticalSize={24}
+                />
+              </button>
+            </header>
+
+            <div className={styles.mediaViewerStage}>
+              {viewerFile.type === "image" ? (
+                <img
+                  src={viewerFile.viewUrl}
+                  alt={viewerFile.name}
+                  className={styles.mediaViewerImage}
+                  onError={handleViewerMediaError}
+                />
+              ) : (
+                <video
+                  src={viewerFile.viewUrl}
+                  className={styles.mediaViewerVideo}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  onError={handleViewerMediaError}
+                >
+                  Tu navegador no puede reproducir este video.
+                </video>
+              )}
+            </div>
+          </div>
         </div>
       ) : null}
 
